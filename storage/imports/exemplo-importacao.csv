@@ -1,0 +1,3 @@
+title,company,city,state,description,applyUrl,category,salary,employmentType,publishedAt,validThrough
+Assistente Financeiro,Grupo Horizonte,Rio de Janeiro,RJ,"<p>Apoio às rotinas financeiras e conciliação de documentos.</p>",https://example.com/vaga-1,Financeiro,,,2026-06-01,2026-07-01
+Auxiliar de Logística,Logística Rio,Duque de Caxias,RJ,"<p>Separação e conferência de pedidos em centro de distribuição.</p>",https://example.com/vaga-2,Logística,"R$ 2.300,00",FULL_TIME,2026-06-01,2026-07-01

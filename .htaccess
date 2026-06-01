@@ -1,0 +1,12 @@
+Options -Indexes
+RewriteEngine On
+
+# Bloqueia pastas sensiveis caso o document root esteja errado.
+RewriteRule ^(app|config|database|storage|templates)(/|$) - [F,L,NC]
+
+# Mantem acesso direto ao /public quando necessario.
+RewriteRule ^public/ - [L]
+
+# Front-controller seguro quando a raiz do projeto e exposta.
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteRule ^(.*)$ public/$1 [L]
