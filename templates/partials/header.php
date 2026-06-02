@@ -1,11 +1,7 @@
 <header class="site-header">
     <div class="container header-inner">
         <a class="logo" href="/">
-            <span class="logo-mark">RJ</span>
-            <span class="logo-text">
-                <strong>Vagas <span class="logo-accent">RJ</span></strong>
-                <small><?= e(config('site.subtitle', 'Empregos no Rio de Janeiro')) ?></small>
-            </span>
+            <img class="logo-image" src="<?= e(url_path('/assets/img/logo-vagas-rj.svg')) ?>" width="220" height="42" alt="<?= e(config('site.name')) ?> — <?= e(config('site.subtitle', 'Empregos no Rio de Janeiro')) ?>">
         </a>
 
         <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav-panel" data-nav-toggle>

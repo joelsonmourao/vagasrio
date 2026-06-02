@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($title ?? 'Admin') ?> - <?= e(config('site.name')) ?></title>
     <meta name="robots" content="noindex,nofollow">
+    <?php require ROOT_PATH . '/templates/partials/head_icons.php'; ?>
     <link rel="stylesheet" href="/assets/css/app.css">
 </head>
 <body class="admin-body">
+<div class="admin-nav-backdrop" id="admin-nav-backdrop" aria-hidden="true"></div>
 <?php
 $adminPath = rtrim((string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/admin'), PHP_URL_PATH), '/') ?: '/admin';
 $isLoginPage = ($adminPath === '/admin/login');
@@ -16,11 +18,7 @@ $isLoginPage = ($adminPath === '/admin/login');
     <div class="admin-shell admin-header-inner">
         <?php if (!$isLoginPage): ?>
         <a class="admin-brand" href="<?= e(url_path('/admin')) ?>">
-            <span class="admin-brand-mark">RJ</span>
-            <span class="admin-brand-text">
-                <strong><?= e(config('site.name')) ?></strong>
-                <small>Painel administrativo</small>
-            </span>
+            <img class="admin-brand-logo" src="<?= e(url_path('/assets/img/logo-vagas-rj.svg')) ?>" width="196" height="38" alt="<?= e(config('site.name')) ?> — Painel administrativo">
         </a>
         <button class="admin-nav-toggle" type="button" aria-expanded="false" aria-controls="admin-nav">Menu</button>
         <nav id="admin-nav" class="admin-nav">
@@ -46,11 +44,7 @@ $isLoginPage = ($adminPath === '/admin/login');
         </nav>
         <?php else: ?>
         <a class="admin-brand" href="<?= e(url_path('/')) ?>">
-            <span class="admin-brand-mark">RJ</span>
-            <span class="admin-brand-text">
-                <strong><?= e(config('site.name')) ?></strong>
-                <small>Acesso administrativo</small>
-            </span>
+            <img class="admin-brand-logo" src="<?= e(url_path('/assets/img/logo-vagas-rj.svg')) ?>" width="196" height="38" alt="<?= e(config('site.name')) ?>">
         </a>
         <?php endif; ?>
     </div>
@@ -58,16 +52,6 @@ $isLoginPage = ($adminPath === '/admin/login');
 <main class="admin-shell admin-main">
     <?= $content ?>
 </main>
-<script>
-(function () {
-    var toggle = document.querySelector('.admin-nav-toggle');
-    var nav = document.getElementById('admin-nav');
-    if (!toggle || !nav) return;
-    toggle.addEventListener('click', function () {
-        var open = nav.classList.toggle('is-open');
-        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-})();
-</script>
+<script src="<?= e(url_path('/assets/js/admin.js')) ?>" defer></script>
 </body>
 </html>

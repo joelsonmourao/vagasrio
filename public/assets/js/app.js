@@ -16,10 +16,78 @@
 
   var navButton = document.querySelector("[data-nav-toggle]");
   var header = document.querySelector(".site-header");
+  var backdrop = document.getElementById("site-nav-backdrop");
+  var mobileQuery = window.matchMedia("(max-width: 760px)");
+
+  function isMobileNav() {
+    return mobileQuery.matches;
+  }
+
+  function closeSiteNav() {
+    if (header) {
+      header.classList.remove("nav-open");
+    }
+    if (navButton) {
+      navButton.setAttribute("aria-expanded", "false");
+    }
+    document.body.classList.remove("nav-open");
+    document.body.style.removeProperty("overflow");
+    if (backdrop) {
+      backdrop.setAttribute("aria-hidden", "true");
+    }
+  }
+
+  function openSiteNav() {
+    if (!header || !navButton || !isMobileNav()) {
+      return;
+    }
+    header.classList.add("nav-open");
+    navButton.setAttribute("aria-expanded", "true");
+    document.body.classList.add("nav-open");
+    document.body.style.overflow = "hidden";
+    if (backdrop) {
+      backdrop.setAttribute("aria-hidden", "false");
+    }
+  }
+
+  function resetSiteNav() {
+    closeSiteNav();
+  }
+
+  resetSiteNav();
+  window.addEventListener("pageshow", resetSiteNav);
+
   if (navButton && header) {
     navButton.addEventListener("click", function () {
-      var isOpen = header.classList.toggle("nav-open");
-      navButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      if (header.classList.contains("nav-open")) {
+        closeSiteNav();
+        return;
+      }
+      openSiteNav();
+    });
+  }
+
+  if (backdrop) {
+    backdrop.addEventListener("click", closeSiteNav);
+  }
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      closeSiteNav();
+    }
+  });
+
+  if (typeof mobileQuery.addEventListener === "function") {
+    mobileQuery.addEventListener("change", function () {
+      if (!isMobileNav()) {
+        closeSiteNav();
+      }
+    });
+  } else if (typeof mobileQuery.addListener === "function") {
+    mobileQuery.addListener(function () {
+      if (!isMobileNav()) {
+        closeSiteNav();
+      }
     });
   }
 

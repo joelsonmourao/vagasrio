@@ -556,9 +556,19 @@ function city_postal_code(?string $cityName): ?string
     return is_string($code) && $code !== '' ? $code : null;
 }
 
+function portal_logo_svg_url(): string
+{
+    return base_url('assets/img/logo-vagas-rj.svg');
+}
+
 function portal_default_logo_url(): string
 {
     return base_url('assets/img/logo-vagas-rj.png');
+}
+
+function portal_og_image_url(): string
+{
+    return portal_default_logo_url();
 }
 
 function job_hiring_organization_logo(array $job): string

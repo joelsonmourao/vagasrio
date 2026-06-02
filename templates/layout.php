@@ -15,10 +15,14 @@
     <meta property="og:description" content="<?= e($description ?? '') ?>">
     <meta property="og:url" content="<?= e($canonical ?? base_url(current_path())) ?>">
     <meta property="og:site_name" content="<?= e(config('site.name')) ?>">
+    <meta property="og:image" content="<?= e($ogImage ?? portal_og_image_url()) ?>">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="<?= e($ogImage ?? portal_og_image_url()) ?>">
+    <?php require ROOT_PATH . '/templates/partials/head_icons.php'; ?>
     <link rel="stylesheet" href="/assets/css/app.css">
 </head>
 <body>
+<div class="site-nav-backdrop" id="site-nav-backdrop" aria-hidden="true"></div>
 <?php require ROOT_PATH . '/templates/partials/header.php'; ?>
 <main class="container">
     <?= $content ?>

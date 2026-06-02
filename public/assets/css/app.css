@@ -32,6 +32,7 @@ main.container{padding-top:32px;padding-bottom:64px;min-height:calc(100vh - 320p
 .site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--line-soft);min-height:var(--header-h);box-shadow:0 1px 0 rgba(6,20,40,.04)}
 .header-inner{min-height:var(--header-h);display:flex;align-items:center;justify-content:space-between;gap:20px;position:relative}
 .logo{display:flex;align-items:center;gap:12px;color:var(--navy)}
+.logo-image{display:block;height:42px;width:auto;max-width:min(220px,58vw)}
 .logo-mark{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-weight:900;font-size:.95rem;color:#fff;background:linear-gradient(145deg,var(--navy),var(--blue-bright));box-shadow:0 8px 20px rgba(29,78,216,.28);letter-spacing:-.02em}
 .logo-text strong{display:block;font-size:1.12rem;line-height:1.15;color:var(--navy);letter-spacing:-.02em}
 .logo-accent{color:var(--blue-bright)}
@@ -51,8 +52,16 @@ main.container{padding-top:32px;padding-bottom:64px;min-height:calc(100vh - 320p
 .btn-outline{background:#fff;color:var(--blue);border:1px solid #c7d7fb;box-shadow:none}
 .btn-outline:hover{background:#f4f8ff;box-shadow:var(--shadow-sm)}
 .btn-full{width:100%}
-.nav-toggle{display:none;background:#f4f7fd;border:1px solid var(--line);border-radius:12px;padding:11px 12px;cursor:pointer}
+.nav-toggle{display:none;background:#f4f7fd;border:1px solid var(--line);border-radius:12px;padding:11px 12px;cursor:pointer;position:relative;z-index:51}
 .nav-toggle span{display:block;width:22px;height:2px;background:var(--navy);margin:5px 0;border-radius:2px}
+
+/* Mobile nav overlay — hidden unless menu is open on small screens */
+.site-nav-backdrop,.admin-nav-backdrop{position:fixed;inset:0;background:rgba(6,20,40,.45);z-index:45;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s ease}
+body.nav-open .site-nav-backdrop,.admin-body.admin-nav-open .admin-nav-backdrop{opacity:1;visibility:visible;pointer-events:auto}
+@media (min-width:761px){
+  .site-nav-backdrop,.admin-nav-backdrop{display:none!important}
+  body.nav-open,.admin-body.admin-nav-open{overflow:auto!important}
+}
 
 /* Hero */
 .hero{position:relative;border-radius:28px;padding:38px 36px;color:#fff;background:linear-gradient(135deg,#041022 0%,#0c2a56 42%,#1e40af 78%,#0891b2 130%);box-shadow:var(--shadow);overflow:hidden;min-height:380px;border:1px solid rgba(255,255,255,.08)}
@@ -283,15 +292,17 @@ main.container{padding-top:32px;padding-bottom:64px;min-height:calc(100vh - 320p
 
 /* Admin */
 .admin-body{background:#eef2f8;color:#1e293b;min-height:100vh}
+.admin-body::before,.admin-body::after{content:none!important;display:none!important}
 .admin-shell{max-width:1180px;margin:0 auto;padding:0 20px}
-.admin-header{background:linear-gradient(180deg,#fff 0%,#f8fbff 100%);border-bottom:1px solid #dbe3f0;position:sticky;top:0;z-index:40;box-shadow:0 8px 24px rgba(15,23,42,.04)}
+.admin-header{background:linear-gradient(180deg,#fff 0%,#f8fbff 100%);border-bottom:1px solid #dbe3f0;position:sticky;top:0;z-index:46;box-shadow:0 8px 24px rgba(15,23,42,.04)}
 .admin-header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:68px;padding-top:8px;padding-bottom:8px}
 .admin-brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}
+.admin-brand-logo{display:block;height:38px;width:auto;max-width:min(196px,58vw)}
 .admin-brand-mark{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;font-weight:900;font-size:.92rem}
 .admin-brand-text{display:grid;gap:2px}
 .admin-brand-text strong{font-size:1rem;color:#0f172a}
 .admin-brand-text small{font-size:.78rem;color:#64748b}
-.admin-nav-toggle{display:none;border:1px solid #cbd5e1;background:#fff;border-radius:10px;padding:8px 12px;font-weight:700;color:#334155;cursor:pointer}
+.admin-nav-toggle{display:none;border:1px solid #cbd5e1;background:#fff;border-radius:10px;padding:8px 12px;font-weight:700;color:#334155;cursor:pointer;position:relative;z-index:47}
 .admin-nav{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .admin-nav-link{display:inline-flex;align-items:center;padding:9px 12px;border-radius:10px;text-decoration:none;color:#475569;font-size:.88rem;font-weight:700;transition:background .12s ease,color .12s ease}
 .admin-nav-link:hover{background:#edf3ff;color:#1d4ed8}
@@ -299,7 +310,7 @@ main.container{padding-top:32px;padding-bottom:64px;min-height:calc(100vh - 320p
 .admin-nav-link-muted{color:#64748b}
 .admin-nav-link-danger{color:#b91c1c}
 .admin-nav-link-danger:hover{background:#fef2f2;color:#991b1b}
-.admin-main{padding:24px 0 40px}
+.admin-main{padding:24px 0 40px;position:relative;z-index:1}
 .admin-page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px;flex-wrap:wrap}
 .admin-page-head h1{margin:4px 0 6px;font-size:clamp(1.45rem,2.5vw,1.9rem);color:#0f172a;letter-spacing:-.02em}
 .admin-kicker{margin:0;font-size:.74rem;text-transform:uppercase;letter-spacing:.08em;color:#64748b;font-weight:800}
@@ -424,7 +435,7 @@ th{background:#f8fafc;font-size:.82rem;text-transform:uppercase;letter-spacing:.
   :root{--header-h:72px}
   .container{padding:0 16px}
   .nav-toggle{display:block}
-  .main-nav{position:absolute;top:var(--header-h);left:0;right:0;background:#fff;border-bottom:1px solid var(--line);padding:14px 16px;display:none;flex-direction:column;align-items:stretch;box-shadow:var(--shadow)}
+  .main-nav{position:absolute;top:var(--header-h);left:0;right:0;background:#fff;border-bottom:1px solid var(--line);padding:14px 16px;display:none;flex-direction:column;align-items:stretch;box-shadow:var(--shadow);z-index:50}
   .site-header.nav-open .main-nav{display:flex}
   .main-nav a{padding:11px 12px}
   .btn-nav{margin-left:0;text-align:center}
@@ -444,8 +455,8 @@ th{background:#f8fafc;font-size:.82rem;text-transform:uppercase;letter-spacing:.
   .btn-card{width:100%;min-width:0}
   .job-salary{max-width:100%;white-space:normal}
   .admin-nav-toggle{display:block}
-  .admin-nav{display:none;width:100%;flex-direction:column;align-items:stretch;padding-bottom:8px}
-  .admin-nav.is-open{display:flex}
+  .admin-nav{display:none;width:100%;flex-direction:column;align-items:stretch;padding:12px 0 8px;background:#fff;border-top:1px solid #e2e8f0}
+  .admin-nav.is-open{display:flex;position:relative;z-index:47}
   .admin-header-inner{flex-wrap:wrap}
   .admin-page-head{flex-direction:column}
   .admin-metrics,.admin-filters,.admin-summary-grid{grid-template-columns:1fr}

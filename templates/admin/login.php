@@ -1,9 +1,9 @@
 <section class="admin-login-wrap">
     <div class="admin-card admin-login-card">
         <div class="admin-login-brand">
-            <span class="admin-brand-mark">RJ</span>
+            <img class="admin-brand-logo" src="<?= e(url_path('/assets/img/logo-vagas-rj.svg')) ?>" width="196" height="38" alt="<?= e(config('site.name')) ?>">
             <div>
-                <h1><?= e(config('site.name')) ?></h1>
+                <h1 class="sr-only"><?= e(config('site.name')) ?></h1>
                 <p>Painel administrativo</p>
             </div>
         </div>
