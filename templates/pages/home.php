@@ -4,7 +4,7 @@
         <p class="hero-kicker">Empregos no Rio de Janeiro</p>
         <h1>As melhores vagas no Rio de Janeiro em um só lugar</h1>
         <p>Encontre oportunidades atualizadas por cidade, empresa e área profissional. Foco total em vagas do RJ.</p>
-        <form class="search-form search-form-hero" action="<?= e(base_url('/vagas')) ?>" method="get">
+        <form class="search-form search-form-hero" action="<?= e(url_path('/vagas')) ?>" method="get">
             <label class="sr-only" for="home-q">Buscar vaga</label>
             <input id="home-q" type="text" name="q" placeholder="Cargo, empresa ou palavra-chave">
             <label class="sr-only" for="home-city">Cidade</label>
@@ -41,7 +41,7 @@
             <p class="section-kicker">Oportunidades recentes</p>
             <h2>Vagas em destaque no RJ</h2>
         </div>
-        <a class="section-link" href="<?= e(base_url('/vagas')) ?>">Ver todas as vagas →</a>
+        <a class="section-link" href="<?= e(url_path('/vagas')) ?>">Ver todas as vagas →</a>
     </div>
     <?php if (empty($recentJobs)): ?>
         <div class="empty-state">
@@ -64,12 +64,12 @@
             <p class="section-kicker">Navegação regional</p>
             <h2>Cidades em destaque</h2>
         </div>
-        <a class="section-link" href="<?= e(base_url('/cidades')) ?>">Ver todas →</a>
+        <a class="section-link" href="<?= e(url_path('/cidades')) ?>">Ver todas →</a>
     </div>
     <p class="section-text">Explore vagas nas principais cidades do estado do Rio de Janeiro.</p>
     <div class="city-grid city-grid-compact">
         <?php foreach (array_slice($cities, 0, 8) as $city): ?>
-            <a class="city-card city-card-link" href="<?= e(base_url('/cidade/' . $city['slug'])) ?>">
+            <a class="city-card city-card-link" href="<?= e(url_path('/cidade/' . $city['slug'])) ?>">
                 <strong><?= e($city['name']) ?></strong>
                 <span><?= (int) ($city['jobs_count'] ?? 0) ?> vaga(s)</span>
             </a>
@@ -83,11 +83,11 @@
             <p class="section-kicker">Áreas profissionais</p>
             <h2>Categorias de vagas</h2>
         </div>
-        <a class="section-link" href="<?= e(base_url('/categorias')) ?>">Ver categorias →</a>
+        <a class="section-link" href="<?= e(url_path('/categorias')) ?>">Ver categorias →</a>
     </div>
     <div class="category-grid">
         <?php foreach ($categories as $category): ?>
-            <a class="category-card" href="<?= e(base_url('/categoria/' . $category['slug'])) ?>">
+            <a class="category-card" href="<?= e(url_path('/categoria/' . $category['slug'])) ?>">
                 <span class="category-card-label"><?= e($category['name']) ?></span>
                 <span class="category-card-cta">Explorar →</span>
             </a>

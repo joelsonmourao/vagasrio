@@ -19,9 +19,9 @@
     <div class="entity-grid blog-grid">
         <?php foreach ($articles as $article): ?>
             <article class="entity-card blog-card">
-                <h2><a href="<?= e(base_url('/blog/' . $article['slug'])) ?>"><?= e($article['title']) ?></a></h2>
+                <h2><a href="<?= e(url_path('/blog/' . $article['slug'])) ?>"><?= e($article['title']) ?></a></h2>
                 <p><?= e($article['excerpt']) ?></p>
-                <a class="btn btn-sm btn-outline" href="<?= e(base_url('/blog/' . $article['slug'])) ?>">Ler artigo</a>
+                <a class="btn btn-sm btn-outline" href="<?= e(url_path('/blog/' . $article['slug'])) ?>">Ler artigo</a>
             </article>
         <?php endforeach; ?>
     </div>

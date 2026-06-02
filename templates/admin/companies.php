@@ -6,7 +6,7 @@
         <p class="admin-lead">Gerencie empresas anunciantes e acompanhe quantas vagas cada uma possui.</p>
     </div>
     <div class="admin-page-actions">
-        <a class="btn btn-sm" href="<?= e(base_url('/admin/companies?new=1#company-form')) ?>">Nova empresa</a>
+        <a class="btn btn-sm" href="<?= e(url_path('/admin/companies?new=1#company-form')) ?>">Nova empresa</a>
     </div>
 </section>
 
@@ -43,9 +43,9 @@
                                 <?php endif; ?>
                             </td>
                             <td class="admin-actions">
-                                <a class="admin-action" href="<?= e(base_url('/admin/companies?edit=' . $company['id'] . '#company-form')) ?>">Editar</a>
-                                <a class="admin-action" href="<?= e(base_url('/empresa/' . $company['slug'])) ?>" target="_blank" rel="noopener">Ver página</a>
-                                <form method="post" action="<?= e(base_url('/admin/companies/' . $company['id'] . '/delete')) ?>" class="admin-inline-form" onsubmit="return confirm('Excluir esta empresa?');">
+                                <a class="admin-action" href="<?= e(url_path('/admin/companies?edit=' . $company['id'] . '#company-form')) ?>">Editar</a>
+                                <a class="admin-action" href="<?= e(url_path('/empresa/' . $company['slug'])) ?>" target="_blank" rel="noopener">Ver página</a>
+                                <form method="post" action="<?= e(url_path('/admin/companies/' . $company['id'] . '/delete')) ?>" class="admin-inline-form" onsubmit="return confirm('Excluir esta empresa?');">
                                     <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
                                     <button class="admin-action admin-action-btn admin-action-danger" type="submit">Excluir</button>
                                 </form>
@@ -65,7 +65,7 @@
     <?php if (!$showForm): ?>
         <p class="admin-empty">Clique em <strong>Nova empresa</strong> ou <strong>Editar</strong> para abrir o formulário.</p>
     <?php else: ?>
-        <form class="admin-form" method="post" action="<?= e(base_url(!empty($editCompany) ? '/admin/companies/' . $editCompany['id'] . '/edit' : '/admin/companies')) ?>">
+        <form class="admin-form" method="post" action="<?= e(url_path(!empty($editCompany) ? '/admin/companies/' . $editCompany['id'] . '/edit' : '/admin/companies')) ?>">
             <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
             <div class="admin-form-grid">
                 <label class="admin-field admin-field-span-2">
@@ -84,7 +84,7 @@
             <div class="admin-form-actions">
                 <button class="btn" type="submit"><?= !empty($editCompany) ? 'Salvar alterações' : 'Cadastrar empresa' ?></button>
                 <?php if (!empty($editCompany)): ?>
-                    <a class="btn btn-outline" href="<?= e(base_url('/admin/companies')) ?>">Cancelar</a>
+                    <a class="btn btn-outline" href="<?= e(url_path('/admin/companies')) ?>">Cancelar</a>
                 <?php endif; ?>
             </div>
         </form>

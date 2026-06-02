@@ -10,7 +10,7 @@
     <div class="empty-state empty-state-large">
         <h3>Nenhuma vaga ativa nesta categoria</h3>
         <p>Explore outras categorias ou veja todas as vagas do estado.</p>
-        <a class="btn btn-sm" href="<?= e(base_url('/vagas')) ?>">Ver todas as vagas</a>
+        <a class="btn btn-sm" href="<?= e(url_path('/vagas')) ?>">Ver todas as vagas</a>
     </div>
 <?php else: ?>
     <div class="job-grid job-grid-listing">

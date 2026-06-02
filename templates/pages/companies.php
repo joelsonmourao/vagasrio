@@ -15,9 +15,9 @@
     <div class="entity-grid">
         <?php foreach ($companies as $company): ?>
             <article class="entity-card">
-                <h2><a href="<?= e(base_url('/empresa/' . $company['slug'])) ?>"><?= e($company['name']) ?></a></h2>
+                <h2><a href="<?= e(url_path('/empresa/' . $company['slug'])) ?>"><?= e($company['name']) ?></a></h2>
                 <p><?= e(excerpt((string) ($company['description'] ?? 'Empresa com vagas abertas no Rio de Janeiro.'), 140)) ?></p>
-                <a class="btn btn-sm btn-outline" href="<?= e(base_url('/empresa/' . $company['slug'])) ?>">Ver vagas</a>
+                <a class="btn btn-sm btn-outline" href="<?= e(url_path('/empresa/' . $company['slug'])) ?>">Ver vagas</a>
             </article>
         <?php endforeach; ?>
     </div>

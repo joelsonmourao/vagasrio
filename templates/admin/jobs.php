@@ -15,7 +15,7 @@ $showForm = !empty($showForm);
         <p class="admin-lead">Cadastre, edite e publique vagas do Rio de Janeiro com descrição única.</p>
     </div>
     <div class="admin-page-actions">
-        <a class="btn btn-sm" href="<?= e(base_url('/admin/jobs?new=1#job-form')) ?>">Nova vaga</a>
+        <a class="btn btn-sm" href="<?= e(url_path('/admin/jobs?new=1#job-form')) ?>">Nova vaga</a>
     </div>
 </section>
 
@@ -68,7 +68,7 @@ $showForm = !empty($showForm);
         </label>
         <div class="admin-filter-actions">
             <button class="btn btn-sm" type="submit">Filtrar</button>
-            <a class="btn btn-sm btn-outline" href="<?= e(base_url('/admin/jobs')) ?>">Limpar</a>
+            <a class="btn btn-sm btn-outline" href="<?= e(url_path('/admin/jobs')) ?>">Limpar</a>
         </div>
     </form>
 </section>
@@ -107,13 +107,13 @@ $showForm = !empty($showForm);
                             </td>
                             <td><?= e(date('d/m/Y', strtotime($row['published_at']))) ?></td>
                             <td class="admin-actions">
-                                <a class="admin-action" href="<?= e(base_url('/admin/jobs?edit=' . $row['id'] . '#job-form')) ?>">Editar</a>
-                                <form method="post" action="<?= e(base_url('/admin/jobs/' . $row['id'] . '/toggle')) ?>" class="admin-inline-form">
+                                <a class="admin-action" href="<?= e(url_path('/admin/jobs?edit=' . $row['id'] . '#job-form')) ?>">Editar</a>
+                                <form method="post" action="<?= e(url_path('/admin/jobs/' . $row['id'] . '/toggle')) ?>" class="admin-inline-form">
                                     <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
                                     <button class="admin-action admin-action-btn" type="submit"><?= $row['is_active'] ? 'Desativar' : 'Ativar' ?></button>
                                 </form>
-                                <a class="admin-action" href="<?= e(base_url('/vagas/' . $row['slug'])) ?>" target="_blank" rel="noopener">Ver</a>
-                                <form method="post" action="<?= e(base_url('/admin/jobs/' . $row['id'] . '/delete')) ?>" class="admin-inline-form" onsubmit="return confirm('Excluir esta vaga?');">
+                                <a class="admin-action" href="<?= e(url_path('/vagas/' . $row['slug'])) ?>" target="_blank" rel="noopener">Ver</a>
+                                <form method="post" action="<?= e(url_path('/admin/jobs/' . $row['id'] . '/delete')) ?>" class="admin-inline-form" onsubmit="return confirm('Excluir esta vaga?');">
                                     <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
                                     <button class="admin-action admin-action-btn admin-action-danger" type="submit">Excluir</button>
                                 </form>
@@ -131,16 +131,16 @@ $showForm = !empty($showForm);
     <div class="admin-card-head">
         <h2><?= $editJob ? 'Editar vaga' : 'Nova vaga' ?></h2>
         <?php if (!$showForm): ?>
-            <a class="admin-link" href="<?= e(base_url('/admin/jobs?new=1#job-form')) ?>">Abrir formulário</a>
+            <a class="admin-link" href="<?= e(url_path('/admin/jobs?new=1#job-form')) ?>">Abrir formulário</a>
         <?php elseif (!$editJob): ?>
-            <a class="admin-link" href="<?= e(base_url('/admin/jobs')) ?>">Fechar</a>
+            <a class="admin-link" href="<?= e(url_path('/admin/jobs')) ?>">Fechar</a>
         <?php endif; ?>
     </div>
 
     <?php if (!$showForm): ?>
         <p class="admin-empty">Use o botão <strong>Nova vaga</strong> para cadastrar ou selecione <strong>Editar</strong> em uma vaga da lista.</p>
     <?php else: ?>
-        <form class="admin-form" method="post" action="<?= e(base_url($editJob ? '/admin/jobs/' . $editJob['id'] . '/edit' : '/admin/jobs/new')) ?>">
+        <form class="admin-form" method="post" action="<?= e(url_path($editJob ? '/admin/jobs/' . $editJob['id'] . '/edit' : '/admin/jobs/new')) ?>">
             <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
             <div class="admin-form-grid">
                 <label class="admin-field admin-field-span-2">
@@ -210,7 +210,7 @@ $showForm = !empty($showForm);
             <div class="admin-form-actions">
                 <button class="btn" type="submit"><?= $editJob ? 'Salvar alterações' : 'Cadastrar vaga' ?></button>
                 <?php if ($editJob): ?>
-                    <a class="btn btn-outline" href="<?= e(base_url('/admin/jobs')) ?>">Cancelar edição</a>
+                    <a class="btn btn-outline" href="<?= e(url_path('/admin/jobs')) ?>">Cancelar edição</a>
                 <?php endif; ?>
             </div>
         </form>

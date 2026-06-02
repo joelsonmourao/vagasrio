@@ -10,7 +10,7 @@
     <div class="empty-state empty-state-large">
         <h3>Sem vagas ativas no momento</h3>
         <p>Esta empresa não possui oportunidades abertas agora. Explore outras empresas do Rio de Janeiro.</p>
-        <a class="btn btn-sm" href="<?= e(base_url('/empresas')) ?>">Ver empresas</a>
+        <a class="btn btn-sm" href="<?= e(url_path('/empresas')) ?>">Ver empresas</a>
     </div>
 <?php else: ?>
     <div class="section-head">

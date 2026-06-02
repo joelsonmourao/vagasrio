@@ -1,15 +1,7 @@
-Options -Indexes
 RewriteEngine On
-RewriteBase /
 
-# Remove /index.php da URL
-RewriteCond %{THE_REQUEST} \s/+index\.php[\s?] [NC]
-RewriteRule ^index\.php$ / [R=301,L]
-
-# Mantem arquivos e pastas reais
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Front controller
-RewriteRule ^ index.php [QSA,L]
+RewriteRule ^ index.php [L]

@@ -104,6 +104,15 @@ function base_url(string $path = ''): string
     return $base . '/' . ltrim($path, '/');
 }
 
+function url_path(string $path = '/'): string
+{
+    if ($path === '' || $path === '/') {
+        return '/';
+    }
+
+    return '/' . ltrim($path, '/');
+}
+
 function current_path(): string
 {
     $uri = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
@@ -154,7 +163,11 @@ function render(string $template, array $data = [], string $layout = 'layout'): 
 
 function redirect(string $path): never
 {
-    header('Location: ' . base_url($path));
+    if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+        header('Location: ' . $path);
+    } else {
+        header('Location: ' . url_path($path));
+    }
     exit;
 }
 

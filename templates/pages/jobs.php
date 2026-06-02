@@ -11,7 +11,7 @@
 
 <section class="filters-panel">
     <h2 class="filters-title">Filtrar vagas</h2>
-    <form class="search-form filters" method="get" action="<?= e(base_url('/vagas')) ?>">
+    <form class="search-form filters" method="get" action="<?= e(url_path('/vagas')) ?>">
         <input type="text" name="q" value="<?= e((string) ($filters['q'] ?? '')) ?>" placeholder="Cargo, empresa ou palavra-chave">
         <select name="city">
             <option value="">Cidade</option>
@@ -41,7 +41,7 @@
             <div class="empty-state empty-state-large">
                 <h3>Nenhuma vaga encontrada</h3>
                 <p>Tente ajustar os filtros ou buscar por outro termo.</p>
-                <a class="btn btn-sm" href="<?= e(base_url('/vagas')) ?>">Limpar filtros</a>
+                <a class="btn btn-sm" href="<?= e(url_path('/vagas')) ?>">Limpar filtros</a>
             </div>
         <?php else: ?>
             <div class="job-grid job-grid-listing">

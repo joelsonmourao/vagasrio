@@ -13,7 +13,7 @@
     <div class="empty-state empty-state-large">
         <h3>Nenhuma vaga ativa nesta cidade</h3>
         <p>Volte em breve ou explore vagas em outras cidades do Rio de Janeiro.</p>
-        <a class="btn btn-sm" href="<?= e(base_url('/vagas')) ?>">Ver todas as vagas</a>
+        <a class="btn btn-sm" href="<?= e(url_path('/vagas')) ?>">Ver todas as vagas</a>
     </div>
 <?php else: ?>
     <div class="job-grid job-grid-listing">
@@ -30,12 +30,12 @@
             <h2>Outras cidades do RJ</h2>
             <p class="section-text">Navegue por municípios próximos e amplie suas chances de contratação.</p>
         </div>
-        <a class="section-link" href="<?= e(base_url('/cidades')) ?>">Ver todas →</a>
+        <a class="section-link" href="<?= e(url_path('/cidades')) ?>">Ver todas →</a>
     </div>
     <div class="chip-grid">
         <?php foreach ($cities as $cityItem): ?>
             <?php if ($cityItem['slug'] === $city['slug']) continue; ?>
-            <a class="chip" href="<?= e(base_url('/cidade/' . $cityItem['slug'])) ?>"><?= e($cityItem['name']) ?></a>
+            <a class="chip" href="<?= e(url_path('/cidade/' . $cityItem['slug'])) ?>"><?= e($cityItem['name']) ?></a>
         <?php endforeach; ?>
     </div>
 </section>

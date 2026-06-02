@@ -6,7 +6,7 @@
         <p class="admin-lead">Organize vagas por área profissional. Use acentuação correta, como Logística.</p>
     </div>
     <div class="admin-page-actions">
-        <a class="btn btn-sm" href="<?= e(base_url('/admin/categories?new=1#category-form')) ?>">Nova categoria</a>
+        <a class="btn btn-sm" href="<?= e(url_path('/admin/categories?new=1#category-form')) ?>">Nova categoria</a>
     </div>
 </section>
 
@@ -37,9 +37,9 @@
                             <td><code><?= e($category['slug']) ?></code></td>
                             <td><?= (int) ($category['jobs_count'] ?? 0) ?></td>
                             <td class="admin-actions">
-                                <a class="admin-action" href="<?= e(base_url('/admin/categories?edit=' . $category['id'] . '#category-form')) ?>">Editar</a>
-                                <a class="admin-action" href="<?= e(base_url('/categoria/' . $category['slug'])) ?>" target="_blank" rel="noopener">Ver página</a>
-                                <form method="post" action="<?= e(base_url('/admin/categories/' . $category['id'] . '/delete')) ?>" class="admin-inline-form" onsubmit="return confirm('Excluir esta categoria?');">
+                                <a class="admin-action" href="<?= e(url_path('/admin/categories?edit=' . $category['id'] . '#category-form')) ?>">Editar</a>
+                                <a class="admin-action" href="<?= e(url_path('/categoria/' . $category['slug'])) ?>" target="_blank" rel="noopener">Ver página</a>
+                                <form method="post" action="<?= e(url_path('/admin/categories/' . $category['id'] . '/delete')) ?>" class="admin-inline-form" onsubmit="return confirm('Excluir esta categoria?');">
                                     <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
                                     <button class="admin-action admin-action-btn admin-action-danger" type="submit">Excluir</button>
                                 </form>
@@ -59,7 +59,7 @@
     <?php if (!$showForm): ?>
         <p class="admin-empty">Clique em <strong>Nova categoria</strong> ou <strong>Editar</strong> para abrir o formulário.</p>
     <?php else: ?>
-        <form class="admin-form" method="post" action="<?= e(base_url(!empty($editCategory) ? '/admin/categories/' . $editCategory['id'] . '/edit' : '/admin/categories')) ?>">
+        <form class="admin-form" method="post" action="<?= e(url_path(!empty($editCategory) ? '/admin/categories/' . $editCategory['id'] . '/edit' : '/admin/categories')) ?>">
             <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
             <div class="admin-form-grid">
                 <label class="admin-field admin-field-span-2">
@@ -70,7 +70,7 @@
             <div class="admin-form-actions">
                 <button class="btn" type="submit"><?= !empty($editCategory) ? 'Salvar alterações' : 'Cadastrar categoria' ?></button>
                 <?php if (!empty($editCategory)): ?>
-                    <a class="btn btn-outline" href="<?= e(base_url('/admin/categories')) ?>">Cancelar</a>
+                    <a class="btn btn-outline" href="<?= e(url_path('/admin/categories')) ?>">Cancelar</a>
                 <?php endif; ?>
             </div>
         </form>

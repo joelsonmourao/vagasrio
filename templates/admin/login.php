@@ -10,7 +10,7 @@
         <?php if (!empty($flashError)): ?>
             <div class="admin-alert admin-alert-error" role="alert"><?= e($flashError) ?></div>
         <?php endif; ?>
-        <form method="post" action="<?= e(base_url('/admin/login')) ?>" class="admin-form">
+        <form method="post" action="<?= e(url_path('/admin/login')) ?>" class="admin-form">
             <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
             <label class="admin-field">
                 <span>Usuário</span>

@@ -5,8 +5,8 @@
         <p class="admin-lead">Acompanhe vagas, empresas e importações do <?= e(config('site.name')) ?>.</p>
     </div>
     <div class="admin-page-actions">
-        <a class="btn btn-sm" href="<?= e(base_url('/admin/jobs?new=1')) ?>">Nova vaga</a>
-        <a class="btn btn-sm btn-outline" href="<?= e(base_url('/admin/import')) ?>">Importar planilha</a>
+        <a class="btn btn-sm" href="<?= e(url_path('/admin/jobs?new=1')) ?>">Nova vaga</a>
+        <a class="btn btn-sm btn-outline" href="<?= e(url_path('/admin/import')) ?>">Importar planilha</a>
     </div>
 </section>
 
@@ -65,7 +65,7 @@
     <section class="admin-card">
         <div class="admin-card-head">
             <h2>Últimas importações</h2>
-            <a class="admin-link" href="<?= e(base_url('/admin/import')) ?>">Ver importação</a>
+            <a class="admin-link" href="<?= e(url_path('/admin/import')) ?>">Ver importação</a>
         </div>
         <?php if (empty($stats['recent_imports'])): ?>
             <p class="admin-empty">Nenhuma importação registrada. Envie um arquivo CSV ou XLSX para começar.</p>
@@ -101,7 +101,7 @@
 <section class="admin-card">
     <div class="admin-card-head">
         <h2>Últimas vagas cadastradas</h2>
-        <a class="admin-link" href="<?= e(base_url('/admin/jobs')) ?>">Gerenciar vagas</a>
+        <a class="admin-link" href="<?= e(url_path('/admin/jobs')) ?>">Gerenciar vagas</a>
     </div>
     <?php if (empty($stats['recent_jobs'])): ?>
         <p class="admin-empty">Nenhuma vaga cadastrada.</p>
@@ -133,8 +133,8 @@
                             </td>
                             <td><?= e(date('d/m/Y', strtotime($row['published_at']))) ?></td>
                             <td class="admin-actions">
-                                <a class="admin-action" href="<?= e(base_url('/admin/jobs?edit=' . $row['id'])) ?>">Editar</a>
-                                <a class="admin-action" href="<?= e(base_url('/vagas/' . $row['slug'])) ?>" target="_blank" rel="noopener">Ver</a>
+                                <a class="admin-action" href="<?= e(url_path('/admin/jobs?edit=' . $row['id'])) ?>">Editar</a>
+                                <a class="admin-action" href="<?= e(url_path('/vagas/' . $row['slug'])) ?>" target="_blank" rel="noopener">Ver</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>

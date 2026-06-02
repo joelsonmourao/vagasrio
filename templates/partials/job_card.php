@@ -9,7 +9,7 @@
             <?php endif; ?>
             <time datetime="<?= e($job['published_at']) ?>"><?= e(date('d/m/Y', strtotime($job['published_at']))) ?></time>
         </div>
-        <h3><a href="<?= e(base_url('/vagas/' . $job['slug'])) ?>"><?= e($job['title']) ?></a></h3>
+        <h3><a href="<?= e(url_path('/vagas/' . $job['slug'])) ?>"><?= e($job['title']) ?></a></h3>
         <div class="job-card-meta">
             <span class="job-card-company"><?= e($job['company_name']) ?></span>
             <span class="job-card-location"><span class="loc-dot" aria-hidden="true"></span><?= e($job['city_name']) ?>/RJ</span>
@@ -22,7 +22,7 @@
             <?php if (!empty($job['salary'])): ?>
                 <span class="job-salary"><?= e($job['salary']) ?></span>
             <?php endif; ?>
-            <a class="btn btn-sm btn-card" href="<?= e(base_url('/vagas/' . $job['slug'])) ?>">Ver vaga</a>
+            <a class="btn btn-sm btn-card" href="<?= e(url_path('/vagas/' . $job['slug'])) ?>">Ver vaga</a>
         </div>
     </div>
 </article>
