@@ -77,6 +77,8 @@ class PortalService
             }
         } elseif (!$includeInactive) {
             $where[] = 'j.is_active = 1';
+            $where[] = '(j.valid_through IS NULL OR TRIM(j.valid_through) = \'\' OR j.valid_through >= :now_valid)';
+            $params[':now_valid'] = date('c');
         }
 
         $whereSql = implode(' AND ', $where);
@@ -131,9 +133,14 @@ class PortalService
              INNER JOIN cities ci ON ci.id = j.city_id
              LEFT JOIN categories ca ON ca.id = j.category_id
              WHERE j.slug = :slug AND j.state = :state AND j.is_active = 1
+             AND (j.valid_through IS NULL OR TRIM(j.valid_through) = \'\' OR j.valid_through >= :now_valid)
              LIMIT 1"
         );
-        $stmt->execute([':slug' => $slug, ':state' => config('site.main_uf')]);
+        $stmt->execute([
+            ':slug' => $slug,
+            ':state' => config('site.main_uf'),
+            ':now_valid' => date('c'),
+        ]);
         $job = $stmt->fetch();
         return $job ?: null;
     }
@@ -148,6 +155,7 @@ class PortalService
                  INNER JOIN cities ci ON ci.id = j.city_id
                  LEFT JOIN categories ca ON ca.id = j.category_id
                  WHERE j.state = :state AND j.is_active = 1 AND j.id != :id
+                 AND (j.valid_through IS NULL OR TRIM(j.valid_through) = '' OR j.valid_through >= :now_valid)
                  AND (j.city_id = :city_id OR j.category_id = :category_id)
                  ORDER BY j.published_at DESC
                  LIMIT :limit";
@@ -158,6 +166,7 @@ class PortalService
                  INNER JOIN cities ci ON ci.id = j.city_id
                  LEFT JOIN categories ca ON ca.id = j.category_id
                  WHERE j.state = :state AND j.is_active = 1 AND j.id != :id
+                 AND (j.valid_through IS NULL OR TRIM(j.valid_through) = '' OR j.valid_through >= :now_valid)
                  AND j.city_id = :city_id
                  ORDER BY j.published_at DESC
                  LIMIT :limit";
@@ -165,6 +174,7 @@ class PortalService
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->bindValue(':state', config('site.main_uf'));
+        $stmt->bindValue(':now_valid', date('c'));
         $stmt->bindValue(':id', (int) $job['id'], PDO::PARAM_INT);
         $stmt->bindValue(':city_id', (int) $job['city_id'], PDO::PARAM_INT);
         if ($categoryId > 0) {
@@ -882,8 +892,34 @@ class PortalService
 
     public function deleteJob(int $id): void
     {
+        if ($id < 1) {
+            throw new \InvalidArgumentException('Vaga inválida.');
+        }
         $stmt = $this->pdo->prepare('DELETE FROM jobs WHERE id = ?');
         $stmt->execute([$id]);
+        if ($stmt->rowCount() < 1) {
+            throw new \InvalidArgumentException('Vaga não encontrada.');
+        }
+    }
+
+    /** @param list<int|string> $ids */
+    public function deleteJobsByIds(array $ids): int
+    {
+        $ids = array_values(array_unique(array_filter(array_map(static fn ($id) => (int) $id, $ids), static fn ($id) => $id > 0)));
+        if ($ids === []) {
+            throw new \InvalidArgumentException('Selecione ao menos uma vaga para excluir.');
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $this->pdo->prepare("DELETE FROM jobs WHERE id IN ({$placeholders})");
+        $stmt->execute($ids);
+
+        return $stmt->rowCount();
+    }
+
+    public function purgeExpiredJobs(): int
+    {
+        return ExpiredJobsPurge::run($this->pdo);
     }
 
     public function toggleJob(int $id): void

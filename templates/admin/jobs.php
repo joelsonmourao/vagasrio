@@ -76,26 +76,49 @@ $showForm = !empty($showForm);
 <section class="admin-card">
     <div class="admin-card-head">
         <h2>Lista de vagas</h2>
+        <?php if (!empty($jobsData['jobs'])): ?>
+            <div class="admin-page-actions">
+                <button class="btn btn-sm btn-outline admin-action-danger" type="submit" form="jobs-bulk-form" onclick="return confirm('Excluir as vagas selecionadas?');">Excluir selecionadas</button>
+            </div>
+        <?php endif; ?>
     </div>
     <?php if (empty($jobsData['jobs'])): ?>
         <p class="admin-empty">Nenhuma vaga encontrada com os filtros atuais.</p>
     <?php else: ?>
+        <form id="jobs-bulk-form" method="post" action="<?= e(url_path('/admin/jobs/bulk-delete')) ?>">
+            <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
+            <input type="hidden" name="filter_q" value="<?= e($filters['q']) ?>">
+            <input type="hidden" name="filter_city" value="<?= e($filters['city']) ?>">
+            <input type="hidden" name="filter_company" value="<?= e($filters['company']) ?>">
+            <input type="hidden" name="filter_category" value="<?= e($filters['category']) ?>">
+            <input type="hidden" name="filter_status" value="<?= e($filters['status']) ?>">
+            <input type="hidden" name="filter_page" value="<?= e((string) ($jobsData['page'] ?? 1)) ?>">
+        </form>
         <div class="admin-table-wrap">
             <table class="admin-table">
                 <thead>
                     <tr>
+                        <th scope="col" class="admin-col-check">
+                            <label class="admin-check-label" title="Selecionar todas">
+                                <input type="checkbox" id="jobs-select-all" aria-label="Selecionar todas as vagas">
+                            </label>
+                        </th>
                         <th>Título</th>
                         <th>Empresa</th>
                         <th>Cidade</th>
                         <th>Categoria</th>
                         <th>Status</th>
                         <th>Publicação</th>
+                        <th>Validade</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($jobsData['jobs'] as $row): ?>
                         <tr>
+                            <td class="admin-col-check">
+                                <input type="checkbox" name="job_ids[]" value="<?= (int) $row['id'] ?>" form="jobs-bulk-form" aria-label="Selecionar vaga <?= e($row['title']) ?>">
+                            </td>
                             <td><strong><?= e($row['title']) ?></strong></td>
                             <td><?= e($row['company_name']) ?></td>
                             <td><?= e($row['city_name']) ?></td>
@@ -106,6 +129,7 @@ $showForm = !empty($showForm);
                                 </span>
                             </td>
                             <td><?= e(format_date_br($row['published_at'])) ?></td>
+                            <td><?= !empty($row['valid_through']) ? e(format_date_br($row['valid_through'])) : '—' ?></td>
                             <td class="admin-actions">
                                 <a class="admin-action" href="<?= e(url_path('/admin/jobs?edit=' . $row['id'] . '#job-form')) ?>">Editar</a>
                                 <form method="post" action="<?= e(url_path('/admin/jobs/' . $row['id'] . '/toggle')) ?>" class="admin-inline-form">
@@ -124,6 +148,17 @@ $showForm = !empty($showForm);
             </table>
         </div>
         <?php $pagination = $jobsData; require ROOT_PATH . '/templates/partials/pagination.php'; ?>
+        <script>
+            (function () {
+                var selectAll = document.getElementById('jobs-select-all');
+                if (!selectAll) return;
+                selectAll.addEventListener('change', function () {
+                    document.querySelectorAll('input[name="job_ids[]"]').forEach(function (checkbox) {
+                        checkbox.checked = selectAll.checked;
+                    });
+                });
+            })();
+        </script>
     <?php endif; ?>
 </section>
 

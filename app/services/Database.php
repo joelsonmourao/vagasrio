@@ -26,6 +26,13 @@ class Database
         BlogContentSeed::ensureTables(self::$pdo);
         BlogContentSeed::seedIfNeeded(self::$pdo);
         self::ensureBlogIndexes();
+        self::ensureJobIndexes();
+        ExpiredJobsPurge::run(self::$pdo);
+    }
+
+    private static function ensureJobIndexes(): void
+    {
+        self::$pdo?->exec('CREATE INDEX IF NOT EXISTS idx_jobs_valid_through ON jobs(valid_through)');
     }
 
     private static function ensureBlogIndexes(): void

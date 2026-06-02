@@ -109,10 +109,45 @@ if (str_starts_with($path, '/admin')) {
         redirect('/admin/jobs');
     }
 
+    if ($path === '/admin/jobs/bulk-delete' && $method === 'POST') {
+        $redirectParams = array_filter([
+            'q' => (string) ($_POST['filter_q'] ?? ''),
+            'city' => (string) ($_POST['filter_city'] ?? ''),
+            'company' => (string) ($_POST['filter_company'] ?? ''),
+            'category' => (string) ($_POST['filter_category'] ?? ''),
+            'status' => (string) ($_POST['filter_status'] ?? ''),
+            'page' => (string) ($_POST['filter_page'] ?? ''),
+        ], static fn ($value) => $value !== '');
+        $redirectUrl = '/admin/jobs' . ($redirectParams !== [] ? '?' . http_build_query($redirectParams) : '');
+
+        if (!verify_csrf($_POST['_csrf'] ?? null)) {
+            $_SESSION['flash_error'] = 'Token inválido.';
+            redirect($redirectUrl);
+        }
+
+        try {
+            $ids = $_POST['job_ids'] ?? [];
+            if (!is_array($ids)) {
+                $ids = [];
+            }
+            $count = $service->deleteJobsByIds($ids);
+            $_SESSION['flash_ok'] = $count === 1 ? '1 vaga removida.' : $count . ' vagas removidas.';
+        } catch (Throwable $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+        }
+        redirect($redirectUrl);
+    }
+
     if (preg_match('#^/admin/jobs/(\d+)/delete$#', $path, $matches) && $method === 'POST') {
-        if (verify_csrf($_POST['_csrf'] ?? null)) {
+        if (!verify_csrf($_POST['_csrf'] ?? null)) {
+            $_SESSION['flash_error'] = 'Token inválido.';
+            redirect('/admin/jobs');
+        }
+        try {
             $service->deleteJob((int) $matches[1]);
             $_SESSION['flash_ok'] = 'Vaga removida.';
+        } catch (Throwable $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
         }
         redirect('/admin/jobs');
     }
@@ -282,6 +317,15 @@ if (str_starts_with($path, '/admin')) {
             'status' => (string) ($_GET['status'] ?? ''),
             'includeInactive' => true,
         ]);
+        $jobs['basePath'] = '/admin/jobs';
+        $jobs['query'] = array_filter([
+            'q' => (string) ($_GET['q'] ?? ''),
+            'city' => (string) ($_GET['city'] ?? ''),
+            'company' => (string) ($_GET['company'] ?? ''),
+            'category' => (string) ($_GET['category'] ?? ''),
+            'status' => (string) ($_GET['status'] ?? ''),
+        ], static fn ($value) => $value !== '');
+        $jobs['useQuery'] = true;
         render('admin/jobs', [
             'title' => 'Gerenciar vagas',
             'jobsData' => $jobs,
