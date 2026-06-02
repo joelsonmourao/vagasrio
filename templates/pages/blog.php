@@ -3,6 +3,9 @@
         <p class="section-kicker">Blog · Vagas RJ</p>
         <h1>Blog e carreira</h1>
         <p>Conteúdo original sobre currículo, entrevistas, mercado de trabalho no Rio de Janeiro e segurança na candidatura.</p>
+        <?php if (!empty($articlesData['total'])): ?>
+            <p class="page-hero-count"><?= (int) $articlesData['total'] ?> artigo(s)</p>
+        <?php endif; ?>
     </div>
 </section>
 
@@ -28,7 +31,7 @@
         <p>Em breve teremos conteúdos sobre carreira e emprego no RJ.</p>
     </div>
 <?php else: ?>
-    <div class="entity-grid blog-grid">
+    <div class="entity-grid blog-grid blog-grid-list">
         <?php foreach ($articles as $i => $article): ?>
             <?php require ROOT_PATH . '/templates/partials/blog_card.php'; ?>
             <?php if ($i === 5): ?>
@@ -36,4 +39,5 @@
             <?php endif; ?>
         <?php endforeach; ?>
     </div>
+    <?php $pagination = $articlesData ?? ['totalPages' => 1, 'page' => 1, 'basePath' => '/blog', 'query' => []]; require ROOT_PATH . '/templates/partials/pagination.php'; ?>
 <?php endif; ?>

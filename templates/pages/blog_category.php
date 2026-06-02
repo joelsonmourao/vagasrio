@@ -3,6 +3,9 @@
         <p class="section-kicker">Blog · <?= e($blogCategory['name']) ?></p>
         <h1><?= e($blogCategory['name']) ?></h1>
         <p><?= e($blogCategory['description']) ?></p>
+        <?php if (!empty($articlesData['total'])): ?>
+            <p class="page-hero-count"><?= (int) $articlesData['total'] ?> artigo(s)</p>
+        <?php endif; ?>
     </div>
 </section>
 
@@ -26,9 +29,18 @@
         <p>Explore outras categorias do blog ou volte em breve.</p>
     </div>
 <?php else: ?>
-    <div class="entity-grid blog-grid">
+    <div class="entity-grid blog-grid blog-grid-list">
         <?php foreach ($articles as $article): ?>
             <?php require ROOT_PATH . '/templates/partials/blog_card.php'; ?>
         <?php endforeach; ?>
     </div>
+    <?php
+    $pagination = $articlesData ?? [
+        'totalPages' => 1,
+        'page' => 1,
+        'basePath' => '/blog/categoria/' . $blogCategory['slug'],
+        'query' => [],
+    ];
+    require ROOT_PATH . '/templates/partials/pagination.php';
+    ?>
 <?php endif; ?>

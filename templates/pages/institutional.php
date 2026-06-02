@@ -79,24 +79,73 @@ $item = $contentMap[$institutionalType] ?? $contentMap['sobre'];
         </form>
     <?php endif; ?>
     <?php if (!empty($item['sitemap'])): ?>
-        <h2>Principais seções</h2>
-        <ul>
-            <li><a href="<?= e(url_path('/')) ?>">Home</a></li>
-            <li><a href="<?= e(url_path('/vagas')) ?>">Vagas</a></li>
-            <li><a href="<?= e(url_path('/cidades')) ?>">Cidades</a></li>
-            <li><a href="<?= e(url_path('/empresas')) ?>">Empresas</a></li>
-            <li><a href="<?= e(url_path('/categorias')) ?>">Categorias</a></li>
-            <li><a href="<?= e(url_path('/blog')) ?>">Blog</a></li>
-        </ul>
-        <h2>Institucional</h2>
-        <ul>
-            <li><a href="<?= e(url_path('/sobre')) ?>">Sobre</a></li>
-            <li><a href="<?= e(url_path('/contato')) ?>">Contato</a></li>
-            <li><a href="<?= e(url_path('/politica-de-privacidade')) ?>">Política de Privacidade</a></li>
-            <li><a href="<?= e(url_path('/politica-de-cookies')) ?>">Política de Cookies</a></li>
-            <li><a href="<?= e(url_path('/termos-de-uso')) ?>">Termos de Uso</a></li>
-            <li><a href="<?= e(url_path('/aviso-legal')) ?>">Aviso Legal</a></li>
-            <li><a href="<?= e(url_path('/seguranca-para-candidatos')) ?>">Segurança para candidatos</a></li>
-        </ul>
+        <p>Navegue por todas as áreas públicas do Vagas RJ. Para mecanismos de busca, consulte também <a href="<?= e(base_url('/sitemap.xml')) ?>">sitemap.xml</a>.</p>
+        <div class="sitemap-section">
+            <h2>Páginas principais</h2>
+            <ul>
+                <li><a href="<?= e(url_path('/')) ?>">Home</a></li>
+                <li><a href="<?= e(url_path('/vagas')) ?>">Vagas</a></li>
+                <li><a href="<?= e(url_path('/cidades')) ?>">Cidades</a></li>
+                <li><a href="<?= e(url_path('/empresas')) ?>">Empresas</a></li>
+                <li><a href="<?= e(url_path('/categorias')) ?>">Categorias</a></li>
+                <li><a href="<?= e(url_path('/blog')) ?>">Blog</a></li>
+            </ul>
+        </div>
+        <div class="sitemap-section">
+            <h2>Institucional</h2>
+            <ul>
+                <li><a href="<?= e(url_path('/sobre')) ?>">Sobre</a></li>
+                <li><a href="<?= e(url_path('/contato')) ?>">Contato</a></li>
+                <li><a href="<?= e(url_path('/politica-de-privacidade')) ?>">Política de Privacidade</a></li>
+                <li><a href="<?= e(url_path('/politica-de-cookies')) ?>">Política de Cookies</a></li>
+                <li><a href="<?= e(url_path('/termos-de-uso')) ?>">Termos de Uso</a></li>
+                <li><a href="<?= e(url_path('/aviso-legal')) ?>">Aviso Legal</a></li>
+                <li><a href="<?= e(url_path('/seguranca-para-candidatos')) ?>">Segurança para candidatos</a></li>
+            </ul>
+        </div>
+        <div class="sitemap-columns">
+            <div class="sitemap-section">
+                <h2>Cidades do RJ</h2>
+                <ul>
+                    <?php foreach ($mapCities ?? [] as $city): ?>
+                        <li><a href="<?= e(city_public_path($city['slug'])) ?>"><?= e($city['name']) ?></a></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+            <div class="sitemap-section">
+                <h2>Categorias de vagas</h2>
+                <ul>
+                    <?php foreach ($mapCategories ?? [] as $category): ?>
+                        <li><a href="<?= e(category_public_path($category['slug'])) ?>"><?= e($category['name']) ?></a></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+            <div class="sitemap-section">
+                <h2>Empresas</h2>
+                <ul>
+                    <?php foreach ($mapCompanies ?? [] as $company): ?>
+                        <li><a href="<?= e(company_public_path($company['slug'])) ?>"><?= e($company['name']) ?></a></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+            <div class="sitemap-section">
+                <h2>Categorias do blog</h2>
+                <ul>
+                    <?php foreach ($mapBlogCategories ?? [] as $cat): ?>
+                        <li><a href="<?= e(blog_category_public_path($cat['slug'])) ?>"><?= e($cat['name']) ?></a></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        </div>
+        <?php if (!empty($mapRecentArticles)): ?>
+            <div class="sitemap-section">
+                <h2>Artigos recentes do blog</h2>
+                <ul>
+                    <?php foreach ($mapRecentArticles as $article): ?>
+                        <li><a href="<?= e(url_path('/blog/' . $article['slug'])) ?>"><?= e($article['title']) ?></a></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endif; ?>
     <?php endif; ?>
 </article>

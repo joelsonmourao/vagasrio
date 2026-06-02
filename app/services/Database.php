@@ -25,6 +25,14 @@ class Database
         DemoDataReset::seedIfEmpty(self::$pdo);
         BlogContentSeed::ensureTables(self::$pdo);
         BlogContentSeed::seedIfNeeded(self::$pdo);
+        self::ensureBlogIndexes();
+    }
+
+    private static function ensureBlogIndexes(): void
+    {
+        self::$pdo?->exec('CREATE INDEX IF NOT EXISTS idx_blog_posts_active ON blog_posts(is_active)');
+        self::$pdo?->exec('CREATE INDEX IF NOT EXISTS idx_blog_posts_published_active ON blog_posts(is_active, published_at DESC)');
+        self::$pdo?->exec('CREATE INDEX IF NOT EXISTS idx_blog_posts_category_active ON blog_posts(category_id, is_active, published_at DESC)');
     }
 
     public static function pdo(): PDO

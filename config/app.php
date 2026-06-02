@@ -49,6 +49,10 @@ return [
         'per_page' => 12,
         'import_max_mb' => 10,
     ],
+    'blog' => [
+        'per_page' => 12,
+        'admin_per_page' => 20,
+    ],
     'admin' => [
         'username' => getenv('ADMIN_USERNAME') ?: 'admin',
         'password' => getenv('ADMIN_PASSWORD') ?: 'admin123',

@@ -156,6 +156,61 @@ function company_page_disclaimer(): string
         . 'Confirme informações no site oficial ou no contato informado na vaga.';
 }
 
+function pagination_build_url(string $basePath, int $page, array $query = []): string
+{
+    unset($query['page']);
+    $query = array_filter($query, static fn ($v) => $v !== null && $v !== '');
+
+    if ($page <= 1) {
+        $url = url_path($basePath);
+
+        return $query !== [] ? $url . '?' . http_build_query($query) : $url;
+    }
+
+    $url = url_path(rtrim($basePath, '/') . '/pagina/' . $page);
+
+    return $query !== [] ? $url . '?' . http_build_query($query) : $url;
+}
+
+function pagination_parse_page(string $path, string $basePath): int
+{
+    $pattern = '#^' . preg_quote(rtrim($basePath, '/'), '#') . '/pagina/(\d+)$#';
+    if (preg_match($pattern, $path, $matches)) {
+        return max(1, (int) $matches[1]);
+    }
+
+    return max(1, (int) ($_GET['page'] ?? 1));
+}
+
+function pagination_meta(int $page, int $totalPages, string $baseTitle, string $baseDescription): array
+{
+    if ($page <= 1) {
+        return ['title' => $baseTitle, 'description' => $baseDescription];
+    }
+
+    return [
+        'title' => $baseTitle . ' - Página ' . $page,
+        'description' => $baseDescription . ' Página ' . $page . ' de ' . max(1, $totalPages) . '.',
+    ];
+}
+
+function article_content_with_mid_ad(string $html, string $pageType = 'article'): string
+{
+    $count = 0;
+    $inserted = false;
+
+    return preg_replace_callback('/<\/p>/i', static function () use (&$count, &$inserted, $pageType) {
+        $count++;
+        $replacement = '</p>';
+        if (!$inserted && $count === 2) {
+            $inserted = true;
+            $replacement .= ad_slot('blog_after_intro', $pageType, 970, 110);
+        }
+
+        return $replacement;
+    }, $html) ?? $html;
+}
+
 function current_path(): string
 {
     $uri = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');

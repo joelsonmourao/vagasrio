@@ -89,6 +89,10 @@ class PortalService
         $countStmt->execute($params);
         $total = (int) $countStmt->fetchColumn();
         $totalPages = max(1, (int) ceil($total / $perPage));
+        if ($page > $totalPages && $total > 0) {
+            $page = $totalPages;
+            $offset = ($page - 1) * $perPage;
+        }
 
         $sql = "SELECT j.*, c.name AS company_name, c.slug AS company_slug, ci.name AS city_name, ci.slug AS city_slug,
                     ca.name AS category_name, ca.slug AS category_slug
@@ -310,20 +314,85 @@ class PortalService
         return $stmt->fetchAll();
     }
 
-    public function articlesCount(?string $categorySlug = null): int
+    public function articlesCount(?string $categorySlug = null, string $search = ''): int
     {
+        $where = ['p.is_active = 1'];
+        $params = [];
         if ($categorySlug !== null && $categorySlug !== '') {
-            $stmt = $this->pdo->prepare(
-                'SELECT COUNT(*) FROM blog_posts p
-                 INNER JOIN blog_categories c ON c.id = p.category_id
-                 WHERE p.is_active = 1 AND c.slug = ?'
-            );
-            $stmt->execute([$categorySlug]);
+            $where[] = 'c.slug = :category_slug';
+            $params[':category_slug'] = $categorySlug;
+        }
+        if ($search !== '') {
+            $where[] = '(p.title LIKE :search OR p.excerpt LIKE :search)';
+            $params[':search'] = '%' . $search . '%';
+        }
+        $whereSql = implode(' AND ', $where);
+        $sql = "SELECT COUNT(*) FROM blog_posts p
+                INNER JOIN blog_categories c ON c.id = p.category_id
+                WHERE {$whereSql}";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
 
-            return (int) $stmt->fetchColumn();
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function articleList(array $filters): array
+    {
+        $perPage = max(1, min(24, (int) ($filters['perPage'] ?? config('blog.per_page', 12))));
+        $page = max(1, (int) ($filters['page'] ?? 1));
+        $offset = ($page - 1) * $perPage;
+        $categorySlug = isset($filters['category']) ? (string) $filters['category'] : null;
+        if ($categorySlug === '') {
+            $categorySlug = null;
+        }
+        $search = trim((string) ($filters['q'] ?? ''));
+        $activeOnly = !array_key_exists('activeOnly', $filters) || !empty($filters['activeOnly']);
+
+        $where = $activeOnly ? ['p.is_active = 1'] : ['1=1'];
+        $params = [];
+        if ($categorySlug !== null) {
+            $where[] = 'c.slug = :category_slug';
+            $params[':category_slug'] = $categorySlug;
+        }
+        if ($search !== '') {
+            $where[] = '(p.title LIKE :search OR p.excerpt LIKE :search)';
+            $params[':search'] = '%' . $search . '%';
+        }
+        $whereSql = implode(' AND ', $where);
+
+        $countSql = "SELECT COUNT(*) FROM blog_posts p
+                     INNER JOIN blog_categories c ON c.id = p.category_id
+                     WHERE {$whereSql}";
+        $countStmt = $this->pdo->prepare($countSql);
+        $countStmt->execute($params);
+        $total = (int) $countStmt->fetchColumn();
+        $totalPages = max(1, (int) ceil($total / $perPage));
+        if ($page > $totalPages && $total > 0) {
+            $page = $totalPages;
+            $offset = ($page - 1) * $perPage;
         }
 
-        return (int) $this->pdo->query('SELECT COUNT(*) FROM blog_posts WHERE is_active = 1')->fetchColumn();
+        $sql = "SELECT p.*, c.name AS category_name, c.slug AS category_slug
+                FROM blog_posts p
+                INNER JOIN blog_categories c ON c.id = p.category_id
+                WHERE {$whereSql}
+                ORDER BY p.published_at DESC
+                LIMIT :limit OFFSET :offset";
+        $stmt = $this->pdo->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return [
+            'articles' => $stmt->fetchAll(),
+            'total' => $total,
+            'page' => $page,
+            'perPage' => $perPage,
+            'totalPages' => $totalPages,
+        ];
     }
 
     public function articleBySlug(string $slug): ?array
@@ -977,46 +1046,16 @@ class PortalService
 
     public function buildSitemapUrls(): array
     {
-        $urls = [
-            ['loc' => base_url('/'), 'priority' => '1.0'],
-            ['loc' => base_url('/vagas'), 'priority' => '0.9'],
-            ['loc' => base_url('/cidades'), 'priority' => '0.8'],
-            ['loc' => base_url('/empresas'), 'priority' => '0.7'],
-            ['loc' => base_url('/categorias'), 'priority' => '0.7'],
-            ['loc' => base_url('/blog'), 'priority' => '0.7'],
-            ['loc' => base_url('/sobre'), 'priority' => '0.6'],
-            ['loc' => base_url('/contato'), 'priority' => '0.6'],
-            ['loc' => base_url('/politica-de-privacidade'), 'priority' => '0.5'],
-            ['loc' => base_url('/politica-de-cookies'), 'priority' => '0.5'],
-            ['loc' => base_url('/termos-de-uso'), 'priority' => '0.5'],
-            ['loc' => base_url('/aviso-legal'), 'priority' => '0.5'],
-            ['loc' => base_url('/seguranca-para-candidatos'), 'priority' => '0.5'],
-            ['loc' => base_url('/mapa-do-site'), 'priority' => '0.4'],
-        ];
-
-        $page = 1;
-        do {
-            $chunk = $this->jobList(['page' => $page, 'perPage' => 200]);
-            foreach ($chunk['jobs'] as $job) {
-                $urls[] = ['loc' => base_url('/vagas/' . $job['slug']), 'priority' => '0.8'];
+        $sitemap = new SitemapService($this->pdo, $this);
+        $urls = [];
+        foreach ($sitemap->indexLocations() as $loc) {
+            $path = (string) parse_url($loc, PHP_URL_PATH);
+            $chunk = $sitemap->chunkByRequestPath($path);
+            if ($chunk) {
+                foreach ($chunk['urls'] as $entry) {
+                    $urls[] = $entry;
+                }
             }
-            $page++;
-        } while ($page <= $chunk['totalPages']);
-
-        foreach ($this->cities() as $city) {
-            $urls[] = ['loc' => base_url('/cidades/' . $city['slug']), 'priority' => '0.7'];
-        }
-        foreach ($this->companies() as $company) {
-            $urls[] = ['loc' => base_url('/empresas/' . $company['slug']), 'priority' => '0.6'];
-        }
-        foreach ($this->categories() as $category) {
-            $urls[] = ['loc' => base_url('/categorias/' . $category['slug']), 'priority' => '0.6'];
-        }
-        foreach ($this->blogCategories() as $category) {
-            $urls[] = ['loc' => base_url('/blog/categoria/' . $category['slug']), 'priority' => '0.6'];
-        }
-        foreach ($this->articles() as $article) {
-            $urls[] = ['loc' => base_url('/blog/' . $article['slug']), 'priority' => '0.6'];
         }
 
         return $urls;

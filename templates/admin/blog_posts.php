@@ -31,18 +31,21 @@
 <section class="admin-card">
     <div class="admin-card-head">
         <h2>Artigos</h2>
-        <form method="get" class="admin-inline-form">
+        <form method="get" class="admin-filters">
+            <input type="search" name="q" value="<?= e($searchQuery ?? '') ?>" placeholder="Buscar por título">
             <select name="category" onchange="this.form.submit()">
                 <option value="">Todas as categorias</option>
                 <?php foreach ($blogCategories as $cat): ?>
                     <option value="<?= e($cat['slug']) ?>" <?= ($categoryFilter ?? '') === $cat['slug'] ? 'selected' : '' ?>><?= e($cat['name']) ?></option>
                 <?php endforeach; ?>
             </select>
+            <button class="btn btn-sm" type="submit">Filtrar</button>
         </form>
     </div>
     <?php if (empty($posts)): ?>
-        <p class="admin-empty">Nenhum artigo. Execute o seed ou cadastre manualmente.</p>
+        <p class="admin-empty">Nenhum artigo encontrado.</p>
     <?php else: ?>
+        <p class="admin-meta"><?= (int) ($postsData['total'] ?? count($posts)) ?> artigo(s) · página <?= (int) ($postsData['page'] ?? 1) ?> de <?= (int) ($postsData['totalPages'] ?? 1) ?></p>
         <div class="admin-table-wrap">
             <table class="admin-table">
                 <thead>
@@ -78,6 +81,7 @@
                 </tbody>
             </table>
         </div>
+        <?php $pagination = $postsData ?? null; if ($pagination): require ROOT_PATH . '/templates/partials/pagination.php'; endif; ?>
     <?php endif; ?>
 </section>
 

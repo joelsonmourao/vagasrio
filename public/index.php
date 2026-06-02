@@ -5,20 +5,27 @@ declare(strict_types=1);
 require dirname(__DIR__) . '/app/bootstrap.php';
 
 use App\Services\PortalService;
+use App\Services\SitemapService;
 
 $service = new PortalService(db());
+$sitemapService = new SitemapService(db(), $service);
 $path = current_path();
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 if ($path === '/sitemap.xml') {
     header('Content-Type: application/xml; charset=UTF-8');
-    $urls = $service->buildSitemapUrls();
-    echo '<?xml version="1.0" encoding="UTF-8"?>';
-    echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-    foreach ($urls as $url) {
-        echo '<url><loc>' . e($url['loc']) . '</loc><priority>' . e($url['priority']) . '</priority></url>';
+    echo SitemapService::renderIndex($sitemapService->indexLocations());
+    exit;
+}
+
+if (preg_match('#^/sitemap-[a-z0-9\-]+\.xml$#', $path)) {
+    $chunk = $sitemapService->chunkByRequestPath($path);
+    if ($chunk === null) {
+        http_response_code(404);
+        exit;
     }
-    echo '</urlset>';
+    header('Content-Type: application/xml; charset=UTF-8');
+    echo SitemapService::renderUrlset($chunk['urls']);
     exit;
 }
 
@@ -438,11 +445,26 @@ if (str_starts_with($path, '/admin')) {
 
     if ($path === '/admin/blog/posts') {
         $categoryFilter = (string) ($_GET['category'] ?? '');
+        $postsData = $service->articleList([
+            'page' => (int) ($_GET['page'] ?? 1),
+            'perPage' => (int) config('blog.admin_per_page', 20),
+            'category' => $categoryFilter !== '' ? $categoryFilter : null,
+            'q' => (string) ($_GET['q'] ?? ''),
+            'activeOnly' => false,
+        ]);
+        $postsData['basePath'] = '/admin/blog/posts';
+        $postsData['query'] = array_filter([
+            'category' => $categoryFilter,
+            'q' => (string) ($_GET['q'] ?? ''),
+        ], static fn ($v) => $v !== '');
+        $postsData['useQuery'] = true;
         render('admin/blog_posts', [
             'title' => 'Artigos do blog',
-            'posts' => $service->articles(50, 0, $categoryFilter !== '' ? $categoryFilter : null, false),
+            'postsData' => $postsData,
+            'posts' => $postsData['articles'],
             'blogCategories' => $service->blogCategories(false),
             'categoryFilter' => $categoryFilter,
+            'searchQuery' => (string) ($_GET['q'] ?? ''),
             'editPost' => isset($_GET['edit']) ? $service->blogPostById((int) $_GET['edit']) : null,
             'showForm' => isset($_GET['edit']) || isset($_GET['new']),
             'flashOk' => $_SESSION['flash_ok'] ?? null,
@@ -497,26 +519,57 @@ if ($path === '/') {
     exit;
 }
 
-if ($path === '/vagas') {
-    $jobsData = $service->jobList([
-        'page' => (int) ($_GET['page'] ?? 1),
-        'q' => (string) ($_GET['q'] ?? ''),
-        'city' => (string) ($_GET['city'] ?? ''),
-        'company' => (string) ($_GET['company'] ?? ''),
-        'category' => (string) ($_GET['category'] ?? ''),
-    ]);
+if ($path === '/vagas' && !empty($_GET['page']) && (int) $_GET['page'] > 1) {
+    $query = $_GET;
+    unset($query['page']);
+    redirect(pagination_build_url('/vagas', (int) $_GET['page'], $query));
+}
+
+$renderJobsListing = static function (int $page, array $filterGet) use ($service, $common): void {
+    $filters = [
+        'page' => $page,
+        'q' => (string) ($filterGet['q'] ?? ''),
+        'city' => (string) ($filterGet['city'] ?? ''),
+        'company' => (string) ($filterGet['company'] ?? ''),
+        'category' => (string) ($filterGet['category'] ?? ''),
+    ];
+    $jobsData = $service->jobList($filters);
+    $jobsData['basePath'] = '/vagas';
+    $jobsData['query'] = array_filter([
+        'q' => $filters['q'],
+        'city' => $filters['city'],
+        'company' => $filters['company'],
+        'category' => $filters['category'],
+    ], static fn ($v) => $v !== '');
+
+    $baseTitle = 'Vagas no Rio de Janeiro RJ - Vagas RJ';
+    $baseDescription = 'Listagem de vagas de emprego no Rio de Janeiro com filtros por cidade, empresa e categoria.';
+    $meta = pagination_meta($page, (int) $jobsData['totalPages'], $baseTitle, $baseDescription);
+    $hasFilters = $filters['q'] !== '' || $filters['city'] !== '' || $filters['company'] !== '' || $filters['category'] !== '';
+    $emptyPage = $jobsData['total'] === 0;
+    $robots = ($emptyPage && ($hasFilters || $page > 1)) ? 'noindex,follow' : 'index,follow';
+
     render('pages/jobs', array_merge($common, [
-        'title' => 'Vagas no Rio de Janeiro RJ - Vagas RJ',
-        'description' => 'Listagem de vagas de emprego no Rio de Janeiro com filtros por cidade, empresa e categoria.',
-        'canonical' => base_url('/vagas'),
-        'robots' => ($jobsData['total'] === 0 && (!empty($_GET['q']) || !empty($_GET['city']) || !empty($_GET['company']) || !empty($_GET['category']))) ? 'noindex,follow' : 'index,follow',
+        'title' => $meta['title'],
+        'description' => $meta['description'],
+        'canonical' => base_url(pagination_build_url('/vagas', $page, $jobsData['query'])),
+        'robots' => $robots,
         'pageType' => 'jobs',
         'jobsData' => $jobsData,
         'companies' => $service->companies(),
         'cities' => $service->cities(),
         'categories' => $service->categories(),
-        'filters' => $_GET,
+        'filters' => $filterGet,
     ]));
+};
+
+if (preg_match('#^/vagas/pagina/(\d+)$#', $path, $matches)) {
+    $renderJobsListing(max(1, (int) $matches[1]), $_GET);
+    exit;
+}
+
+if ($path === '/vagas') {
+    $renderJobsListing(1, $_GET);
     exit;
 }
 
@@ -661,15 +714,51 @@ if (preg_match('#^/categorias/([a-z0-9\-]+)$#', $path, $matches)) {
     exit;
 }
 
-if ($path === '/blog') {
-    render('pages/blog', array_merge($common, [
-        'title' => 'Blog de carreira no Rio de Janeiro - Vagas RJ',
-        'description' => 'Dicas de currículo, entrevista e mercado de trabalho no RJ.',
-        'canonical' => base_url('/blog'),
+if ($path === '/blog' && !empty($_GET['page']) && (int) $_GET['page'] > 1) {
+    redirect(pagination_build_url('/blog', (int) $_GET['page']));
+}
+
+$renderBlogListing = static function (int $page, ?array $blogCategory) use ($service, $common): void {
+    $categorySlug = $blogCategory['slug'] ?? null;
+    $basePath = $categorySlug ? '/blog/categoria/' . $categorySlug : '/blog';
+    $articlesData = $service->articleList([
+        'page' => $page,
+        'category' => $categorySlug,
+    ]);
+    $articlesData['basePath'] = $basePath;
+    $articlesData['query'] = [];
+
+    $baseTitle = $blogCategory
+        ? ($blogCategory['name'] . ' - Blog Vagas RJ')
+        : 'Blog de carreira no Rio de Janeiro - Vagas RJ';
+    $baseDescription = $blogCategory
+        ? ((string) ($blogCategory['description'] ?: 'Artigos sobre ' . $blogCategory['name']))
+        : 'Dicas de currículo, entrevista e mercado de trabalho no RJ.';
+    $meta = pagination_meta($page, (int) $articlesData['totalPages'], $baseTitle, $baseDescription);
+    $robots = ($articlesData['total'] === 0 && $page > 1) ? 'noindex,follow' : 'index,follow';
+    $template = $blogCategory ? 'pages/blog_category' : 'pages/blog';
+
+    render($template, array_merge($common, [
+        'title' => $meta['title'],
+        'description' => $meta['description'],
+        'canonical' => base_url(pagination_build_url($basePath, $page)),
+        'robots' => $robots,
         'pageType' => 'blog',
-        'articles' => $service->articles(24),
+        'articles' => $articlesData['articles'],
+        'articlesData' => $articlesData,
         'blogCategories' => $service->blogCategories(),
+        'blogCategory' => $blogCategory,
     ]));
+};
+
+if (preg_match('#^/blog/categoria/([a-z0-9\-]+)/pagina/(\d+)$#', $path, $matches)) {
+    $blogCategory = $service->blogCategoryBySlug($matches[1]);
+    if (!$blogCategory) {
+        http_response_code(404);
+        render('pages/404', array_merge($common, ['title' => 'Categoria não encontrada', 'pageType' => 'error', 'disableAds' => true, 'robots' => 'noindex,follow']));
+        exit;
+    }
+    $renderBlogListing(max(1, (int) $matches[2]), $blogCategory);
     exit;
 }
 
@@ -680,15 +769,17 @@ if (preg_match('#^/blog/categoria/([a-z0-9\-]+)$#', $path, $matches)) {
         render('pages/404', array_merge($common, ['title' => 'Categoria não encontrada', 'pageType' => 'error', 'disableAds' => true, 'robots' => 'noindex,follow']));
         exit;
     }
-    render('pages/blog_category', array_merge($common, [
-        'title' => $blogCategory['name'] . ' - Blog Vagas RJ',
-        'description' => (string) ($blogCategory['description'] ?: 'Artigos sobre ' . $blogCategory['name']),
-        'canonical' => base_url('/blog/categoria/' . $blogCategory['slug']),
-        'pageType' => 'blog',
-        'blogCategory' => $blogCategory,
-        'articles' => $service->articles(0, 0, $blogCategory['slug']),
-        'blogCategories' => $service->blogCategories(),
-    ]));
+    $renderBlogListing(1, $blogCategory);
+    exit;
+}
+
+if (preg_match('#^/blog/pagina/(\d+)$#', $path, $matches)) {
+    $renderBlogListing(max(1, (int) $matches[1]), null);
+    exit;
+}
+
+if ($path === '/blog') {
+    $renderBlogListing(1, null);
     exit;
 }
 
@@ -705,7 +796,8 @@ if (preg_match('#^/blog/([a-z0-9\-]+)$#', $path, $matches)) {
         'canonical' => base_url('/blog/' . $article['slug']),
         'pageType' => 'article',
         'article' => $article,
-        'relatedArticles' => $service->relatedBlogPosts((int) $article['category_id'], (int) $article['id'], 4),
+        'relatedArticles' => $service->relatedBlogPosts((int) $article['category_id'], (int) $article['id'], 5),
+        'blogCategories' => $service->blogCategories(),
     ]));
     exit;
 }
@@ -723,13 +815,23 @@ $institutionalMap = [
 
 if (array_key_exists($path, $institutionalMap)) {
     [$title, $description] = $institutionalMap[$path];
+    $extra = [];
+    if ($path === '/mapa-do-site') {
+        $extra = [
+            'mapCities' => $service->cities(),
+            'mapCategories' => $service->categories(),
+            'mapCompanies' => array_slice($service->companies(), 0, 40),
+            'mapBlogCategories' => $service->blogCategories(),
+            'mapRecentArticles' => $service->articles(12),
+        ];
+    }
     render('pages/institutional', array_merge($common, [
         'title' => $title . ' - ' . config('site.name'),
         'description' => $description,
         'canonical' => base_url($path),
         'pageType' => 'institutional',
         'institutionalType' => trim($path, '/'),
-    ]));
+    ], $extra));
     exit;
 }
 
