@@ -7,7 +7,7 @@
             <?php else: ?>
                 <span class="tag tag-muted">Vaga</span>
             <?php endif; ?>
-            <time datetime="<?= e($job['published_at']) ?>"><?= e(date('d/m/Y', strtotime($job['published_at']))) ?></time>
+            <time datetime="<?= e(format_datetime_iso_attr($job['published_at'])) ?>"><?= e(format_date_br($job['published_at'])) ?></time>
         </div>
         <h3><a href="<?= e(url_path('/vagas/' . $job['slug'])) ?>"><?= e($job['title']) ?></a></h3>
         <div class="job-card-meta">

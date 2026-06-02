@@ -105,7 +105,7 @@ $showForm = !empty($showForm);
                                     <?= $row['is_active'] ? 'Ativa' : 'Inativa' ?>
                                 </span>
                             </td>
-                            <td><?= e(date('d/m/Y', strtotime($row['published_at']))) ?></td>
+                            <td><?= e(format_date_br($row['published_at'])) ?></td>
                             <td class="admin-actions">
                                 <a class="admin-action" href="<?= e(url_path('/admin/jobs?edit=' . $row['id'] . '#job-form')) ?>">Editar</a>
                                 <form method="post" action="<?= e(url_path('/admin/jobs/' . $row['id'] . '/toggle')) ?>" class="admin-inline-form">
@@ -179,12 +179,12 @@ $showForm = !empty($showForm);
                     </select>
                 </label>
                 <label class="admin-field admin-field-span-2">
-                    <span>Descrição da vaga <small>(único bloco — HTML simples ou texto)</small></span>
+                    <span>Descrição única da vaga <small>(HTML simples ou texto)</small></span>
                     <textarea name="description" rows="10" required placeholder="Texto completo da vaga"><?= e((string) ($editJob['description'] ?? '')) ?></textarea>
                 </label>
                 <label class="admin-field">
-                    <span>Link de candidatura</span>
-                    <input type="url" name="apply_url" value="<?= e((string) ($editJob['apply_url'] ?? '')) ?>" placeholder="https://...">
+                    <span>Link ou e-mail de candidatura</span>
+                    <input type="text" name="apply_url" value="<?= e((string) ($editJob['apply_url'] ?? '')) ?>" placeholder="https://... ou email@empresa.com.br">
                 </label>
                 <label class="admin-field">
                     <span>Salário <small>(opcional)</small></span>
@@ -199,7 +199,7 @@ $showForm = !empty($showForm);
                     <input type="date" name="published_at" value="<?= e((string) (!empty($editJob['published_at']) ? date('Y-m-d', strtotime($editJob['published_at'])) : date('Y-m-d'))) ?>">
                 </label>
                 <label class="admin-field">
-                    <span>Validade <small>(opcional)</small></span>
+                    <span>Validade da vaga <small>(opcional)</small></span>
                     <input type="date" name="valid_through" value="<?= e((string) (!empty($editJob['valid_through']) ? date('Y-m-d', strtotime($editJob['valid_through'])) : '')) ?>">
                 </label>
                 <label class="admin-field admin-field-check">

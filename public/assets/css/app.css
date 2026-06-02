@@ -352,6 +352,7 @@ main.container{padding-top:32px;padding-bottom:64px;min-height:calc(100vh - 320p
 .admin-summary-success{background:#f0fdf4;border-color:#bbf7d0}
 .admin-summary-error{background:#fef2f2;border-color:#fecaca}
 .admin-hint{margin:0;color:#64748b;font-size:.84rem;line-height:1.5}
+.admin-code{margin:8px 0 14px;padding:12px 14px;background:#0f172a;color:#e2e8f0;border-radius:12px;font-size:.78rem;line-height:1.55;overflow:auto;white-space:pre-wrap;word-break:break-word}
 .admin-login-wrap{min-height:calc(100vh - 68px);display:grid;place-items:center;padding:24px 0}
 .admin-login-card{width:100%;max-width:440px;padding:28px}
 .admin-login-brand{display:flex;align-items:center;gap:14px;margin-bottom:18px}

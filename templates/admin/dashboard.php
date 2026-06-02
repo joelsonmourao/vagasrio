@@ -131,7 +131,7 @@
                                     <?= $row['is_active'] ? 'Ativa' : 'Inativa' ?>
                                 </span>
                             </td>
-                            <td><?= e(date('d/m/Y', strtotime($row['published_at']))) ?></td>
+                            <td><?= e(format_date_br($row['published_at'])) ?></td>
                             <td class="admin-actions">
                                 <a class="admin-action" href="<?= e(url_path('/admin/jobs?edit=' . $row['id'])) ?>">Editar</a>
                                 <a class="admin-action" href="<?= e(url_path('/vagas/' . $row['slug'])) ?>" target="_blank" rel="noopener">Ver</a>

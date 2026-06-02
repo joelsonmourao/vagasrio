@@ -1,4 +1,5 @@
 <?php $mainJob = $job; ?>
+<?php $applyMeta = !empty($mainJob['apply_url']) ? apply_button_meta((string) $mainJob['apply_url']) : null; ?>
 <article class="job-detail">
     <header class="job-detail-hero">
         <div class="job-detail-hero-inner">
@@ -14,7 +15,7 @@
                 </p>
             </div>
             <div class="job-detail-hero-meta">
-                <span>Publicada em <?= e(date('d/m/Y', strtotime($mainJob['published_at']))) ?></span>
+                <span>Publicada em <?= e(format_date_br($mainJob['published_at'])) ?></span>
                 <?php if (!empty($mainJob['employment_type'])): ?>
                     <span><?= e(employment_type_label($mainJob['employment_type'])) ?></span>
                 <?php endif; ?>
@@ -47,11 +48,11 @@
             <section class="job-apply-box">
                 <p class="apply-kicker">Próximo passo</p>
                 <h2>Candidatura</h2>
-                <?php if (!empty($mainJob['apply_url'])): ?>
-                    <a class="btn btn-lg btn-full btn-accent" href="<?= e($mainJob['apply_url']) ?>" target="_blank" rel="nofollow noopener">Candidate-se agora</a>
-                    <p class="apply-note">Você será direcionado ao site oficial da empresa.</p>
+                <?php if ($applyMeta): ?>
+                    <a class="btn btn-lg btn-full btn-accent" href="<?= e($applyMeta['href']) ?>"<?= $applyMeta['target'] ? ' target="' . e($applyMeta['target']) . '"' : '' ?> rel="<?= e($applyMeta['rel']) ?>"><?= e(apply_button_label((string) $mainJob['apply_url'])) ?></a>
+                    <p class="apply-note"><?= e($applyMeta['note']) ?></p>
                 <?php else: ?>
-                    <p class="empty-state">Link de candidatura não informado pela empresa.</p>
+                    <p class="empty-state">Link ou e-mail de candidatura não informado pela empresa.</p>
                 <?php endif; ?>
             </section>
 
@@ -69,7 +70,10 @@
                     <?php if (!empty($mainJob['salary'])): ?>
                         <li><span>Salário</span><strong><?= e($mainJob['salary']) ?></strong></li>
                     <?php endif; ?>
-                    <li><span>Publicação</span><strong><?= e(date('d/m/Y', strtotime($mainJob['published_at']))) ?></strong></li>
+                    <li><span>Publicação</span><strong><?= e(format_date_br($mainJob['published_at'])) ?></strong></li>
+                    <?php if (!empty($mainJob['valid_through'])): ?>
+                        <li><span>Validade</span><strong><?= e(format_date_br($mainJob['valid_through'])) ?></strong></li>
+                    <?php endif; ?>
                 </ul>
             </section>
         </aside>
@@ -99,8 +103,8 @@ $jobSchema = [
     '@type' => 'JobPosting',
     'title' => $mainJob['title'],
     'description' => html_to_plain_text($mainJob['description']),
-    'datePosted' => date('Y-m-d', strtotime($mainJob['published_at'])),
-    'validThrough' => !empty($mainJob['valid_through']) ? date('Y-m-d', strtotime($mainJob['valid_through'])) : date('Y-m-d', strtotime('+' . (int) config('jobs.default_valid_days', 30) . ' days')),
+    'datePosted' => job_schema_date_posted((string) $mainJob['published_at']),
+    'validThrough' => job_schema_valid_through($mainJob['valid_through'] ?? null, (string) $mainJob['published_at']),
     'directApply' => !empty($mainJob['apply_url']),
     'hiringOrganization' => [
         '@type' => 'Organization',

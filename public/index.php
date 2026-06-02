@@ -198,6 +198,16 @@ if (str_starts_with($path, '/admin')) {
         redirect('/admin/categories');
     }
 
+    if ($path === '/admin/import/template.csv') {
+        output_import_template_csv();
+        exit;
+    }
+
+    if ($path === '/admin/import/template.xlsx') {
+        output_import_template_xlsx();
+        exit;
+    }
+
     if ($path === '/admin/import' && $method === 'POST') {
         if (!verify_csrf($_POST['_csrf'] ?? null)) {
             $_SESSION['flash_error'] = 'Token inválido.';

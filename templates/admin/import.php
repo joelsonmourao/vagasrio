@@ -113,11 +113,31 @@
             </ul>
         </div>
         <div class="admin-note">
-            <p>A descrição deve ser um único bloco. Campos antigos como <code>requirements</code>, <code>activities</code>, <code>benefits</code> e <code>additionalInfo</code> são ignorados.</p>
+            <p>A descrição deve ser um <strong>único bloco</strong> (<code>description</code>). Campos legados como <code>requirements</code>, <code>activities</code>, <code>benefits</code> e <code>additionalInfo</code> não fazem parte do modelo oficial; se vierem na planilha, podem ser mesclados em <code>description</code> automaticamente.</p>
+            <p>O campo <code>applyUrl</code> pode receber um <strong>link de candidatura</strong> (<code>https://...</code>) ou um <strong>e-mail</strong> da empresa (<code>rh@empresa.com.br</code>).</p>
             <p>Somente vagas com <strong>state = RJ</strong> são importadas. Cidades permitidas: <?= e(implode(', ', allowed_rj_cities())) ?>.</p>
+        </div>
+        <div class="admin-form-actions">
+            <a class="btn btn-sm btn-outline" href="<?= e(url_path('/admin/import/template.csv')) ?>">Baixar modelo CSV</a>
+            <a class="btn btn-sm btn-outline" href="<?= e(url_path('/admin/import/template.xlsx')) ?>">Baixar modelo XLSX</a>
         </div>
     </section>
 </div>
+
+<section class="admin-card">
+    <div class="admin-card-head">
+        <h2>Exemplo de planilha</h2>
+    </div>
+    <p class="admin-hint">Cabeçalho:</p>
+    <pre class="admin-code">title, company, city, state, description, applyUrl, category, salary, employmentType, publishedAt, validThrough</pre>
+    <p class="admin-hint"><strong>Exemplo 1</strong> (datas simples — viram 00:00:00 e 23:59:59 no fuso -03:00):</p>
+    <pre class="admin-code">Assistente Administrativo, Grupo Horizonte, Rio de Janeiro, RJ, &lt;p&gt;Apoio às rotinas administrativas.&lt;/p&gt;, https://empresa.com/vaga, Administrativo, 1600, FULL_TIME, 2026-06-01, 2026-07-01</pre>
+    <p class="admin-hint"><strong>Exemplo 2</strong> (ISO 8601 completo preservado):</p>
+    <pre class="admin-code">Auxiliar de Logística, Logística Rio, Duque de Caxias, RJ, &lt;p&gt;Apoio à separação e movimentação de mercadorias.&lt;/p&gt;, rh@empresa.com.br, Logística, 1800, FULL_TIME, 2026-06-01T08:00:00-03:00, 2026-07-01T23:59:59-03:00</pre>
+    <div class="admin-note">
+        <p><strong>Datas:</strong> se <code>publishedAt</code> vier vazio, usa a data atual (RJ). Se <code>validThrough</code> vier vazio, gera automaticamente 30 dias após a publicação, às 23:59:59 (-03:00).</p>
+    </div>
+</section>
 
 <section class="admin-card">
     <div class="admin-card-head">

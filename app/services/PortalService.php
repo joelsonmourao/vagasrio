@@ -435,8 +435,16 @@ class PortalService
         }
 
         $now = date('c');
-        $publishedAt = !empty($payload['published_at']) ? date('c', strtotime((string) $payload['published_at'])) : $now;
-        $validThrough = !empty($payload['valid_through']) ? date('c', strtotime((string) $payload['valid_through'])) : null;
+        $publishedAt = resolve_job_published_at((string) ($payload['published_at'] ?? ''));
+        $validThroughRaw = trim((string) ($payload['valid_through'] ?? ''));
+        $validThrough = $validThroughRaw !== ''
+            ? resolve_job_valid_through($validThroughRaw, $publishedAt)
+            : resolve_job_valid_through('', $publishedAt);
+        $applyRaw = trim((string) ($payload['apply_url'] ?? ''));
+        $applyUrl = $applyRaw === '' ? '' : (normalize_apply_url($applyRaw) ?? '');
+        if ($applyRaw !== '' && $applyUrl === '') {
+            throw new \InvalidArgumentException('Link ou e-mail de candidatura inválido.');
+        }
         $isActive = isset($payload['is_active']) && (int) $payload['is_active'] === 1 ? 1 : 0;
 
         if ($id) {
@@ -461,7 +469,7 @@ class PortalService
                 null,
                 nullable_field((string) ($payload['salary'] ?? '')),
                 $employmentType,
-                trim((string) ($payload['apply_url'] ?? '')),
+                $applyUrl,
                 $isActive,
                 $publishedAt,
                 $validThrough,
@@ -490,7 +498,7 @@ class PortalService
             null,
             nullable_field((string) ($payload['salary'] ?? '')),
             $employmentType,
-            trim((string) ($payload['apply_url'] ?? '')),
+            $applyUrl,
             $isActive,
             $publishedAt,
             $validThrough,
@@ -582,9 +590,16 @@ class PortalService
                 $companyName = smart_title((string) ($record['company'] ?? ''));
                 $cityName = smart_title((string) ($record['city'] ?? ''));
                 $description = merge_import_description($record);
-                if ($title === '' || $companyName === '' || $cityName === '' || $description === '' || trim((string) ($record['applyUrl'] ?? '')) === '') {
+                if ($title === '' || $companyName === '' || $cityName === '' || $description === '') {
                     $errors++;
                     $this->saveImportError($importId, $line + 1, 'Campos obrigatorios invalidos', json_encode($record, JSON_UNESCAPED_UNICODE));
+                    continue;
+                }
+
+                $applyUrl = normalize_apply_url((string) ($record['applyUrl'] ?? ''));
+                if ($applyUrl === null) {
+                    $errors++;
+                    $this->saveImportError($importId, $line + 1, 'applyUrl invalido: informe URL http(s) ou e-mail valido', json_encode($record, JSON_UNESCAPED_UNICODE));
                     continue;
                 }
 
@@ -605,11 +620,8 @@ class PortalService
                     $categoryId = $this->firstOrCreateCategory(normalize_category_name((string) $record['category']));
                 }
 
-                $publishedAt = $this->parseSpreadsheetDate((string) ($record['publishedAt'] ?? ''), date('c'));
-                $validThrough = $this->parseSpreadsheetDate(
-                    (string) ($record['validThrough'] ?? ''),
-                    date('c', strtotime('+' . (int) config('jobs.default_valid_days', 30) . ' days'))
-                );
+                $publishedAt = resolve_job_published_at((string) ($record['publishedAt'] ?? ''));
+                $validThrough = resolve_job_valid_through((string) ($record['validThrough'] ?? ''), $publishedAt);
                 $slugBase = slugify($title . '-' . $cityName . '-' . config('site.main_uf'));
                 $slug = $slugBase;
                 $inc = 1;
@@ -637,7 +649,7 @@ class PortalService
                     null,
                     $salary,
                     $employmentType,
-                    trim((string) ($record['applyUrl'] ?? '')),
+                    $applyUrl,
                     1,
                     $publishedAt,
                     $validThrough,
@@ -890,25 +902,5 @@ class PortalService
             }
         }
         return true;
-    }
-
-    private function parseSpreadsheetDate(string $raw, string $fallback): string
-    {
-        $value = trim($raw);
-        if ($value === '') {
-            return $fallback;
-        }
-        if (is_numeric($value)) {
-            $excelSerial = (int) round((float) $value);
-            if ($excelSerial > 25569) {
-                $timestamp = ($excelSerial - 25569) * 86400;
-                return date('c', $timestamp);
-            }
-        }
-        $parsed = strtotime($value);
-        if ($parsed === false) {
-            return $fallback;
-        }
-        return date('c', $parsed);
     }
 }

@@ -268,6 +268,305 @@ function employment_type_label(?string $type): string
     return $map[$key] ?? smart_title($type);
 }
 
+function site_timezone(): \DateTimeZone
+{
+    static $tz = null;
+    if ($tz === null) {
+        $tz = new \DateTimeZone((string) config('site.timezone', 'America/Sao_Paulo'));
+    }
+
+    return $tz;
+}
+
+function is_date_only(string $value): bool
+{
+    return (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', trim($value));
+}
+
+function parse_excel_serial_date(string $value): ?\DateTimeImmutable
+{
+    if (!is_numeric($value)) {
+        return null;
+    }
+    $serial = (float) $value;
+    if ($serial <= 25569) {
+        return null;
+    }
+    $timestamp = (int) round(($serial - 25569) * 86400);
+
+    return (new \DateTimeImmutable('@' . $timestamp))->setTimezone(site_timezone());
+}
+
+function parse_job_datetime(string $raw, string $kind = 'published'): ?\DateTimeImmutable
+{
+    $raw = trim($raw);
+    if ($raw === '') {
+        return null;
+    }
+
+    $excelDate = parse_excel_serial_date($raw);
+    if ($excelDate !== null) {
+        return $kind === 'valid'
+            ? $excelDate->setTime(23, 59, 59)
+            : $excelDate->setTime(0, 0, 0);
+    }
+
+    if (is_date_only($raw)) {
+        $time = $kind === 'valid' ? '23:59:59' : '00:00:00';
+        return new \DateTimeImmutable($raw . 'T' . $time, site_timezone());
+    }
+
+    try {
+        return (new \DateTimeImmutable($raw))->setTimezone(site_timezone());
+    } catch (\Exception) {
+        $parsed = strtotime($raw);
+        if ($parsed === false) {
+            return null;
+        }
+
+        return (new \DateTimeImmutable('@' . $parsed))->setTimezone(site_timezone());
+    }
+}
+
+function resolve_job_published_at(string $raw = ''): string
+{
+    $dt = parse_job_datetime($raw, 'published');
+    if ($dt === null) {
+        $dt = new \DateTimeImmutable('today', site_timezone());
+    }
+
+    if ($raw !== '' && is_date_only($raw)) {
+        $dt = $dt->setTime(0, 0, 0);
+    }
+
+    return $dt->format('c');
+}
+
+function resolve_job_valid_through(string $raw, string $publishedAtStored): string
+{
+    $dt = parse_job_datetime($raw, 'valid');
+    if ($dt === null) {
+        $published = new \DateTimeImmutable($publishedAtStored, site_timezone());
+        $days = (int) config('jobs.default_valid_days', 30);
+        $dt = $published->modify('+' . $days . ' days')->setTime(23, 59, 59);
+    } elseif ($raw !== '' && is_date_only($raw)) {
+        $dt = $dt->setTime(23, 59, 59);
+    }
+
+    return $dt->format('c');
+}
+
+function job_schema_date_posted(string $stored): string
+{
+    $dt = new \DateTimeImmutable($stored, site_timezone());
+    if ($dt->format('H:i:s') === '00:00:00') {
+        $dt = $dt->setTime(0, 0, 0);
+    }
+
+    return $dt->format('c');
+}
+
+function job_schema_valid_through(?string $stored, string $publishedAt): string
+{
+    if ($stored === null || trim($stored) === '') {
+        return resolve_job_valid_through('', $publishedAt);
+    }
+
+    $dt = new \DateTimeImmutable($stored, site_timezone());
+    if ($dt->format('H:i:s') === '00:00:00') {
+        $dt = $dt->setTime(23, 59, 59);
+    }
+
+    return $dt->format('c');
+}
+
+function format_date_br(?string $stored): string
+{
+    if ($stored === null || trim($stored) === '') {
+        return '';
+    }
+
+    try {
+        return (new \DateTimeImmutable($stored, site_timezone()))->format('d/m/Y');
+    } catch (\Exception) {
+        return '';
+    }
+}
+
+function format_datetime_iso_attr(?string $stored): string
+{
+    if ($stored === null || trim($stored) === '') {
+        return '';
+    }
+
+    try {
+        return (new \DateTimeImmutable($stored, site_timezone()))->format('c');
+    } catch (\Exception) {
+        return '';
+    }
+}
+
+function normalize_apply_url(string $raw): ?string
+{
+    $raw = trim($raw);
+    if ($raw === '') {
+        return null;
+    }
+
+    if (preg_match('/^mailto:/i', $raw)) {
+        $email = trim(substr($raw, 7));
+        return filter_var($email, FILTER_VALIDATE_EMAIL) ? 'mailto:' . $email : null;
+    }
+
+    if (filter_var($raw, FILTER_VALIDATE_EMAIL)) {
+        return 'mailto:' . $raw;
+    }
+
+    if (!preg_match('#^https?://#i', $raw)) {
+        return null;
+    }
+
+    return filter_var($raw, FILTER_VALIDATE_URL) ? $raw : null;
+}
+
+function is_apply_email(string $applyUrl): bool
+{
+    return str_starts_with(strtolower(trim($applyUrl)), 'mailto:');
+}
+
+function apply_button_label(string $applyUrl): string
+{
+    return is_apply_email($applyUrl) ? 'Candidatar-se por e-mail' : 'Candidatar-se agora';
+}
+
+/** @return array{href:string,target:?string,rel:string,note:string} */
+function apply_button_meta(string $applyUrl): array
+{
+    if (is_apply_email($applyUrl)) {
+        return [
+            'href' => $applyUrl,
+            'target' => null,
+            'rel' => 'nofollow',
+            'note' => 'Seu cliente de e-mail será aberto para contato com a empresa.',
+        ];
+    }
+
+    return [
+        'href' => $applyUrl,
+        'target' => '_blank',
+        'rel' => 'nofollow noopener',
+        'note' => 'Você será direcionado ao site oficial da empresa.',
+    ];
+}
+
+/** @return list<list<string>> */
+function import_template_rows(): array
+{
+    return [
+        ['title', 'company', 'city', 'state', 'description', 'applyUrl', 'category', 'salary', 'employmentType', 'publishedAt', 'validThrough'],
+        [
+            'Assistente Administrativo',
+            'Grupo Horizonte',
+            'Rio de Janeiro',
+            'RJ',
+            '<p>Apoio às rotinas administrativas.</p>',
+            'https://empresa.com/vaga',
+            'Administrativo',
+            '1600',
+            'FULL_TIME',
+            '2026-06-01',
+            '2026-07-01',
+        ],
+        [
+            'Auxiliar de Logística',
+            'Logística Rio',
+            'Duque de Caxias',
+            'RJ',
+            '<p>Apoio à separação e movimentação de mercadorias.</p>',
+            'rh@empresa.com.br',
+            'Logística',
+            '1800',
+            'FULL_TIME',
+            '2026-06-01T08:00:00-03:00',
+            '2026-07-01T23:59:59-03:00',
+        ],
+    ];
+}
+
+function output_import_template_csv(): void
+{
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="modelo-importacao-vagas.csv"');
+    echo "\xEF\xBB\xBF";
+    $out = fopen('php://output', 'w');
+    if ($out === false) {
+        return;
+    }
+    foreach (import_template_rows() as $row) {
+        fputcsv($out, $row);
+    }
+    fclose($out);
+}
+
+function output_import_template_xlsx(): void
+{
+    if (!class_exists(\ZipArchive::class)) {
+        http_response_code(500);
+        echo 'Extensao zip necessaria para gerar XLSX.';
+        return;
+    }
+
+    $rows = import_template_rows();
+    $shared = [];
+    $sharedIndex = [];
+    $sheetRows = '';
+    foreach ($rows as $rowIndex => $row) {
+        $sheetRows .= '<row r="' . ($rowIndex + 1) . '">';
+        foreach ($row as $colIndex => $value) {
+            $cellRef = chr(65 + $colIndex) . ($rowIndex + 1);
+            if (!isset($sharedIndex[$value])) {
+                $sharedIndex[$value] = count($shared);
+                $shared[] = $value;
+            }
+            $sheetRows .= '<c r="' . $cellRef . '" t="s"><v>' . $sharedIndex[$value] . '</v></c>';
+        }
+        $sheetRows .= '</row>';
+    }
+
+    $sharedXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="' . count($shared) . '" uniqueCount="' . count($shared) . '">';
+    foreach ($shared as $item) {
+        $sharedXml .= '<si><t>' . htmlspecialchars($item, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</t></si>';
+    }
+    $sharedXml .= '</sst>';
+
+    $sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'
+        . $sheetRows
+        . '</sheetData></worksheet>';
+
+    $tmp = tempnam(sys_get_temp_dir(), 'modelo-vagas-');
+    if ($tmp === false) {
+        http_response_code(500);
+        echo 'Nao foi possivel gerar o arquivo XLSX.';
+        return;
+    }
+
+    $zip = new \ZipArchive();
+    $zip->open($tmp, \ZipArchive::OVERWRITE);
+    $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/></Types>');
+    $zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>');
+    $zip->addFromString('xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/></Relationships>');
+    $zip->addFromString('xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Vagas" sheetId="1" r:id="rId1"/></sheets></workbook>');
+    $zip->addFromString('xl/worksheets/sheet1.xml', $sheetXml);
+    $zip->addFromString('xl/sharedStrings.xml', $sharedXml);
+    $zip->close();
+
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment; filename="modelo-importacao-vagas.xlsx"');
+    readfile($tmp);
+    @unlink($tmp);
+}
+
 function merge_import_description(array $record): string
 {
     $description = clean_html((string) ($record['description'] ?? ''));

@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php if (empty($disableAds) && ads_is_configured()): ?>
+    <meta name="google-adsense-account" content="<?= e(ads_client_id()) ?>">
+    <?php endif; ?>
     <title><?= e($title ?? config('site.name')) ?></title>
     <meta name="description" content="<?= e($description ?? 'Vagas de emprego no Rio de Janeiro (RJ) por cidade, empresa e categoria.') ?>">
     <meta name="robots" content="<?= e($robots ?? 'index,follow') ?>">

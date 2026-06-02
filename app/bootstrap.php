@@ -5,7 +5,7 @@ declare(strict_types=1);
 define('ROOT_PATH', dirname(__DIR__));
 
 $config = require ROOT_PATH . '/config/app.php';
-date_default_timezone_set($config['site']['timezone']);
+date_default_timezone_set((string) ($config['site']['timezone'] ?? 'America/Sao_Paulo'));
 
 session_name($config['security']['session_name']);
 if (session_status() !== PHP_SESSION_ACTIVE) {
