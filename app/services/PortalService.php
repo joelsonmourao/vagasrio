@@ -77,7 +77,7 @@ class PortalService
             }
         } elseif (!$includeInactive) {
             $where[] = 'j.is_active = 1';
-            $where[] = '(j.valid_through IS NULL OR TRIM(j.valid_through) = \'\' OR j.valid_through >= :now_valid)';
+            $where[] = $this->jobNotExpiredCondition('j');
             $params[':now_valid'] = date('c');
         }
 
@@ -125,51 +125,55 @@ class PortalService
     public function jobBySlug(string $slug): ?array
     {
         $stmt = $this->pdo->prepare(
-            "SELECT j.*, c.name AS company_name, c.slug AS company_slug, c.website AS company_website,
+            'SELECT j.*, c.name AS company_name, c.slug AS company_slug, c.website AS company_website,
                 c.logo AS company_logo,
                 ci.name AS city_name, ci.slug AS city_slug, ca.name AS category_name, ca.slug AS category_slug
              FROM jobs j
              INNER JOIN companies c ON c.id = j.company_id
              INNER JOIN cities ci ON ci.id = j.city_id
              LEFT JOIN categories ca ON ca.id = j.category_id
-             WHERE j.slug = :slug AND j.state = :state AND j.is_active = 1
-             AND (j.valid_through IS NULL OR TRIM(j.valid_through) = \'\' OR j.valid_through >= :now_valid)
-             LIMIT 1"
+             WHERE j.slug = :slug
+               AND j.state = :state
+               AND j.is_active = 1
+               AND ' . $this->jobNotExpiredCondition('j') . '
+             LIMIT 1'
         );
         $stmt->execute([
             ':slug' => $slug,
             ':state' => config('site.main_uf'),
             ':now_valid' => date('c'),
         ]);
-        $job = $stmt->fetch();
+        $job = $stmt->fetch(PDO::FETCH_ASSOC);
+
         return $job ?: null;
     }
 
     public function relatedJobs(array $job, int $limit = 4): array
     {
         $categoryId = (int) ($job['category_id'] ?? 0);
+        $notExpired = $this->jobNotExpiredCondition('j');
         if ($categoryId > 0) {
-            $sql = "SELECT j.*, c.name AS company_name, ci.name AS city_name, ca.name AS category_name
+            $sql = 'SELECT j.*, c.name AS company_name, ci.name AS city_name, ca.name AS category_name
                  FROM jobs j
                  INNER JOIN companies c ON c.id = j.company_id
                  INNER JOIN cities ci ON ci.id = j.city_id
                  LEFT JOIN categories ca ON ca.id = j.category_id
                  WHERE j.state = :state AND j.is_active = 1 AND j.id != :id
-                 AND (j.valid_through IS NULL OR TRIM(j.valid_through) = '' OR j.valid_through >= :now_valid)
+                 AND ' . $notExpired . '
                  AND (j.city_id = :city_id OR j.category_id = :category_id)
                  ORDER BY j.published_at DESC
-                 LIMIT :limit";
+                 LIMIT :limit';
         } else {
-            $sql = "SELECT j.*, c.name AS company_name, ci.name AS city_name, ca.name AS category_name
+            $sql = 'SELECT j.*, c.name AS company_name, ci.name AS city_name, ca.name AS category_name
                  FROM jobs j
                  INNER JOIN companies c ON c.id = j.company_id
                  INNER JOIN cities ci ON ci.id = j.city_id
                  LEFT JOIN categories ca ON ca.id = j.category_id
                  WHERE j.state = :state AND j.is_active = 1 AND j.id != :id
-                 AND (j.valid_through IS NULL OR TRIM(j.valid_through) = '' OR j.valid_through >= :now_valid)
+                 AND ' . $notExpired . '
                  AND j.city_id = :city_id
                  ORDER BY j.published_at DESC
-                 LIMIT :limit";
+                 LIMIT :limit';
         }
 
         $stmt = $this->pdo->prepare($sql);
@@ -1278,5 +1282,15 @@ class PortalService
             }
         }
         return true;
+    }
+
+    private function jobNotExpiredCondition(string $alias = 'j'): string
+    {
+        return sprintf(
+            '(%s.valid_through IS NULL OR TRIM(%s.valid_through) = \'\' OR %s.valid_through >= :now_valid)',
+            $alias,
+            $alias,
+            $alias
+        );
     }
 }

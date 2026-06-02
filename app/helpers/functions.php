@@ -26,6 +26,11 @@ function config(?string $key = null, mixed $default = null): mixed
     return $value;
 }
 
+function is_production_env(): bool
+{
+    return config('env') === 'production';
+}
+
 function db(): PDO
 {
     return Database::pdo();

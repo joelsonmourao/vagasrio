@@ -622,7 +622,17 @@ if (preg_match('#^/vaga/([a-z0-9\-]+)$#', $path, $matches)) {
 }
 
 if (preg_match('#^/vagas/([a-z0-9\-]+)$#', $path, $matches)) {
-    $job = $service->jobBySlug($matches[1]);
+    try {
+        $job = $service->jobBySlug($matches[1]);
+    } catch (Throwable $e) {
+        if (is_production_env()) {
+            error_log('jobBySlug failed for slug ' . $matches[1] . ': ' . $e->getMessage());
+            http_response_code(404);
+            render('pages/404', array_merge($common, ['title' => 'Vaga não encontrada', 'pageType' => 'error', 'disableAds' => true, 'robots' => 'noindex,follow']));
+            exit;
+        }
+        throw $e;
+    }
     if (!$job) {
         http_response_code(404);
         render('pages/404', array_merge($common, ['title' => 'Vaga não encontrada', 'pageType' => 'error', 'disableAds' => true, 'robots' => 'noindex,follow']));

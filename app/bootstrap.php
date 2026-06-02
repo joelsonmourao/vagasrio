@@ -7,6 +7,16 @@ define('ROOT_PATH', dirname(__DIR__));
 $config = require ROOT_PATH . '/config/app.php';
 date_default_timezone_set((string) ($config['site']['timezone'] ?? 'America/Sao_Paulo'));
 
+$isProduction = ($config['env'] ?? '') === 'production';
+if ($isProduction) {
+    ini_set('display_errors', '0');
+    ini_set('display_startup_errors', '0');
+    error_reporting(E_ALL);
+} else {
+    ini_set('display_errors', '1');
+    error_reporting(E_ALL);
+}
+
 session_name($config['security']['session_name']);
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
