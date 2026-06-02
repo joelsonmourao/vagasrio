@@ -24,7 +24,7 @@ if ($path === '/sitemap.xml') {
 
 if ($path === '/robots.txt') {
     header('Content-Type: text/plain; charset=UTF-8');
-    echo "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /scripts\nSitemap: " . base_url('/sitemap.xml');
+    echo "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /admin/\nDisallow: /scripts\nSitemap: " . base_url('/sitemap.xml');
     exit;
 }
 
@@ -208,6 +208,16 @@ if (str_starts_with($path, '/admin')) {
         exit;
     }
 
+    if ($path === '/admin/import/modelo.csv') {
+        output_import_template_required_csv();
+        exit;
+    }
+
+    if ($path === '/admin/import/modelo.xlsx') {
+        output_import_template_required_xlsx();
+        exit;
+    }
+
     if ($path === '/admin/import' && $method === 'POST') {
         if (!verify_csrf($_POST['_csrf'] ?? null)) {
             $_SESSION['flash_error'] = 'Token inválido.';
@@ -312,6 +322,138 @@ if (str_starts_with($path, '/admin')) {
         exit;
     }
 
+    if ($path === '/admin/blog/seed' && $method === 'POST') {
+        if (!verify_csrf($_POST['_csrf'] ?? null)) {
+            $_SESSION['flash_error'] = 'Token inválido.';
+            redirect('/admin/blog/posts');
+        }
+        try {
+            $result = $service->seedBlogContent(!empty($_POST['force']));
+            $_SESSION['flash_ok'] = 'Blog atualizado: ' . (int) ($result['posts'] ?? 0) . ' artigos, '
+                . (int) ($result['categories'] ?? 0) . ' categorias.';
+        } catch (Throwable $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+        }
+        redirect('/admin/blog/posts');
+    }
+
+    if ($path === '/admin/blog/categories' && $method === 'POST' && empty($_POST['_action'])) {
+        if (!verify_csrf($_POST['_csrf'] ?? null)) {
+            $_SESSION['flash_error'] = 'Token inválido.';
+            redirect('/admin/blog/categories');
+        }
+        try {
+            $service->createBlogCategory($_POST);
+            $_SESSION['flash_ok'] = 'Categoria do blog cadastrada.';
+        } catch (Throwable $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+        }
+        redirect('/admin/blog/categories');
+    }
+
+    if (preg_match('#^/admin/blog/categories/(\d+)/edit$#', $path, $matches) && $method === 'POST') {
+        if (!verify_csrf($_POST['_csrf'] ?? null)) {
+            $_SESSION['flash_error'] = 'Token inválido.';
+            redirect('/admin/blog/categories');
+        }
+        try {
+            $service->updateBlogCategory((int) $matches[1], $_POST);
+            $_SESSION['flash_ok'] = 'Categoria do blog atualizada.';
+        } catch (Throwable $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+        }
+        redirect('/admin/blog/categories');
+    }
+
+    if (preg_match('#^/admin/blog/categories/(\d+)/delete$#', $path, $matches) && $method === 'POST') {
+        if (verify_csrf($_POST['_csrf'] ?? null)) {
+            try {
+                $service->deleteBlogCategory((int) $matches[1]);
+                $_SESSION['flash_ok'] = 'Categoria do blog removida.';
+            } catch (Throwable $e) {
+                $_SESSION['flash_error'] = $e->getMessage();
+            }
+        }
+        redirect('/admin/blog/categories');
+    }
+
+    if ($path === '/admin/blog/posts/new' && $method === 'POST') {
+        if (!verify_csrf($_POST['_csrf'] ?? null)) {
+            $_SESSION['flash_error'] = 'Token inválido.';
+            redirect('/admin/blog/posts');
+        }
+        try {
+            $service->saveBlogPost($_POST);
+            $_SESSION['flash_ok'] = 'Artigo publicado.';
+        } catch (Throwable $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+        }
+        redirect('/admin/blog/posts');
+    }
+
+    if (preg_match('#^/admin/blog/posts/(\d+)/edit$#', $path, $matches) && $method === 'POST') {
+        if (!verify_csrf($_POST['_csrf'] ?? null)) {
+            $_SESSION['flash_error'] = 'Token inválido.';
+            redirect('/admin/blog/posts');
+        }
+        try {
+            $service->saveBlogPost($_POST, (int) $matches[1]);
+            $_SESSION['flash_ok'] = 'Artigo atualizado.';
+        } catch (Throwable $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+        }
+        redirect('/admin/blog/posts');
+    }
+
+    if (preg_match('#^/admin/blog/posts/(\d+)/delete$#', $path, $matches) && $method === 'POST') {
+        if (verify_csrf($_POST['_csrf'] ?? null)) {
+            $service->deleteBlogPost((int) $matches[1]);
+            $_SESSION['flash_ok'] = 'Artigo removido.';
+        }
+        redirect('/admin/blog/posts');
+    }
+
+    if (preg_match('#^/admin/blog/posts/(\d+)/toggle$#', $path, $matches) && $method === 'POST') {
+        if (verify_csrf($_POST['_csrf'] ?? null)) {
+            $service->toggleBlogPost((int) $matches[1]);
+            $_SESSION['flash_ok'] = 'Status do artigo atualizado.';
+        }
+        redirect('/admin/blog/posts');
+    }
+
+    if ($path === '/admin/blog/categories') {
+        render('admin/blog_categories', [
+            'title' => 'Categorias do blog',
+            'categories' => $service->blogCategories(false),
+            'editCategory' => isset($_GET['edit']) ? $service->blogCategoryById((int) $_GET['edit']) : null,
+            'showForm' => isset($_GET['edit']) || isset($_GET['new']),
+            'flashOk' => $_SESSION['flash_ok'] ?? null,
+            'flashError' => $_SESSION['flash_error'] ?? null,
+            'pageType' => 'admin',
+            'disableAds' => true,
+        ], 'admin_layout');
+        unset($_SESSION['flash_ok'], $_SESSION['flash_error']);
+        exit;
+    }
+
+    if ($path === '/admin/blog/posts') {
+        $categoryFilter = (string) ($_GET['category'] ?? '');
+        render('admin/blog_posts', [
+            'title' => 'Artigos do blog',
+            'posts' => $service->articles(50, 0, $categoryFilter !== '' ? $categoryFilter : null, false),
+            'blogCategories' => $service->blogCategories(false),
+            'categoryFilter' => $categoryFilter,
+            'editPost' => isset($_GET['edit']) ? $service->blogPostById((int) $_GET['edit']) : null,
+            'showForm' => isset($_GET['edit']) || isset($_GET['new']),
+            'flashOk' => $_SESSION['flash_ok'] ?? null,
+            'flashError' => $_SESSION['flash_error'] ?? null,
+            'pageType' => 'admin',
+            'disableAds' => true,
+        ], 'admin_layout');
+        unset($_SESSION['flash_ok'], $_SESSION['flash_error']);
+        exit;
+    }
+
     if ($path === '/admin/import') {
         $importSummary = $_SESSION['import_summary'] ?? null;
         $importSummaryErrors = $_SESSION['import_summary_errors'] ?? [];
@@ -397,6 +539,7 @@ if (preg_match('#^/vagas/([a-z0-9\-]+)$#', $path, $matches)) {
         'pageType' => 'job_detail',
         'job' => $job,
         'relatedJobs' => $service->relatedJobs($job),
+        'relatedArticles' => $service->relatedBlogPosts(null, 0, 3),
     ]));
     exit;
 }
@@ -413,6 +556,10 @@ if ($path === '/cidades') {
 }
 
 if (preg_match('#^/cidade/([a-z0-9\-]+)$#', $path, $matches)) {
+    redirect('/cidades/' . $matches[1]);
+}
+
+if (preg_match('#^/cidades/([a-z0-9\-]+)$#', $path, $matches)) {
     $city = $service->cityBySlug($matches[1]);
     if (!$city) {
         http_response_code(404);
@@ -427,11 +574,13 @@ if (preg_match('#^/cidade/([a-z0-9\-]+)$#', $path, $matches)) {
     render('pages/city', array_merge($common, [
         'title' => 'Vagas em ' . $city['name'] . ' RJ - Vagas RJ',
         'description' => 'Vagas atualizadas em ' . $city['name'] . '/' . $city['state'] . '.',
-        'canonical' => base_url('/cidade/' . $city['slug']),
+        'canonical' => base_url('/cidades/' . $city['slug']),
         'pageType' => 'city',
         'city' => $city,
         'jobsData' => $jobsData,
         'cities' => $service->citiesWithStats(),
+        'categories' => $service->categories(),
+        'relatedArticles' => $service->blogPostsForCity((string) $city['name'], 4),
     ]));
     exit;
 }
@@ -442,12 +591,16 @@ if ($path === '/empresas') {
         'description' => 'Veja empresas com oportunidades abertas no estado do Rio de Janeiro.',
         'canonical' => base_url('/empresas'),
         'pageType' => 'company',
-        'companies' => $service->companies(),
+        'companies' => $service->companiesWithStats(),
     ]));
     exit;
 }
 
 if (preg_match('#^/empresa/([a-z0-9\-]+)$#', $path, $matches)) {
+    redirect('/empresas/' . $matches[1]);
+}
+
+if (preg_match('#^/empresas/([a-z0-9\-]+)$#', $path, $matches)) {
     $company = $service->companyBySlug($matches[1]);
     if (!$company) {
         http_response_code(404);
@@ -461,7 +614,7 @@ if (preg_match('#^/empresa/([a-z0-9\-]+)$#', $path, $matches)) {
     render('pages/company_detail', array_merge($common, [
         'title' => 'Vagas na ' . $company['name'] . ' - Rio de Janeiro | Vagas RJ',
         'description' => 'Oportunidades da ' . $company['name'] . ' no estado do Rio de Janeiro.',
-        'canonical' => base_url('/empresa/' . $company['slug']),
+        'canonical' => base_url('/empresas/' . $company['slug']),
         'pageType' => 'company',
         'company' => $company,
         'jobsData' => $jobsData,
@@ -475,12 +628,16 @@ if ($path === '/categorias') {
         'description' => 'Navegue por categorias de vagas de emprego no estado do Rio de Janeiro.',
         'canonical' => base_url('/categorias'),
         'pageType' => 'category',
-        'categories' => $service->categories(),
+        'categories' => $service->categoriesWithStats(),
     ]));
     exit;
 }
 
 if (preg_match('#^/categoria/([a-z0-9\-]+)$#', $path, $matches)) {
+    redirect('/categorias/' . $matches[1]);
+}
+
+if (preg_match('#^/categorias/([a-z0-9\-]+)$#', $path, $matches)) {
     $category = $service->categoryBySlug($matches[1]);
     if (!$category) {
         http_response_code(404);
@@ -494,10 +651,12 @@ if (preg_match('#^/categoria/([a-z0-9\-]+)$#', $path, $matches)) {
     render('pages/category_detail', array_merge($common, [
         'title' => 'Vagas de ' . $category['name'] . ' no Rio de Janeiro RJ - Vagas RJ',
         'description' => 'Oportunidades da categoria ' . $category['name'] . ' no estado do Rio de Janeiro.',
-        'canonical' => base_url('/categoria/' . $category['slug']),
+        'canonical' => base_url('/categorias/' . $category['slug']),
         'pageType' => 'category',
         'category' => $category,
         'jobsData' => $jobsData,
+        'cities' => $service->citiesWithStats(),
+        'relatedArticles' => $service->blogPostsForJobCategory((string) $category['name'], 4),
     ]));
     exit;
 }
@@ -505,10 +664,30 @@ if (preg_match('#^/categoria/([a-z0-9\-]+)$#', $path, $matches)) {
 if ($path === '/blog') {
     render('pages/blog', array_merge($common, [
         'title' => 'Blog de carreira no Rio de Janeiro - Vagas RJ',
-        'description' => 'Dicas de carreira, currículo e mercado de trabalho.',
+        'description' => 'Dicas de currículo, entrevista e mercado de trabalho no RJ.',
         'canonical' => base_url('/blog'),
         'pageType' => 'blog',
-        'articles' => $service->articles(),
+        'articles' => $service->articles(24),
+        'blogCategories' => $service->blogCategories(),
+    ]));
+    exit;
+}
+
+if (preg_match('#^/blog/categoria/([a-z0-9\-]+)$#', $path, $matches)) {
+    $blogCategory = $service->blogCategoryBySlug($matches[1]);
+    if (!$blogCategory) {
+        http_response_code(404);
+        render('pages/404', array_merge($common, ['title' => 'Categoria não encontrada', 'pageType' => 'error', 'disableAds' => true, 'robots' => 'noindex,follow']));
+        exit;
+    }
+    render('pages/blog_category', array_merge($common, [
+        'title' => $blogCategory['name'] . ' - Blog Vagas RJ',
+        'description' => (string) ($blogCategory['description'] ?: 'Artigos sobre ' . $blogCategory['name']),
+        'canonical' => base_url('/blog/categoria/' . $blogCategory['slug']),
+        'pageType' => 'blog',
+        'blogCategory' => $blogCategory,
+        'articles' => $service->articles(0, 0, $blogCategory['slug']),
+        'blogCategories' => $service->blogCategories(),
     ]));
     exit;
 }
@@ -521,21 +700,25 @@ if (preg_match('#^/blog/([a-z0-9\-]+)$#', $path, $matches)) {
         exit;
     }
     render('pages/article_detail', array_merge($common, [
-        'title' => $article['title'],
-        'description' => $article['excerpt'],
+        'title' => (string) ($article['seo_title'] ?: $article['title']),
+        'description' => (string) ($article['seo_description'] ?: $article['excerpt']),
         'canonical' => base_url('/blog/' . $article['slug']),
         'pageType' => 'article',
         'article' => $article,
+        'relatedArticles' => $service->relatedBlogPosts((int) $article['category_id'], (int) $article['id'], 4),
     ]));
     exit;
 }
 
 $institutionalMap = [
-    '/sobre' => ['Sobre', 'Conheça o portal e nossa missão.'],
-    '/contato' => ['Contato', 'Entre em contato para dúvidas e suporte.'],
-    '/politica-de-privacidade' => ['Política de Privacidade', 'Como tratamos dados, cookies e publicidade.'],
-    '/politica-de-cookies' => ['Política de Cookies', 'Informações sobre cookies, consentimento e parceiros.'],
-    '/termos-de-uso' => ['Termos de Uso', 'Regras de uso e responsabilidades do portal.'],
+    '/sobre' => ['Sobre o Vagas RJ', 'Conheça o portal regional de vagas no Rio de Janeiro.'],
+    '/contato' => ['Contato', 'Fale conosco para dúvidas, sugestões e correções.'],
+    '/politica-de-privacidade' => ['Política de Privacidade', 'Como tratamos dados, cookies, analytics e publicidade.'],
+    '/politica-de-cookies' => ['Política de Cookies', 'Cookies essenciais, análise e publicidade no Vagas RJ.'],
+    '/termos-de-uso' => ['Termos de Uso', 'Regras de uso do portal de divulgação de vagas.'],
+    '/aviso-legal' => ['Aviso Legal', 'Informações legais sobre o Vagas RJ.'],
+    '/seguranca-para-candidatos' => ['Segurança para candidatos', 'Orientações contra golpes em processos seletivos.'],
+    '/mapa-do-site' => ['Mapa do site', 'Navegação completa do Vagas RJ.'],
 ];
 
 if (array_key_exists($path, $institutionalMap)) {

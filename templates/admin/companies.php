@@ -44,7 +44,7 @@
                             </td>
                             <td class="admin-actions">
                                 <a class="admin-action" href="<?= e(url_path('/admin/companies?edit=' . $company['id'] . '#company-form')) ?>">Editar</a>
-                                <a class="admin-action" href="<?= e(url_path('/empresa/' . $company['slug'])) ?>" target="_blank" rel="noopener">Ver página</a>
+                                <a class="admin-action" href="<?= e(company_public_path($company['slug'])) ?>" target="_blank" rel="noopener">Ver página</a>
                                 <form method="post" action="<?= e(url_path('/admin/companies/' . $company['id'] . '/delete')) ?>" class="admin-inline-form" onsubmit="return confirm('Excluir esta empresa?');">
                                     <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
                                     <button class="admin-action admin-action-btn admin-action-danger" type="submit">Excluir</button>

@@ -2,9 +2,19 @@
     <div class="page-hero-inner">
         <p class="section-kicker">Empresa · RJ</p>
         <h1><?= e($company['name']) ?></h1>
-        <p><?= e((string) ($company['description'] ?: 'Oportunidades publicadas no Vagas RJ.')) ?></p>
+        <p><?= e((string) ($company['description'] ?: 'Oportunidades publicadas no Vagas RJ para candidatos do Rio de Janeiro.')) ?></p>
     </div>
 </section>
+
+<section class="panel panel-warning panel-security panel-security-inline">
+    <div class="panel-security-icon" aria-hidden="true">!</div>
+    <div>
+        <h2>Aviso importante</h2>
+        <p><?= e(company_page_disclaimer()) ?></p>
+    </div>
+</section>
+
+<?= ad_slot('company_inline', 'company', 970, 100) ?>
 
 <?php if (empty($jobsData['jobs'])): ?>
     <div class="empty-state empty-state-large">

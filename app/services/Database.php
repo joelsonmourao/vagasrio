@@ -23,6 +23,8 @@ class Database
         self::migrate();
         DemoDataReset::purgeInvalidData(self::$pdo);
         DemoDataReset::seedIfEmpty(self::$pdo);
+        BlogContentSeed::ensureTables(self::$pdo);
+        BlogContentSeed::seedIfNeeded(self::$pdo);
     }
 
     public static function pdo(): PDO
@@ -129,5 +131,22 @@ class Database
         SQL;
 
         self::$pdo?->exec($sql);
+        self::ensureCompanyLogoColumn();
+    }
+
+    private static function ensureCompanyLogoColumn(): void
+    {
+        $columns = self::$pdo?->query('PRAGMA table_info(companies)')->fetchAll() ?: [];
+        $hasLogo = false;
+        foreach ($columns as $column) {
+            if (($column['name'] ?? '') === 'logo') {
+                $hasLogo = true;
+                break;
+            }
+        }
+
+        if (!$hasLogo) {
+            self::$pdo?->exec('ALTER TABLE companies ADD COLUMN logo TEXT DEFAULT NULL');
+        }
     }
 }

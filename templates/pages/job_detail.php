@@ -76,8 +76,16 @@
                     <?php endif; ?>
                 </ul>
             </section>
+
+            <div class="job-aside-ad job-aside-ad-desktop">
+                <?= ad_slot('job_sidebar', 'job_detail', 300, 280) ?>
+            </div>
         </aside>
     </div>
+
+    <?php if (!empty($relatedArticles)): ?>
+        <?php require ROOT_PATH . '/templates/partials/related_articles.php'; ?>
+    <?php endif; ?>
 
     <?php if (!empty($relatedJobs)): ?>
         <?= ad_slot('job_before_related', 'job_detail', 970, 110, 'ad-slot-job-before-related') ?>
@@ -97,56 +105,5 @@
     <?php endif; ?>
 </article>
 
-<?php
-$jobSchema = [
-    '@context' => 'https://schema.org',
-    '@type' => 'JobPosting',
-    'title' => $mainJob['title'],
-    'description' => html_to_plain_text($mainJob['description']),
-    'datePosted' => job_schema_date_posted((string) $mainJob['published_at']),
-    'validThrough' => job_schema_valid_through($mainJob['valid_through'] ?? null, (string) $mainJob['published_at']),
-    'directApply' => !empty($mainJob['apply_url']),
-    'hiringOrganization' => [
-        '@type' => 'Organization',
-        'name' => $mainJob['company_name'],
-        'sameAs' => $mainJob['company_website'] ?: null,
-    ],
-    'jobLocation' => [
-        '@type' => 'Place',
-        'address' => [
-            '@type' => 'PostalAddress',
-            'addressLocality' => $mainJob['city_name'],
-            'addressRegion' => 'RJ',
-            'addressCountry' => 'Brazil',
-        ],
-    ],
-    'identifier' => [
-        '@type' => 'PropertyValue',
-        'name' => config('site.name'),
-        'value' => 'job-' . $mainJob['id'],
-    ],
-    'url' => base_url('/vagas/' . $mainJob['slug']),
-];
-if (!empty($mainJob['employment_type'])) {
-    $jobSchema['employmentType'] = $mainJob['employment_type'];
-}
-if (!empty($mainJob['salary'])) {
-    $salaryValue = preg_replace('/[^0-9,\.]/', '', $mainJob['salary']);
-    if ($salaryValue !== '') {
-        $jobSchema['baseSalary'] = [
-            '@type' => 'MonetaryAmount',
-            'currency' => 'BRL',
-            'value' => [
-                '@type' => 'QuantitativeValue',
-                'value' => $salaryValue,
-                'unitText' => 'MONTH',
-            ],
-        ];
-    }
-}
-$jobSchema = array_filter($jobSchema, static fn ($v) => $v !== null && $v !== '');
-if (isset($jobSchema['hiringOrganization']['sameAs']) && $jobSchema['hiringOrganization']['sameAs'] === null) {
-    unset($jobSchema['hiringOrganization']['sameAs']);
-}
-?>
-<script type="application/ld+json"><?= json_encode($jobSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
+<?php $jobSchema = build_job_posting_schema($mainJob); ?>
+<script type="application/ld+json"><?= encode_json_ld($jobSchema) ?></script>

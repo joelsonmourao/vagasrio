@@ -113,6 +113,49 @@ function url_path(string $path = '/'): string
     return '/' . ltrim($path, '/');
 }
 
+function city_public_path(string $slug): string
+{
+    return url_path('/cidades/' . ltrim($slug, '/'));
+}
+
+function company_public_path(string $slug): string
+{
+    return url_path('/empresas/' . ltrim($slug, '/'));
+}
+
+function category_public_path(string $slug): string
+{
+    return url_path('/categorias/' . ltrim($slug, '/'));
+}
+
+function blog_category_public_path(string $slug): string
+{
+    return url_path('/blog/categoria/' . ltrim($slug, '/'));
+}
+
+function city_page_intro(string $cityName): string
+{
+    return 'O Vagas RJ reúne oportunidades divulgadas em ' . $cityName
+        . ', no estado do Rio de Janeiro. Use os filtros abaixo para encontrar vagas compatíveis com seu perfil, '
+        . 'leia a descrição completa de cada anúncio e candidate-se apenas pelos canais oficiais informados pela empresa contratante. '
+        . 'O portal não participa do processo seletivo e não cobra taxa de candidatura.';
+}
+
+function category_page_intro(string $categoryName): string
+{
+    return 'Confira vagas da área ' . $categoryName
+        . ' em cidades do Rio de Janeiro. Cada oportunidade listada possui descrição própria e link ou e-mail de candidatura '
+        . 'fornecido pela empresa. Antes de enviar currículo, confirme requisitos, local de trabalho e modalidade de contratação '
+        . 'no anúncio original.';
+}
+
+function company_page_disclaimer(): string
+{
+    return 'O Vagas RJ apenas divulga oportunidades publicadas ou cadastradas por terceiros. '
+        . 'Não representamos a empresa, não garantimos contratação e não cobramos taxa para candidatura. '
+        . 'Confirme informações no site oficial ou no contato informado na vaga.';
+}
+
 function current_path(): string
 {
     $uri = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
@@ -356,6 +399,11 @@ function resolve_job_valid_through(string $raw, string $publishedAtStored): stri
     return $dt->format('c');
 }
 
+function job_schema_iso8601(\DateTimeInterface $dt): string
+{
+    return $dt->format('Y-m-d\TH:i:sP');
+}
+
 function job_schema_date_posted(string $stored): string
 {
     $dt = new \DateTimeImmutable($stored, site_timezone());
@@ -363,13 +411,15 @@ function job_schema_date_posted(string $stored): string
         $dt = $dt->setTime(0, 0, 0);
     }
 
-    return $dt->format('c');
+    return job_schema_iso8601($dt);
 }
 
 function job_schema_valid_through(?string $stored, string $publishedAt): string
 {
     if ($stored === null || trim($stored) === '') {
-        return resolve_job_valid_through('', $publishedAt);
+        $iso = resolve_job_valid_through('', $publishedAt);
+
+        return job_schema_iso8601(new \DateTimeImmutable($iso, site_timezone()));
     }
 
     $dt = new \DateTimeImmutable($stored, site_timezone());
@@ -377,7 +427,223 @@ function job_schema_valid_through(?string $stored, string $publishedAt): string
         $dt = $dt->setTime(23, 59, 59);
     }
 
-    return $dt->format('c');
+    return job_schema_iso8601($dt);
+}
+
+function normalize_employment_type(?string $type): ?string
+{
+    if ($type === null || trim($type) === '') {
+        return null;
+    }
+
+    $allowed = [
+        'FULL_TIME',
+        'PART_TIME',
+        'CONTRACTOR',
+        'TEMPORARY',
+        'INTERN',
+        'VOLUNTEER',
+        'PER_DIEM',
+        'OTHER',
+    ];
+    $key = strtoupper(str_replace([' ', '-'], '_', trim($type)));
+    $aliases = [
+        'CLT' => 'FULL_TIME',
+        'PJ' => 'CONTRACTOR',
+        'FREELANCER' => 'CONTRACTOR',
+        'ESTAGIO' => 'INTERN',
+        'ESTÁGIO' => 'INTERN',
+    ];
+
+    if (isset($aliases[$key])) {
+        $key = $aliases[$key];
+    }
+
+    return in_array($key, $allowed, true) ? $key : null;
+}
+
+function parse_job_salary_amount(?string $salary): ?float
+{
+    if ($salary === null || trim($salary) === '') {
+        return null;
+    }
+
+    $normalized = preg_replace('/[^\d,\.]/', '', trim($salary)) ?? '';
+    if ($normalized === '') {
+        return null;
+    }
+
+    if (str_contains($normalized, ',') && str_contains($normalized, '.')) {
+        $normalized = str_replace('.', '', $normalized);
+        $normalized = str_replace(',', '.', $normalized);
+    } elseif (str_contains($normalized, ',')) {
+        $normalized = str_replace(',', '.', $normalized);
+    }
+
+    $value = (float) $normalized;
+
+    return $value > 0 ? $value : null;
+}
+
+function city_postal_code(?string $cityName): ?string
+{
+    if ($cityName === null || trim($cityName) === '') {
+        return null;
+    }
+
+    $map = config('site.city_postal_codes', []);
+    if (!is_array($map)) {
+        return null;
+    }
+
+    $code = $map[trim($cityName)] ?? null;
+
+    return is_string($code) && $code !== '' ? $code : null;
+}
+
+function portal_default_logo_url(): string
+{
+    return base_url('assets/img/logo-vagas-rj.png');
+}
+
+function job_hiring_organization_logo(array $job): string
+{
+    $companyLogo = trim((string) ($job['company_logo'] ?? ''));
+    if ($companyLogo !== '') {
+        if (preg_match('#^https?://#i', $companyLogo)) {
+            return $companyLogo;
+        }
+
+        return base_url(ltrim($companyLogo, '/'));
+    }
+
+    return portal_default_logo_url();
+}
+
+function is_intermediary_apply_url(string $url): bool
+{
+    $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+    if ($host === '') {
+        return true;
+    }
+
+    $siteHost = strtolower((string) parse_url(base_url(), PHP_URL_HOST));
+    if ($siteHost !== '' && ($host === $siteHost || str_ends_with($host, '.' . $siteHost))) {
+        return true;
+    }
+
+    $intermediaryHosts = [
+        'linkedin.com',
+        'indeed.com',
+        'infojobs.com.br',
+        'catho.com.br',
+        'gupy.io',
+        'vagas.com.br',
+        'trabalhabrasil.com.br',
+        'empregos.com.br',
+        'glassdoor.com',
+        'bebee.com',
+    ];
+
+    foreach ($intermediaryHosts as $pattern) {
+        if ($host === $pattern || str_ends_with($host, '.' . $pattern)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function job_schema_direct_apply(?string $applyUrl): bool
+{
+    $normalized = $applyUrl !== null && trim($applyUrl) !== '' ? normalize_apply_url($applyUrl) : null;
+    if ($normalized === null) {
+        return false;
+    }
+
+    if (is_apply_email($normalized)) {
+        return true;
+    }
+
+    return !is_intermediary_apply_url($normalized);
+}
+
+/** @return array<string, mixed> */
+function build_job_posting_schema(array $job): array
+{
+    $address = [
+        '@type' => 'PostalAddress',
+        'addressLocality' => $job['city_name'],
+        'addressRegion' => 'RJ',
+        'addressCountry' => 'Brazil',
+    ];
+
+    $postalCode = city_postal_code((string) ($job['city_name'] ?? ''));
+    if ($postalCode !== null) {
+        $address['postalCode'] = $postalCode;
+    }
+
+    $hiringOrganization = [
+        '@type' => 'Organization',
+        'name' => $job['company_name'],
+        'logo' => job_hiring_organization_logo($job),
+    ];
+
+    $companyWebsite = trim((string) ($job['company_website'] ?? ''));
+    if ($companyWebsite !== '') {
+        $hiringOrganization['sameAs'] = $companyWebsite;
+    }
+
+    $schema = [
+        '@context' => 'https://schema.org',
+        '@type' => 'JobPosting',
+        'title' => $job['title'],
+        'description' => html_to_plain_text((string) $job['description']),
+        'datePosted' => job_schema_date_posted((string) $job['published_at']),
+        'validThrough' => job_schema_valid_through($job['valid_through'] ?? null, (string) $job['published_at']),
+        'directApply' => job_schema_direct_apply(isset($job['apply_url']) ? (string) $job['apply_url'] : null),
+        'hiringOrganization' => $hiringOrganization,
+        'jobLocation' => [
+            '@type' => 'Place',
+            'address' => $address,
+        ],
+        'identifier' => [
+            '@type' => 'PropertyValue',
+            'name' => config('site.name'),
+            'value' => 'job-' . $job['id'],
+        ],
+        'url' => base_url('/vagas/' . $job['slug']),
+    ];
+
+    $employmentType = normalize_employment_type(isset($job['employment_type']) ? (string) $job['employment_type'] : null);
+    if ($employmentType !== null) {
+        $schema['employmentType'] = $employmentType;
+    }
+
+    $salaryAmount = parse_job_salary_amount(isset($job['salary']) ? (string) $job['salary'] : null);
+    if ($salaryAmount !== null) {
+        $schema['baseSalary'] = [
+            '@type' => 'MonetaryAmount',
+            'currency' => 'BRL',
+            'value' => [
+                '@type' => 'QuantitativeValue',
+                'value' => $salaryAmount,
+                'unitText' => 'MONTH',
+            ],
+        ];
+    }
+
+    return $schema;
+}
+
+function encode_json_ld(array $data): string
+{
+    $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($json === false) {
+        return '{}';
+    }
+
+    return $json;
 }
 
 function format_date_br(?string $stored): string
@@ -460,6 +726,38 @@ function apply_button_meta(string $applyUrl): array
 }
 
 /** @return list<list<string>> */
+function import_template_required_rows(): array
+{
+    return [
+        ['title', 'company', 'city', 'state', 'description', 'applyUrl'],
+        [
+            'Assistente Administrativo',
+            'Grupo Horizonte',
+            'Rio de Janeiro',
+            'RJ',
+            '<p>Apoio às rotinas administrativas, organização de documentos e atendimento interno.</p>',
+            'https://empresa.com/vaga-assistente',
+        ],
+        [
+            'Auxiliar de Logística',
+            'Logística Rio',
+            'Duque de Caxias',
+            'RJ',
+            '<p>Apoio à separação, conferência e movimentação de mercadorias no centro de distribuição.</p>',
+            'rh@empresa.com.br',
+        ],
+        [
+            'Atendente Comercial',
+            'Comercial Guanabara',
+            'Niterói',
+            'RJ',
+            '<p>Atendimento a clientes, apresentação de produtos e registro de pedidos.</p>',
+            'https://empresa.com/vaga-comercial',
+        ],
+    ];
+}
+
+/** @return list<list<string>> */
 function import_template_rows(): array
 {
     return [
@@ -495,14 +793,25 @@ function import_template_rows(): array
 
 function output_import_template_csv(): void
 {
+    output_csv_download(import_template_rows(), 'modelo-importacao-vagas.csv');
+}
+
+function output_import_template_required_csv(): void
+{
+    output_csv_download(import_template_required_rows(), 'modelo-vagas-obrigatorias.csv');
+}
+
+/** @param list<list<string>> $rows */
+function output_csv_download(array $rows, string $filename): void
+{
     header('Content-Type: text/csv; charset=UTF-8');
-    header('Content-Disposition: attachment; filename="modelo-importacao-vagas.csv"');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
     echo "\xEF\xBB\xBF";
     $out = fopen('php://output', 'w');
     if ($out === false) {
         return;
     }
-    foreach (import_template_rows() as $row) {
+    foreach ($rows as $row) {
         fputcsv($out, $row);
     }
     fclose($out);
@@ -510,13 +819,23 @@ function output_import_template_csv(): void
 
 function output_import_template_xlsx(): void
 {
+    output_xlsx_download(import_template_rows(), 'modelo-importacao-vagas.xlsx');
+}
+
+function output_import_template_required_xlsx(): void
+{
+    output_xlsx_download(import_template_required_rows(), 'modelo-vagas-obrigatorias.xlsx');
+}
+
+/** @param list<list<string>> $rows */
+function output_xlsx_download(array $rows, string $filename): void
+{
     if (!class_exists(\ZipArchive::class)) {
         http_response_code(500);
         echo 'Extensao zip necessaria para gerar XLSX.';
         return;
     }
 
-    $rows = import_template_rows();
     $shared = [];
     $sharedIndex = [];
     $sheetRows = '';
@@ -562,7 +881,7 @@ function output_import_template_xlsx(): void
     $zip->close();
 
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    header('Content-Disposition: attachment; filename="modelo-importacao-vagas.xlsx"');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
     readfile($tmp);
     @unlink($tmp);
 }

@@ -38,7 +38,7 @@
                             <td><?= (int) ($category['jobs_count'] ?? 0) ?></td>
                             <td class="admin-actions">
                                 <a class="admin-action" href="<?= e(url_path('/admin/categories?edit=' . $category['id'] . '#category-form')) ?>">Editar</a>
-                                <a class="admin-action" href="<?= e(url_path('/categoria/' . $category['slug'])) ?>" target="_blank" rel="noopener">Ver página</a>
+                                <a class="admin-action" href="<?= e(category_public_path($category['slug'])) ?>" target="_blank" rel="noopener">Ver página</a>
                                 <form method="post" action="<?= e(url_path('/admin/categories/' . $category['id'] . '/delete')) ?>" class="admin-inline-form" onsubmit="return confirm('Excluir esta categoria?');">
                                     <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
                                     <button class="admin-action admin-action-btn admin-action-danger" type="submit">Excluir</button>

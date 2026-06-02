@@ -1,9 +1,9 @@
 <section class="hero hero-home">
     <div class="hero-pattern" aria-hidden="true"></div>
     <div class="hero-copy">
-        <p class="hero-kicker">Empregos no Rio de Janeiro</p>
-        <h1>As melhores vagas no Rio de Janeiro em um só lugar</h1>
-        <p>Encontre oportunidades atualizadas por cidade, empresa e área profissional. Foco total em vagas do RJ.</p>
+        <p class="hero-kicker">Portal de vagas no Rio de Janeiro</p>
+        <h1>Oportunidades de emprego no estado do Rio de Janeiro</h1>
+        <p>O Vagas RJ divulga vagas reais por cargo, empresa e cidade. Busque, compare descrições e candidate-se pelos canais oficiais das empresas.</p>
         <form class="search-form search-form-hero" action="<?= e(url_path('/vagas')) ?>" method="get">
             <label class="sr-only" for="home-q">Buscar vaga</label>
             <input id="home-q" type="text" name="q" placeholder="Cargo, empresa ou palavra-chave">
@@ -69,7 +69,7 @@
     <p class="section-text">Explore vagas nas principais cidades do estado do Rio de Janeiro.</p>
     <div class="city-grid city-grid-compact">
         <?php foreach (array_slice($cities, 0, 8) as $city): ?>
-            <a class="city-card city-card-link" href="<?= e(url_path('/cidade/' . $city['slug'])) ?>">
+            <a class="city-card city-card-link" href="<?= e(city_public_path($city['slug'])) ?>">
                 <strong><?= e($city['name']) ?></strong>
                 <span><?= (int) ($city['jobs_count'] ?? 0) ?> vaga(s)</span>
             </a>
@@ -87,7 +87,7 @@
     </div>
     <div class="category-grid">
         <?php foreach ($categories as $category): ?>
-            <a class="category-card" href="<?= e(url_path('/categoria/' . $category['slug'])) ?>">
+            <a class="category-card" href="<?= e(category_public_path($category['slug'])) ?>">
                 <span class="category-card-label"><?= e($category['name']) ?></span>
                 <span class="category-card-cta">Explorar →</span>
             </a>
@@ -125,6 +125,23 @@
     <div class="panel-security-icon" aria-hidden="true">!</div>
     <div>
         <h2>Aviso de segurança para candidatos</h2>
-        <p>Desconfie de pedidos de pagamento, depósito ou compartilhamento de dados sensíveis. O Vagas RJ apenas divulga oportunidades e não participa do processo seletivo.</p>
+        <p>Desconfie de pedidos de pagamento, depósito ou compartilhamento de dados sensíveis. O Vagas RJ apenas divulga oportunidades e não participa do processo seletivo. <a href="<?= e(url_path('/seguranca-para-candidatos')) ?>">Saiba como se proteger →</a></p>
     </div>
 </section>
+
+<?php if (!empty($recentArticles)): ?>
+<section class="home-section">
+    <div class="section-head section-head-inline">
+        <div>
+            <p class="section-kicker">Blog Vagas RJ</p>
+            <h2>Dicas para sua carreira no RJ</h2>
+        </div>
+        <a class="section-link" href="<?= e(url_path('/blog')) ?>">Ver blog →</a>
+    </div>
+    <div class="entity-grid blog-grid blog-grid-compact">
+        <?php foreach ($recentArticles as $article): ?>
+            <?php require ROOT_PATH . '/templates/partials/blog_card.php'; ?>
+        <?php endforeach; ?>
+    </div>
+</section>
+<?php endif; ?>

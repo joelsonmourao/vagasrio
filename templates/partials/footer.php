@@ -22,7 +22,7 @@
                         <li><a href="/cidades">Ver cidades</a></li>
                     <?php else: ?>
                         <?php foreach ($citiesMenu as $city): ?>
-                            <li><a href="<?= e(url_path('/cidade/' . $city['slug'])) ?>"><?= e($city['name']) ?></a></li>
+                            <li><a href="<?= e(city_public_path($city['slug'])) ?>"><?= e($city['name']) ?></a></li>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </ul>
@@ -32,9 +32,12 @@
                 <ul>
                     <li><a href="/sobre">Sobre</a></li>
                     <li><a href="/contato">Contato</a></li>
+                    <li><a href="/seguranca-para-candidatos">Segurança</a></li>
                     <li><a href="/politica-de-privacidade">Privacidade</a></li>
                     <li><a href="/politica-de-cookies">Cookies</a></li>
                     <li><a href="/termos-de-uso">Termos</a></li>
+                    <li><a href="/aviso-legal">Aviso legal</a></li>
+                    <li><a href="/mapa-do-site">Mapa do site</a></li>
                 </ul>
             </section>
         </div>

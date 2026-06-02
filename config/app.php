@@ -1,7 +1,7 @@
 <?php
 
 $adsEnabledEnv = getenv('ADS_ENABLED');
-$adsEnabled = $adsEnabledEnv === false ? true : in_array(strtolower((string) $adsEnabledEnv), ['1', 'true', 'yes'], true);
+$adsEnabled = $adsEnabledEnv === false ? false : in_array(strtolower((string) $adsEnabledEnv), ['1', 'true', 'yes'], true);
 
 return [
     'env' => getenv('APP_ENV') ?: 'development',
@@ -26,7 +26,23 @@ return [
             'Itaboraí',
             'Belford Roxo',
         ],
+        // CEP genérico (centro) por cidade — usado só no JobPosting quando não há endereço completo
+        'city_postal_codes' => [
+            'Rio de Janeiro' => '20040-020',
+            'Niterói' => '24020-041',
+            'São Gonçalo' => '24440-000',
+            'Duque de Caxias' => '25020-010',
+            'Nova Iguaçu' => '26220-010',
+            'Petrópolis' => '25610-010',
+            'Volta Redonda' => '27253-000',
+            'Campos dos Goytacazes' => '28010-010',
+            'Cabo Frio' => '28905-000',
+            'Macaé' => '27910-010',
+            'Itaboraí' => '24800-000',
+            'Belford Roxo' => '26113-010',
+        ],
         'timezone' => 'America/Sao_Paulo',
+        'contact_email' => getenv('SITE_CONTACT_EMAIL') ?: 'contato@vagasrj.rio.br',
     ],
     'jobs' => [
         'default_valid_days' => 30,
@@ -51,24 +67,31 @@ return [
             'job_detail' => true,
             'blog' => true,
             'article' => true,
-            'city' => false,
-            'category' => false,
-            'company' => false,
+            'city' => true,
+            'category' => true,
+            'company' => true,
             'institutional' => false,
             'admin' => false,
             'error' => false,
         ],
         // Slots centralizados — altere aqui ou via ADSENSE_SLOT_* no .env
         'slots' => [
-            'home_after_hero' => getenv('ADSENSE_SLOT_HOME') ?: '1111111111',
-            'home_between_sections' => getenv('ADSENSE_SLOT_HOME_SECOND') ?: '1111111112',
-            'listing_inline' => getenv('ADSENSE_SLOT_LISTING') ?: '1111111113',
-            'listing_sidebar' => getenv('ADSENSE_SLOT_LISTING_SIDEBAR') ?: '1111111114',
-            'job_after_main' => getenv('ADSENSE_SLOT_JOB_DETAIL') ?: '1111111115',
-            'job_before_related' => getenv('ADSENSE_SLOT_JOB_DETAIL_SECOND') ?: '1111111116',
-            'blog_after_intro' => getenv('ADSENSE_SLOT_BLOG') ?: '1111111117',
-            'blog_middle' => getenv('ADSENSE_SLOT_BLOG_MIDDLE') ?: '1111111118',
-            'blog_after_content' => getenv('ADSENSE_SLOT_BLOG_END') ?: '1111111119',
+            'home_after_hero' => getenv('ADSENSE_SLOT_HOME') ?: '',
+            'home_between_sections' => getenv('ADSENSE_SLOT_HOME_SECOND') ?: '',
+            'listing_inline' => getenv('ADSENSE_SLOT_LISTING') ?: '',
+            'listing_sidebar' => getenv('ADSENSE_SLOT_LISTING_SIDEBAR') ?: '',
+            'job_after_main' => getenv('ADSENSE_SLOT_JOB_DETAIL') ?: '',
+            'job_sidebar' => getenv('ADSENSE_SLOT_JOB_SIDEBAR') ?: '',
+            'job_before_related' => getenv('ADSENSE_SLOT_JOB_DETAIL_SECOND') ?: '',
+            'blog_after_intro' => getenv('ADSENSE_SLOT_BLOG') ?: '',
+            'blog_listing_inline' => getenv('ADSENSE_SLOT_BLOG_LISTING') ?: '',
+            'blog_middle' => getenv('ADSENSE_SLOT_BLOG_MIDDLE') ?: '',
+            'blog_after_content' => getenv('ADSENSE_SLOT_BLOG_END') ?: '',
+            'blog_sidebar' => getenv('ADSENSE_SLOT_BLOG_SIDEBAR') ?: '',
+            'article_sidebar' => getenv('ADSENSE_SLOT_ARTICLE_SIDEBAR') ?: '',
+            'city_inline' => getenv('ADSENSE_SLOT_CITY') ?: '',
+            'category_inline' => getenv('ADSENSE_SLOT_CATEGORY') ?: '',
+            'company_inline' => getenv('ADSENSE_SLOT_COMPANY') ?: '',
         ],
     ],
     'security' => [

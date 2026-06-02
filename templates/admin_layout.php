@@ -29,12 +29,15 @@ $isLoginPage = ($adminPath === '/admin/login');
                 '/admin/jobs' => 'Vagas',
                 '/admin/companies' => 'Empresas',
                 '/admin/categories' => 'Categorias',
+                '/admin/blog/posts' => 'Blog',
                 '/admin/import' => 'Importação',
             ] as $href => $label): ?>
                 <?php
                 $isActive = $href === '/admin'
                     ? ($adminPath === '/admin' || $adminPath === '/admin/dashboard')
-                    : str_starts_with($adminPath, $href);
+                    : ($href === '/admin/blog/posts'
+                        ? str_starts_with($adminPath, '/admin/blog')
+                        : str_starts_with($adminPath, $href));
                 ?>
                 <a class="admin-nav-link<?= $isActive ? ' is-active' : '' ?>" href="<?= e(url_path($href === '/admin' ? '/admin' : $href)) ?>"><?= e($label) ?></a>
             <?php endforeach; ?>

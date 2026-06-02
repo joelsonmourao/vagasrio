@@ -70,6 +70,19 @@
 <?php endif; ?>
 
 <div class="admin-grid-2">
+    <section class="admin-card admin-card-highlight">
+        <div class="admin-card-head">
+            <h2>Baixar planilha modelo</h2>
+        </div>
+        <p class="admin-hint">Modelo com <strong>apenas as colunas obrigatórias</strong> para divulgação e preenchimento:</p>
+        <pre class="admin-code">title, company, city, state, description, applyUrl</pre>
+        <div class="admin-form-actions">
+            <a class="btn" href="<?= e(url_path('/admin/import/modelo.csv')) ?>">Baixar CSV (obrigatórias)</a>
+            <a class="btn btn-outline" href="<?= e(url_path('/admin/import/modelo.xlsx')) ?>">Baixar XLSX (obrigatórias)</a>
+        </div>
+        <p class="admin-hint">O <code>applyUrl</code> aceita link (<code>https://...</code>) ou e-mail (<code>rh@empresa.com.br</code>). Use <strong>state = RJ</strong>.</p>
+    </section>
+
     <section class="admin-card">
         <div class="admin-card-head">
             <h2>Enviar planilha</h2>
@@ -118,8 +131,8 @@
             <p>Somente vagas com <strong>state = RJ</strong> são importadas. Cidades permitidas: <?= e(implode(', ', allowed_rj_cities())) ?>.</p>
         </div>
         <div class="admin-form-actions">
-            <a class="btn btn-sm btn-outline" href="<?= e(url_path('/admin/import/template.csv')) ?>">Baixar modelo CSV</a>
-            <a class="btn btn-sm btn-outline" href="<?= e(url_path('/admin/import/template.xlsx')) ?>">Baixar modelo XLSX</a>
+            <a class="btn btn-sm btn-outline" href="<?= e(url_path('/admin/import/template.csv')) ?>">Modelo completo CSV</a>
+            <a class="btn btn-sm btn-outline" href="<?= e(url_path('/admin/import/template.xlsx')) ?>">Modelo completo XLSX</a>
         </div>
     </section>
 </div>

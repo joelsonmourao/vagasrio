@@ -35,6 +35,7 @@ class PortalService
             'recentJobs' => $this->jobList(['page' => 1, 'perPage' => 8])['jobs'],
             'cities' => $this->citiesWithStats(),
             'categories' => $this->categories(),
+            'recentArticles' => $this->articles(6),
             'stats' => [
                 'active_jobs' => $activeJobs,
                 'cities' => $citiesCount,
@@ -119,6 +120,7 @@ class PortalService
     {
         $stmt = $this->pdo->prepare(
             "SELECT j.*, c.name AS company_name, c.slug AS company_slug, c.website AS company_website,
+                c.logo AS company_logo,
                 ci.name AS city_name, ci.slug AS city_slug, ca.name AS category_name, ca.slug AS category_slug
              FROM jobs j
              INNER JOIN companies c ON c.id = j.company_id
@@ -278,18 +280,309 @@ class PortalService
         return $category ?: null;
     }
 
-    public function articles(): array
+    public function articles(int $limit = 0, int $offset = 0, ?string $categorySlug = null, bool $activeOnly = true): array
     {
-        $stmt = $this->pdo->query("SELECT * FROM articles WHERE status = 'published' ORDER BY published_at DESC");
+        $where = $activeOnly ? ['p.is_active = 1'] : ['1=1'];
+        $params = [];
+        if ($categorySlug !== null && $categorySlug !== '') {
+            $where[] = 'c.slug = :category_slug';
+            $params[':category_slug'] = $categorySlug;
+        }
+        $whereSql = implode(' AND ', $where);
+        $sql = "SELECT p.*, c.name AS category_name, c.slug AS category_slug
+                FROM blog_posts p
+                INNER JOIN blog_categories c ON c.id = p.category_id
+                WHERE {$whereSql}
+                ORDER BY p.published_at DESC";
+        if ($limit > 0) {
+            $sql .= ' LIMIT :limit OFFSET :offset';
+        }
+        $stmt = $this->pdo->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        if ($limit > 0) {
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        }
+        $stmt->execute();
+
         return $stmt->fetchAll();
+    }
+
+    public function articlesCount(?string $categorySlug = null): int
+    {
+        if ($categorySlug !== null && $categorySlug !== '') {
+            $stmt = $this->pdo->prepare(
+                'SELECT COUNT(*) FROM blog_posts p
+                 INNER JOIN blog_categories c ON c.id = p.category_id
+                 WHERE p.is_active = 1 AND c.slug = ?'
+            );
+            $stmt->execute([$categorySlug]);
+
+            return (int) $stmt->fetchColumn();
+        }
+
+        return (int) $this->pdo->query('SELECT COUNT(*) FROM blog_posts WHERE is_active = 1')->fetchColumn();
     }
 
     public function articleBySlug(string $slug): ?array
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM articles WHERE slug = :slug AND status = 'published' LIMIT 1");
+        $stmt = $this->pdo->prepare(
+            "SELECT p.*, c.name AS category_name, c.slug AS category_slug
+             FROM blog_posts p
+             INNER JOIN blog_categories c ON c.id = p.category_id
+             WHERE p.slug = :slug AND p.is_active = 1
+             LIMIT 1"
+        );
         $stmt->execute([':slug' => $slug]);
         $article = $stmt->fetch();
+
         return $article ?: null;
+    }
+
+    public function blogCategories(bool $activeOnly = true): array
+    {
+        $sql = 'SELECT c.*, COUNT(p.id) AS posts_count
+                FROM blog_categories c
+                LEFT JOIN blog_posts p ON p.category_id = c.id AND p.is_active = 1';
+        if ($activeOnly) {
+            $sql .= ' WHERE c.is_active = 1';
+        }
+        $sql .= ' GROUP BY c.id ORDER BY c.name ASC';
+
+        return $this->pdo->query($sql)->fetchAll();
+    }
+
+    public function blogCategoryBySlug(string $slug): ?array
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM blog_categories WHERE slug = :slug AND is_active = 1 LIMIT 1');
+        $stmt->execute([':slug' => $slug]);
+        $row = $stmt->fetch();
+
+        return $row ?: null;
+    }
+
+    public function blogCategoryById(int $id): ?array
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM blog_categories WHERE id = ? LIMIT 1');
+        $stmt->execute([$id]);
+        $row = $stmt->fetch();
+
+        return $row ?: null;
+    }
+
+    public function relatedBlogPosts(?int $categoryId, int $excludeId = 0, int $limit = 4): array
+    {
+        if ($categoryId === null || $categoryId < 1) {
+            return array_slice($this->articles($limit), 0, $limit);
+        }
+        $stmt = $this->pdo->prepare(
+            "SELECT p.*, c.name AS category_name, c.slug AS category_slug
+             FROM blog_posts p
+             INNER JOIN blog_categories c ON c.id = p.category_id
+             WHERE p.is_active = 1 AND p.category_id = :category_id AND p.id != :exclude_id
+             ORDER BY p.published_at DESC
+             LIMIT :limit"
+        );
+        $stmt->bindValue(':category_id', $categoryId, PDO::PARAM_INT);
+        $stmt->bindValue(':exclude_id', $excludeId, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    public function blogPostsForCity(string $cityName, int $limit = 4): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT p.*, c.name AS category_name, c.slug AS category_slug
+             FROM blog_posts p
+             INNER JOIN blog_categories c ON c.id = p.category_id
+             WHERE p.is_active = 1 AND c.slug = 'vagas-por-cidade' AND p.title LIKE :city
+             ORDER BY p.published_at DESC
+             LIMIT :limit"
+        );
+        $stmt->bindValue(':city', '%' . $cityName . '%');
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $posts = $stmt->fetchAll();
+        if ($posts !== []) {
+            return $posts;
+        }
+
+        return $this->relatedBlogPosts(null, 0, $limit);
+    }
+
+    public function blogPostsForJobCategory(string $categoryName, int $limit = 4): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT p.*, c.name AS category_name, c.slug AS category_slug
+             FROM blog_posts p
+             INNER JOIN blog_categories c ON c.id = p.category_id
+             WHERE p.is_active = 1 AND c.slug = 'profissoes-e-areas' AND p.title LIKE :term
+             ORDER BY p.published_at DESC
+             LIMIT :limit"
+        );
+        $stmt->bindValue(':term', '%' . $categoryName . '%');
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $posts = $stmt->fetchAll();
+        if ($posts !== []) {
+            return $posts;
+        }
+
+        return $this->relatedBlogPosts(null, 0, $limit);
+    }
+
+    public function blogPostById(int $id): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT p.*, c.name AS category_name, c.slug AS category_slug
+             FROM blog_posts p
+             INNER JOIN blog_categories c ON c.id = p.category_id
+             WHERE p.id = ? LIMIT 1'
+        );
+        $stmt->execute([$id]);
+        $row = $stmt->fetch();
+
+        return $row ?: null;
+    }
+
+    public function createBlogCategory(array $payload): void
+    {
+        $name = smart_title(trim((string) ($payload['name'] ?? '')));
+        if ($name === '') {
+            throw new \InvalidArgumentException('Nome da categoria do blog é obrigatório.');
+        }
+        $now = date('c');
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO blog_categories (name, slug, description, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)'
+        );
+        $stmt->execute([
+            $name,
+            slugify($name),
+            trim((string) ($payload['description'] ?? '')),
+            !empty($payload['is_active']) ? 1 : 0,
+            $now,
+            $now,
+        ]);
+    }
+
+    public function updateBlogCategory(int $id, array $payload): void
+    {
+        $category = $this->blogCategoryById($id);
+        if (!$category) {
+            throw new \InvalidArgumentException('Categoria do blog não encontrada.');
+        }
+        $name = smart_title(trim((string) ($payload['name'] ?? '')));
+        if ($name === '') {
+            throw new \InvalidArgumentException('Nome da categoria do blog é obrigatório.');
+        }
+        $stmt = $this->pdo->prepare(
+            'UPDATE blog_categories SET name = ?, slug = ?, description = ?, is_active = ?, updated_at = ? WHERE id = ?'
+        );
+        $stmt->execute([
+            $name,
+            slugify($name),
+            trim((string) ($payload['description'] ?? '')),
+            !empty($payload['is_active']) ? 1 : 0,
+            date('c'),
+            $id,
+        ]);
+    }
+
+    public function deleteBlogCategory(int $id): void
+    {
+        $count = $this->pdo->prepare('SELECT COUNT(*) FROM blog_posts WHERE category_id = ?');
+        $count->execute([$id]);
+        if ((int) $count->fetchColumn() > 0) {
+            throw new \InvalidArgumentException('Não é possível excluir categoria com artigos vinculados.');
+        }
+        $this->pdo->prepare('DELETE FROM blog_categories WHERE id = ?')->execute([$id]);
+    }
+
+    public function saveBlogPost(array $payload, ?int $id = null): void
+    {
+        $title = trim((string) ($payload['title'] ?? ''));
+        if ($title === '') {
+            throw new \InvalidArgumentException('Título do artigo é obrigatório.');
+        }
+        $categoryId = (int) ($payload['category_id'] ?? 0);
+        if ($categoryId < 1 || !$this->blogCategoryById($categoryId)) {
+            throw new \InvalidArgumentException('Categoria do artigo é obrigatória.');
+        }
+        $slug = trim((string) ($payload['slug'] ?? ''));
+        $slug = $slug !== '' ? slugify($slug) : slugify($title);
+        if ($this->blogPostSlugExists($slug, $id)) {
+            throw new \InvalidArgumentException('Slug do artigo já existe.');
+        }
+        $excerpt = trim((string) ($payload['excerpt'] ?? ''));
+        $content = clean_html((string) ($payload['content'] ?? ''));
+        if ($content === '') {
+            throw new \InvalidArgumentException('Conteúdo do artigo é obrigatório.');
+        }
+        if ($excerpt === '') {
+            $excerpt = excerpt(html_to_plain_text($content), 160);
+        }
+        $seoTitle = trim((string) ($payload['seo_title'] ?? ''));
+        if ($seoTitle === '') {
+            $seoTitle = $title . ' | Blog Vagas RJ';
+        }
+        $seoDescription = trim((string) ($payload['seo_description'] ?? ''));
+        if ($seoDescription === '') {
+            $seoDescription = $excerpt;
+        }
+        $publishedAt = resolve_job_published_at((string) ($payload['published_at'] ?? ''));
+        $isActive = !empty($payload['is_active']) ? 1 : 0;
+        $now = date('c');
+
+        if ($id !== null) {
+            $stmt = $this->pdo->prepare(
+                'UPDATE blog_posts SET category_id = ?, title = ?, slug = ?, excerpt = ?, content = ?, seo_title = ?, seo_description = ?, published_at = ?, is_active = ?, updated_at = ? WHERE id = ?'
+            );
+            $stmt->execute([$categoryId, $title, $slug, $excerpt, $content, $seoTitle, $seoDescription, $publishedAt, $isActive, $now, $id]);
+
+            return;
+        }
+
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO blog_posts (category_id, title, slug, excerpt, content, seo_title, seo_description, published_at, is_active, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        );
+        $stmt->execute([$categoryId, $title, $slug, $excerpt, $content, $seoTitle, $seoDescription, $publishedAt, $isActive, $now, $now]);
+    }
+
+    public function deleteBlogPost(int $id): void
+    {
+        $this->pdo->prepare('DELETE FROM blog_posts WHERE id = ?')->execute([$id]);
+    }
+
+    public function toggleBlogPost(int $id): void
+    {
+        $this->pdo->prepare('UPDATE blog_posts SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END, updated_at = ? WHERE id = ?')
+            ->execute([date('c'), $id]);
+    }
+
+    public function seedBlogContent(bool $force = false): array
+    {
+        return BlogContentSeed::seed($this->pdo, $force);
+    }
+
+    private function blogPostSlugExists(string $slug, ?int $ignoreId): bool
+    {
+        if ($ignoreId) {
+            $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM blog_posts WHERE slug = ? AND id != ?');
+            $stmt->execute([$slug, $ignoreId]);
+
+            return (int) $stmt->fetchColumn() > 0;
+        }
+        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM blog_posts WHERE slug = ?');
+        $stmt->execute([$slug]);
+
+        return (int) $stmt->fetchColumn() > 0;
     }
 
     public function dashboardStats(): array
@@ -696,6 +989,9 @@ class PortalService
             ['loc' => base_url('/politica-de-privacidade'), 'priority' => '0.5'],
             ['loc' => base_url('/politica-de-cookies'), 'priority' => '0.5'],
             ['loc' => base_url('/termos-de-uso'), 'priority' => '0.5'],
+            ['loc' => base_url('/aviso-legal'), 'priority' => '0.5'],
+            ['loc' => base_url('/seguranca-para-candidatos'), 'priority' => '0.5'],
+            ['loc' => base_url('/mapa-do-site'), 'priority' => '0.4'],
         ];
 
         $page = 1;
@@ -706,18 +1002,23 @@ class PortalService
             }
             $page++;
         } while ($page <= $chunk['totalPages']);
+
         foreach ($this->cities() as $city) {
-            $urls[] = ['loc' => base_url('/cidade/' . $city['slug']), 'priority' => '0.7'];
+            $urls[] = ['loc' => base_url('/cidades/' . $city['slug']), 'priority' => '0.7'];
         }
         foreach ($this->companies() as $company) {
-            $urls[] = ['loc' => base_url('/empresa/' . $company['slug']), 'priority' => '0.6'];
+            $urls[] = ['loc' => base_url('/empresas/' . $company['slug']), 'priority' => '0.6'];
         }
         foreach ($this->categories() as $category) {
-            $urls[] = ['loc' => base_url('/categoria/' . $category['slug']), 'priority' => '0.6'];
+            $urls[] = ['loc' => base_url('/categorias/' . $category['slug']), 'priority' => '0.6'];
+        }
+        foreach ($this->blogCategories() as $category) {
+            $urls[] = ['loc' => base_url('/blog/categoria/' . $category['slug']), 'priority' => '0.6'];
         }
         foreach ($this->articles() as $article) {
             $urls[] = ['loc' => base_url('/blog/' . $article['slug']), 'priority' => '0.6'];
         }
+
         return $urls;
     }
 

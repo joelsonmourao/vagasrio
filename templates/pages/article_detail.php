@@ -1,26 +1,30 @@
-<article class="article">
+<article class="article article-layout">
     <header class="page-hero page-hero-compact">
         <div class="page-hero-inner">
-            <p class="section-kicker">Blog · Vagas RJ</p>
+            <?php if (!empty($article['category_name'])): ?>
+                <p class="section-kicker"><a href="<?= e(blog_category_public_path((string) $article['category_slug'])) ?>"><?= e($article['category_name']) ?></a></p>
+            <?php else: ?>
+                <p class="section-kicker">Blog · Vagas RJ</p>
+            <?php endif; ?>
             <h1><?= e($article['title']) ?></h1>
             <p><?= e($article['excerpt']) ?></p>
         </div>
     </header>
 
-    <?= ad_slot('blog_after_intro', 'article', 970, 110) ?>
+    <div class="article-layout-grid">
+        <div class="article-main">
+            <?= ad_slot('blog_after_intro', 'article', 970, 110) ?>
 
-    <div class="panel prose article-prose"><?= $article['content'] ?></div>
+            <div class="panel prose article-prose"><?= $article['content'] ?></div>
 
-    <?= ad_slot('blog_middle', 'article', 970, 110) ?>
+            <?= ad_slot('blog_middle', 'article', 970, 110) ?>
 
-    <section class="panel section-block">
-        <h2>Dicas relacionadas</h2>
-        <ul class="tips-list">
-            <li>Atualize seu currículo com resultados concretos.</li>
-            <li>Pesquise a empresa antes da entrevista.</li>
-            <li>Confira novas vagas diariamente na sua cidade do RJ.</li>
-        </ul>
-    </section>
+            <?php require ROOT_PATH . '/templates/partials/related_articles.php'; ?>
 
-    <?= ad_slot('blog_after_content', 'article', 970, 110) ?>
+            <?= ad_slot('blog_after_content', 'article', 970, 110) ?>
+        </div>
+        <aside class="article-sidebar article-sidebar-desktop">
+            <?= ad_slot('article_sidebar', 'article', 300, 280) ?>
+        </aside>
+    </div>
 </article>
