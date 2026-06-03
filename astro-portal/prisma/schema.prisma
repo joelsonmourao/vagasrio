@@ -1,10 +1,10 @@
-// Schema local — SQLite (desenvolvimento sem Docker/PostgreSQL)
+// Schema producao — PostgreSQL (Coolify / VPS)
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -76,7 +76,7 @@ model Job {
 
   @@index([cityId])
   @@index([state])
-  @@index([isActive, publishedAt])
+  @@index([isActive, publishedAt(sort: Desc)])
   @@map("jobs")
 }
 
@@ -112,7 +112,7 @@ model BlogPost {
 
   category BlogCategory @relation(fields: [categoryId], references: [id])
 
-  @@index([categoryId, isActive, publishedAt])
+  @@index([categoryId, isActive, publishedAt(sort: Desc)])
   @@map("blog_posts")
 }
 

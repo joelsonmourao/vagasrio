@@ -3,7 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import JobCard from '../../components/JobCard.astro';
 import JobApplyBox from '../../components/JobApplyBox.astro';
 import { jobBySlug, jobList } from '../../lib/portal';
-import { buildJobPostingSchema } from '../../lib/job-posting';
+import { buildJobPostingSchema, formatJobStreetAddressDisplay, resolveJobStreetAddress } from '../../lib/job-posting';
 import {
   buildJobPageTitle,
   buildJobPageDescription,
@@ -45,6 +45,8 @@ const relatedJobs = related.jobs
   .filter((j) => j.slug !== job.slug && j.slug.trim() && jobIsPubliclyVisible(j))
   .slice(0, 3);
 const applyChannel = parseApplyChannel(job.applyUrl);
+const jobStreetAddress = resolveJobStreetAddress(job);
+const jobAddressDisplay = formatJobStreetAddressDisplay(job);
 ---
 <BaseLayout title={title} description={description} canonical={canonical} robots={robots} jsonLd={jsonLd}>
   <nav class="breadcrumb" aria-label="Navegação">
@@ -95,6 +97,9 @@ const applyChannel = parseApplyChannel(job.applyUrl);
           <ul class="summary-list">
             <li><span>Empresa</span><strong>{job.company.name}</strong></li>
             <li><span>Cidade</span><strong>{job.city.name}/RJ</strong></li>
+            {!jobStreetAddress && (
+              <li><span>Endereço</span><strong>{jobAddressDisplay}</strong></li>
+            )}
             {job.category && <li><span>Categoria</span><strong>{job.category.name}</strong></li>}
             <li><span>Publicação</span><strong>{formatJobPublishedBr(job.publishedAt)}</strong></li>
             <li><span>Validade</span><strong>{formatJobValidThroughBr(job.validThrough, job.publishedAt)}</strong></li>

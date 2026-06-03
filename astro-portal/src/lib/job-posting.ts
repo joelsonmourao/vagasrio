@@ -1,8 +1,13 @@
-import { baseUrl, siteConfig } from './config';
+import { absoluteUrl, baseUrl, siteConfig } from './config';
 import { formatJobPostingDate, formatJobPostingValidThrough } from './datetime-brazil';
 import { isValidApplyChannel, parseApplyChannel } from './apply-channel';
 import { isRealCompanyLogo, sanitizeSchemaUrl } from './public-content';
 import type { SiteSettingsMap } from './site-settings';
+
+/** Logo padrão do portal (fallback no hiringOrganization.logo). */
+export const SITE_LOGO_SCHEMA_PATH = '/assets/img/logo-vagas-rj.svg';
+
+const STREET_ADDRESS_FALLBACK = 'Não informado';
 
 type JobForSchema = {
   id: number;
@@ -48,26 +53,49 @@ function parseSalary(salary: string | null): number | null {
   return m ? Number(m[1]) : null;
 }
 
-export function buildJobPostingSchema(job: JobForSchema, settings?: SiteSettingsMap): Record<string, unknown> {
+/** Endereço completo da vaga (rua/número). Hoje não há campo no banco. */
+export function resolveJobStreetAddress(_job: JobForSchema): string | null {
+  return null;
+}
+
+export function formatJobStreetAddressDisplay(job: JobForSchema): string {
+  return resolveJobStreetAddress(job) ?? STREET_ADDRESS_FALLBACK;
+}
+
+function resolveOrganizationLogoUrl(
+  companyLogo: string | null | undefined,
+  settings?: SiteSettingsMap,
+): string {
+  if (companyLogo && isRealCompanyLogo(companyLogo)) {
+    const raw = sanitizeSchemaUrl(companyLogo) || companyLogo.trim();
+    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+    const path = raw.startsWith('/') ? raw : `/${raw}`;
+    return absoluteUrl(path, settings);
+  }
+  return absoluteUrl(SITE_LOGO_SCHEMA_PATH, settings);
+}
+
+function buildPostalAddress(job: JobForSchema): Record<string, string> {
   const postalCode = siteConfig.cityPostalCodes[job.city.name];
   const address: Record<string, string> = {
     '@type': 'PostalAddress',
+    streetAddress: resolveJobStreetAddress(job) ?? STREET_ADDRESS_FALLBACK,
     addressLocality: job.city.name,
     addressRegion: siteConfig.mainUf,
     addressCountry: 'BR',
   };
   if (postalCode) address.postalCode = postalCode;
+  return address;
+}
+
+export function buildJobPostingSchema(job: JobForSchema, settings?: SiteSettingsMap): Record<string, unknown> {
+  const address = buildPostalAddress(job);
 
   const hiringOrganization: Record<string, unknown> = {
     '@type': 'Organization',
     name: job.company.name,
+    logo: resolveOrganizationLogoUrl(job.company.logo, settings),
   };
-  if (job.company.logo && isRealCompanyLogo(job.company.logo)) {
-    const logoUrl = sanitizeSchemaUrl(job.company.logo) || job.company.logo.trim();
-    hiringOrganization.logo = logoUrl.startsWith('http')
-      ? logoUrl
-      : baseUrl(logoUrl, settings);
-  }
   const companyWebsite = sanitizeSchemaUrl(job.company.website);
   if (companyWebsite) hiringOrganization.sameAs = companyWebsite;
 
