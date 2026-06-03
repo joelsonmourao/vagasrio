@@ -7,6 +7,10 @@ export default defineConfig({
   adapter: node({ mode: 'standalone' }),
   site: process.env.SITE_BASE_URL || 'http://localhost:4321',
   trailingSlash: 'never',
+  // Coolify/reverse proxy: Origin interno pode divergir do domínio público (vagasrj.rio.br).
+  security: {
+    checkOrigin: false,
+  },
   // Barra flutuante preta no rodapé em dev = Astro Dev Toolbar (não é do site)
   devToolbar: { enabled: false },
   redirects: {
