@@ -6,20 +6,52 @@ const error = Astro.url.searchParams.get('error');
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Login Admin | {siteConfig.name}</title>
     <meta name="robots" content="noindex,nofollow" />
     <link rel="stylesheet" href="/assets/css/app.css" />
     <link rel="stylesheet" href="/assets/css/portal-v2.css" />
   </head>
   <body class="admin-login-page">
-    <main class="container admin-login-box">
-      <h1>Admin · {siteConfig.name}</h1>
-      {error && <p class="flash-error">Credenciais inválidas.</p>}
-      <form method="post" action="/api/auth/login">
-        <label>Usuário <input name="username" required /></label>
-        <label>Senha <input name="password" type="password" required /></label>
-        <button class="btn" type="submit">Entrar</button>
-      </form>
+    <main class="admin-login-wrap">
+      <div class="admin-login-card">
+        <h1 class="admin-login-title">Admin · {siteConfig.name}</h1>
+
+        {error && (
+          <p class="admin-login-error" role="alert">
+            Usuário ou senha incorretos. Confira se digitou o usuário no primeiro campo e a senha no segundo.
+          </p>
+        )}
+
+        <form class="admin-login-form" method="post" action="/api/auth/login">
+          <label class="admin-login-field">
+            <span class="admin-login-label">Usuário</span>
+            <input
+              class="admin-login-input"
+              type="text"
+              name="username"
+              autocomplete="username"
+              required
+            />
+          </label>
+          <label class="admin-login-field">
+            <span class="admin-login-label">Senha</span>
+            <input
+              class="admin-login-input"
+              type="password"
+              name="password"
+              autocomplete="current-password"
+              required
+            />
+          </label>
+          <button class="btn btn-accent admin-login-submit" type="submit">Entrar</button>
+        </form>
+
+        <nav class="admin-login-links" aria-label="Ações do login">
+          <a href="/api/auth/logout">Limpar sessão</a>
+          <a href="/">Voltar ao site</a>
+        </nav>
+      </div>
     </main>
   </body>
 </html>
