@@ -1,6 +1,6 @@
 import { absoluteUrl, baseUrl, siteConfig } from './config';
 import { formatJobPostingDate, formatJobPostingValidThrough } from './datetime-brazil';
-import { parseJobSalaryAmount } from './format';
+import { parseJobSalaryAmount, SALARY_DISPLAY_FALLBACK } from './format';
 import { isValidApplyChannel, parseApplyChannel } from './apply-channel';
 import { isRealCompanyLogo, sanitizeSchemaUrl } from './public-content';
 import type { SiteSettingsMap } from './site-settings';
@@ -83,6 +83,27 @@ function buildPostalAddress(job: JobForSchema): Record<string, string> {
   return address;
 }
 
+export type JobPostingBaseSalary =
+  | string
+  | {
+      '@type': 'MonetaryAmount';
+      currency: string;
+      value: { '@type': 'QuantitativeValue'; value: number; unitText: string };
+    };
+
+/** baseSalary estruturado (valor real) ou texto "A combinar". */
+export function buildBaseSalary(salary: string | null | undefined): JobPostingBaseSalary {
+  const amount = parseJobSalaryAmount(salary);
+  if (amount != null && amount > 0) {
+    return {
+      '@type': 'MonetaryAmount',
+      currency: 'BRL',
+      value: { '@type': 'QuantitativeValue', value: amount, unitText: 'MONTH' },
+    };
+  }
+  return SALARY_DISPLAY_FALLBACK;
+}
+
 export function buildJobPostingSchema(job: JobForSchema, settings?: SiteSettingsMap): Record<string, unknown> {
   const address = buildPostalAddress(job);
 
@@ -116,14 +137,7 @@ export function buildJobPostingSchema(job: JobForSchema, settings?: SiteSettings
   const employmentType = normalizeEmploymentType(job.employmentType);
   if (employmentType) schema.employmentType = employmentType;
 
-  const amount = parseJobSalaryAmount(job.salary);
-  if (amount != null && amount > 0) {
-    schema.baseSalary = {
-      '@type': 'MonetaryAmount',
-      currency: 'BRL',
-      value: { '@type': 'QuantitativeValue', value: amount, unitText: 'MONTH' },
-    };
-  }
+  schema.baseSalary = buildBaseSalary(job.salary);
 
   const channel = parseApplyChannel(job.applyUrl);
   if (isValidApplyChannel(channel)) {

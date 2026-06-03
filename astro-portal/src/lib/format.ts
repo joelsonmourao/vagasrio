@@ -51,12 +51,13 @@ export function applyButtonLabel(url: string): string {
 
 export const SALARY_DISPLAY_FALLBACK = 'A combinar';
 
-const SALARY_NON_NUMERIC_RE = /a\s*combinar|combinar|negociar|a\s*definir|sob\s*consulta/i;
+const SALARY_PLACEHOLDER_RE =
+  /a\s*combinar|combinar|negociar|a\s*definir|sob\s*consulta|n[aã]o\s+informado|n[aã]o\s+especificad[oa]/i;
 
-/** Valor numérico mensal para schema (null = omitir baseSalary). */
+/** Valor numérico mensal quando há salário real (null = usar "A combinar"). */
 export function parseJobSalaryAmount(salary: string | null | undefined): number | null {
   if (!salary?.trim()) return null;
-  if (SALARY_NON_NUMERIC_RE.test(salary.trim())) return null;
+  if (SALARY_PLACEHOLDER_RE.test(salary.trim())) return null;
   const m = salary.replace(/\./g, '').match(/(\d{3,})/);
   if (!m) return null;
   const amount = Number(m[1]);
@@ -64,7 +65,7 @@ export function parseJobSalaryAmount(salary: string | null | undefined): number 
 }
 
 /** Texto exibido na página e nos cards. */
-export function formatJobSalaryDisplay(salary: string | null | undefined): string {
+export function formatSalaryDisplay(salary: string | null | undefined): string {
   const amount = parseJobSalaryAmount(salary);
   if (amount) {
     return new Intl.NumberFormat('pt-BR', {
@@ -73,7 +74,8 @@ export function formatJobSalaryDisplay(salary: string | null | undefined): strin
       maximumFractionDigits: 0,
     }).format(amount);
   }
-  const trimmed = salary?.trim();
-  if (trimmed && !SALARY_NON_NUMERIC_RE.test(trimmed)) return trimmed;
   return SALARY_DISPLAY_FALLBACK;
 }
+
+/** @deprecated Use formatSalaryDisplay */
+export const formatJobSalaryDisplay = formatSalaryDisplay;

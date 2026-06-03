@@ -16,7 +16,7 @@ import { getSiteSettingsSafe, isIndexingEnabled } from '../../lib/site-settings'
 import {
   employmentTypeLabel,
   formatJobPublishedBr,
-  formatJobSalaryDisplay,
+  formatSalaryDisplay,
   formatJobValidThroughBr,
 } from '../../lib/format';
 import { parseApplyChannel } from '../../lib/apply-channel';
@@ -52,7 +52,7 @@ const relatedJobs = related.jobs
 const applyChannel = parseApplyChannel(job.applyUrl);
 const jobStreetAddress = resolveJobStreetAddress(job);
 const jobAddressDisplay = formatJobStreetAddressDisplay(job);
-const jobSalaryDisplay = formatJobSalaryDisplay(job.salary);
+const jobSalaryDisplay = formatSalaryDisplay(job.salary);
 ---
 <BaseLayout title={title} description={description} canonical={canonical} robots={robots} jsonLd={jsonLd}>
   <nav class="breadcrumb" aria-label="Navegação">
