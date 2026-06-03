@@ -48,3 +48,32 @@ export function applyButtonLabel(url: string): string {
   }
   return 'Candidatar-se';
 }
+
+export const SALARY_DISPLAY_FALLBACK = 'A combinar';
+
+const SALARY_NON_NUMERIC_RE = /a\s*combinar|combinar|negociar|a\s*definir|sob\s*consulta/i;
+
+/** Valor numérico mensal para schema (null = omitir baseSalary). */
+export function parseJobSalaryAmount(salary: string | null | undefined): number | null {
+  if (!salary?.trim()) return null;
+  if (SALARY_NON_NUMERIC_RE.test(salary.trim())) return null;
+  const m = salary.replace(/\./g, '').match(/(\d{3,})/);
+  if (!m) return null;
+  const amount = Number(m[1]);
+  return amount > 0 ? amount : null;
+}
+
+/** Texto exibido na página e nos cards. */
+export function formatJobSalaryDisplay(salary: string | null | undefined): string {
+  const amount = parseJobSalaryAmount(salary);
+  if (amount) {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      maximumFractionDigits: 0,
+    }).format(amount);
+  }
+  const trimmed = salary?.trim();
+  if (trimmed && !SALARY_NON_NUMERIC_RE.test(trimmed)) return trimmed;
+  return SALARY_DISPLAY_FALLBACK;
+}

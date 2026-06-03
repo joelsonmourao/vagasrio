@@ -13,7 +13,12 @@ import {
   mergeJsonLd,
 } from '../../lib/seo';
 import { getSiteSettingsSafe, isIndexingEnabled } from '../../lib/site-settings';
-import { employmentTypeLabel, formatJobPublishedBr, formatJobValidThroughBr } from '../../lib/format';
+import {
+  employmentTypeLabel,
+  formatJobPublishedBr,
+  formatJobSalaryDisplay,
+  formatJobValidThroughBr,
+} from '../../lib/format';
 import { parseApplyChannel } from '../../lib/apply-channel';
 import { jobIsPubliclyVisible } from '../../lib/public-content';
 
@@ -47,6 +52,7 @@ const relatedJobs = related.jobs
 const applyChannel = parseApplyChannel(job.applyUrl);
 const jobStreetAddress = resolveJobStreetAddress(job);
 const jobAddressDisplay = formatJobStreetAddressDisplay(job);
+const jobSalaryDisplay = formatJobSalaryDisplay(job.salary);
 ---
 <BaseLayout title={title} description={description} canonical={canonical} robots={robots} jsonLd={jsonLd}>
   <nav class="breadcrumb" aria-label="Navegação">
@@ -70,7 +76,7 @@ const jobAddressDisplay = formatJobStreetAddressDisplay(job);
         <div class="job-detail-hero-meta">
           <span>Publicada em {formatJobPublishedBr(job.publishedAt)}</span>
           {typeLabel && <span>{typeLabel}</span>}
-          {job.salary && <span>{job.salary}</span>}
+          <span>{jobSalaryDisplay}</span>
         </div>
       </div>
     </header>
@@ -100,6 +106,7 @@ const jobAddressDisplay = formatJobStreetAddressDisplay(job);
             {!jobStreetAddress && (
               <li><span>Endereço</span><strong>{jobAddressDisplay}</strong></li>
             )}
+            <li><span>Salário</span><strong>{jobSalaryDisplay}</strong></li>
             {job.category && <li><span>Categoria</span><strong>{job.category.name}</strong></li>}
             <li><span>Publicação</span><strong>{formatJobPublishedBr(job.publishedAt)}</strong></li>
             <li><span>Validade</span><strong>{formatJobValidThroughBr(job.validThrough, job.publishedAt)}</strong></li>

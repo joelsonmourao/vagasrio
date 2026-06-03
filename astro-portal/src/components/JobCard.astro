@@ -1,5 +1,11 @@
 ---
-import { excerpt, formatDateBr, formatDatetimeIsoAttr, employmentTypeLabel } from '../lib/format';
+import {
+  excerpt,
+  formatDateBr,
+  formatDatetimeIsoAttr,
+  employmentTypeLabel,
+  formatJobSalaryDisplay,
+} from '../lib/format';
 
 interface Props {
   job: {
@@ -40,7 +46,7 @@ const typeLabel = employmentTypeLabel(job.employmentType);
     {typeLabel && <p class="job-card-type">{typeLabel}</p>}
     <p class="job-card-excerpt">{excerpt(job.description, 155)}</p>
     <div class="job-card-footer">
-      {job.salary && <span class="job-salary">{job.salary}</span>}
+      <span class="job-salary">{formatJobSalaryDisplay(job.salary)}</span>
       <a class="btn btn-sm btn-card" href={`/vagas/${job.slug}`}>Ver vaga</a>
     </div>
   </div>

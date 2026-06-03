@@ -1,5 +1,6 @@
 import { absoluteUrl, baseUrl, siteConfig } from './config';
 import { formatJobPostingDate, formatJobPostingValidThrough } from './datetime-brazil';
+import { parseJobSalaryAmount } from './format';
 import { isValidApplyChannel, parseApplyChannel } from './apply-channel';
 import { isRealCompanyLogo, sanitizeSchemaUrl } from './public-content';
 import type { SiteSettingsMap } from './site-settings';
@@ -45,12 +46,6 @@ function normalizeEmploymentType(value: string | null): string | null {
     estagio: 'INTERN',
   };
   return map[value.toLowerCase()] ?? null;
-}
-
-function parseSalary(salary: string | null): number | null {
-  if (!salary) return null;
-  const m = salary.replace(/\./g, '').match(/(\d{3,})/);
-  return m ? Number(m[1]) : null;
 }
 
 /** Endereço completo da vaga (rua/número). Hoje não há campo no banco. */
@@ -121,8 +116,8 @@ export function buildJobPostingSchema(job: JobForSchema, settings?: SiteSettings
   const employmentType = normalizeEmploymentType(job.employmentType);
   if (employmentType) schema.employmentType = employmentType;
 
-  const amount = parseSalary(job.salary);
-  if (amount) {
+  const amount = parseJobSalaryAmount(job.salary);
+  if (amount != null && amount > 0) {
     schema.baseSalary = {
       '@type': 'MonetaryAmount',
       currency: 'BRL',
