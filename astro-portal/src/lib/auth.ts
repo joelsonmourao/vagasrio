@@ -115,8 +115,16 @@ export function setAdminSession(cookies: AstroCookies): void {
   });
 }
 
+/** Remove o cookie de sessão admin (HttpOnly exige resposta do servidor). */
 export function clearAdminSession(cookies: AstroCookies): void {
-  cookies.delete(COOKIE, { path: '/' });
+  cookies.set(COOKIE, '', {
+    path: '/',
+    maxAge: 0,
+    expires: new Date(0),
+    httpOnly: true,
+    secure: isProduction(),
+    sameSite: 'lax',
+  });
 }
 
 export function isAdminLoggedIn(cookies: AstroCookies): boolean {

@@ -546,7 +546,8 @@ main.container,
   color: #fff !important;
 }
 
-.admin-logout-form {
+.admin-logout-form,
+.admin-logout-link {
   margin: 0;
 }
 
@@ -575,12 +576,15 @@ main.container,
     text-align: center;
   }
 
-  .admin-logout-form {
+  .admin-logout-form,
+  .admin-logout-link {
     width: 100%;
   }
 
-  .admin-logout-form .btn {
+  .admin-logout-form .btn,
+  .admin-logout-link {
     width: 100%;
+    justify-content: center;
   }
 }
 

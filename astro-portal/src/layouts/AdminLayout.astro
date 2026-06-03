@@ -49,9 +49,7 @@ function isActive(href: string, exact?: boolean): boolean {
           {links.map((l) => (
             <a href={l.href} class:list={{ active: isActive(l.href, l.exact) }}>{l.label}</a>
           ))}
-          <form method="post" action="/api/auth/logout" class="admin-logout-form">
-            <button class="btn btn-sm btn-outline" type="submit">Sair</button>
-          </form>
+          <a class="btn btn-sm btn-outline admin-logout-link" href="/api/auth/logout">Sair</a>
         </nav>
       </div>
     </header>
