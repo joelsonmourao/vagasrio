@@ -1,16 +1,19 @@
 import type { APIRoute } from 'astro';
-import { getAdminSessionUser, isAdminLoggedIn } from '../../../lib/auth';
+import { getAdminCookieValue, verifyAdminSession } from '../../../lib/auth';
 
 export const GET: APIRoute = async ({ cookies }) => {
-  const cookiePresent = Boolean(cookies.get('vagas_admin_session')?.value);
-  const loggedIn = isAdminLoggedIn(cookies);
-  const user = loggedIn ? getAdminSessionUser(cookies) : null;
+  const raw = getAdminCookieValue(cookies);
+  const cookiePresent = Boolean(raw);
+  const session = verifyAdminSession(raw);
+
+  console.info(`[auth/check] cookiePresent=${cookiePresent} reason=${session.reason}`);
 
   return new Response(
     JSON.stringify({
-      loggedIn,
+      loggedIn: session.valid,
       cookiePresent,
-      user,
+      user: session.user,
+      reason: session.reason,
     }),
     {
       status: 200,
