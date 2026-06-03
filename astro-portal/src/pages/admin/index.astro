@@ -1,0 +1,90 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import AdminJobsNotice from '../../components/AdminJobsNotice.astro';
+import { dashboardStats } from '../../lib/portal';
+import { siteConfig } from '../../lib/config';
+import { formatDateBr } from '../../lib/format';
+import { jobIsPubliclyVisible } from '../../lib/public-content';
+
+const stats = await dashboardStats();
+---
+<AdminLayout title="Dashboard">
+  <header class="admin-page-head">
+    <div>
+      <p class="admin-kicker">Painel</p>
+      <h1>Dashboard</h1>
+      <p class="admin-lead">Visão geral do portal {siteConfig.name}.</p>
+    </div>
+  </header>
+
+  <div class="stats-grid stats-grid-wide">
+    <article class="stat-card"><strong>{stats.jobs}</strong><span>Total cadastradas</span></article>
+    <article class="stat-card"><strong>{stats.activeJobs}</strong><span>Ativas (painel)</span></article>
+    <article class="stat-card stat-card-success"><strong>{stats.publicJobs}</strong><span>Públicas no site</span></article>
+    <article class="stat-card stat-card-warn"><strong>{stats.hiddenActiveJobs}</strong><span>Ativas não públicas</span></article>
+    <article class="stat-card"><strong>{stats.demoJobs}</strong><span>Demo</span></article>
+    <article class="stat-card stat-card-warn"><strong>{stats.expiredJobs}</strong><span>Expiradas / inativas</span></article>
+    <article class="stat-card"><strong>{stats.posts}</strong><span>Posts ativos</span></article>
+    <article class="stat-card"><strong>{stats.companies}</strong><span>Empresas</span></article>
+    <article class="stat-card"><strong>{stats.cities}</strong><span>Cidades</span></article>
+  </div>
+
+  <AdminJobsNotice
+    publicJobs={stats.publicJobs}
+    activeJobs={stats.activeJobs}
+    demoJobs={stats.demoJobs}
+    hiddenActiveJobs={stats.hiddenActiveJobs}
+  />
+
+  <div class="admin-actions-bar admin-actions-bar-wrap">
+    <a href="/admin/vagas/nova" class="btn">Nova vaga</a>
+    <a href="/admin/posts/novo" class="btn btn-outline">Novo post</a>
+    <a href="/admin/importar-vagas" class="btn btn-outline">Importar vagas</a>
+    <a href="/admin/configuracoes" class="btn btn-outline">Configurações de SEO</a>
+    <a href="/sitemap.xml" class="btn btn-outline btn-sm" target="_blank" rel="noopener">Ver sitemap</a>
+    <a href="/robots.txt" class="btn btn-outline btn-sm" target="_blank" rel="noopener">Ver robots.txt</a>
+    <a href="/" class="btn btn-outline btn-sm" target="_blank" rel="noopener">Ver site</a>
+  </div>
+
+  <div class="admin-dashboard-grid">
+    <section class="admin-card">
+      <h2>Últimas vagas cadastradas</h2>
+      {stats.recentJobs.length === 0 ? (
+        <p class="admin-empty">Nenhuma vaga ainda.</p>
+      ) : (
+        <ul class="admin-recent-list">
+          {stats.recentJobs.map((job) => {
+            const isPublic = jobIsPubliclyVisible(job);
+            return (
+              <li>
+                <a href={`/admin/vagas/editar/${job.id}`}>{job.title}</a>
+                <span>
+                  {job.company.name} · {job.city.name}/RJ · {formatDateBr(job.publishedAt)}
+                  {isPublic ? ' · pública' : ' · só painel'}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <a class="admin-card-link" href="/admin/vagas">Gerenciar todas →</a>
+    </section>
+
+    <section class="admin-card">
+      <h2>Últimos posts publicados</h2>
+      {stats.recentPosts.length === 0 ? (
+        <p class="admin-empty">Nenhum post ainda.</p>
+      ) : (
+        <ul class="admin-recent-list">
+          {stats.recentPosts.map((post) => (
+            <li>
+              <a href={`/admin/posts/editar/${post.id}`}>{post.title}</a>
+              <span>{post.category.name} · {formatDateBr(post.publishedAt)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <a class="admin-card-link" href="/admin/posts">Gerenciar todos →</a>
+    </section>
+  </div>
+</AdminLayout>

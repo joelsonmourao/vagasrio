@@ -1,0 +1,33 @@
+# Opcional — apenas para testar PostgreSQL localmente (nao necessario no dia a dia).
+# Desenvolvimento padrao: npm run dev:sqlite (SQLite em prisma/dev.sqlite).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: vagas
+      POSTGRES_PASSWORD: vagas
+      POSTGRES_DB: vagas_rj
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    ports:
+      - '4321:4321'
+    environment:
+      DATABASE_URL: postgresql://vagas:vagas@postgres:5432/vagas_rj?schema=public
+      SITE_BASE_URL: http://localhost:4321
+      SESSION_SECRET: dev-local-secret-change-in-production
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin123
+    depends_on:
+      - postgres
+    volumes:
+      - uploads:/app/public/uploads
+
+volumes:
+  pgdata:
+  uploads:

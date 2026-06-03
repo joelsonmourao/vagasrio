@@ -1,0 +1,119 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import JobCard from '../../components/JobCard.astro';
+import JobApplyBox from '../../components/JobApplyBox.astro';
+import { jobBySlug, jobList } from '../../lib/portal';
+import { buildJobPostingSchema } from '../../lib/job-posting';
+import {
+  buildJobPageTitle,
+  buildJobPageDescription,
+  buildBreadcrumbSchema,
+  jobCanonical,
+  jobRobotsMeta,
+  mergeJsonLd,
+} from '../../lib/seo';
+import { getSiteSettingsSafe, isIndexingEnabled } from '../../lib/site-settings';
+import { employmentTypeLabel, formatJobPublishedBr, formatJobValidThroughBr } from '../../lib/format';
+import { parseApplyChannel } from '../../lib/apply-channel';
+import { jobIsPubliclyVisible } from '../../lib/public-content';
+
+const { slug } = Astro.params;
+const job = slug ? await jobBySlug(slug) : null;
+if (!job) return Astro.redirect('/404');
+
+const settings = await getSiteSettingsSafe();
+const indexingOn = isIndexingEnabled(settings);
+const title = buildJobPageTitle(job, settings);
+const description = buildJobPageDescription(job, settings);
+const canonical = jobCanonical(job, settings);
+const publiclyVisible = jobIsPubliclyVisible(job);
+const robots = jobRobotsMeta(job, indexingOn, publiclyVisible);
+const jsonLd = mergeJsonLd(
+  buildJobPostingSchema(job, settings),
+  buildBreadcrumbSchema(
+    [
+      { name: 'Início', path: '/' },
+      { name: 'Vagas', path: '/vagas' },
+      { name: job.title, path: `/vagas/${job.slug}` },
+    ],
+    settings,
+  ),
+);
+const typeLabel = employmentTypeLabel(job.employmentType);
+const related = await jobList({ city: job.city.slug, perPage: 3, page: 1 });
+const relatedJobs = related.jobs
+  .filter((j) => j.slug !== job.slug && j.slug.trim() && jobIsPubliclyVisible(j))
+  .slice(0, 3);
+const applyChannel = parseApplyChannel(job.applyUrl);
+---
+<BaseLayout title={title} description={description} canonical={canonical} robots={robots} jsonLd={jsonLd}>
+  <nav class="breadcrumb" aria-label="Navegação">
+    <a href="/">Início</a><span>/</span>
+    <a href="/vagas">Vagas</a><span>/</span>
+    <span>{job.title}</span>
+  </nav>
+
+  <article class="job-detail">
+    <header class="job-detail-hero">
+      <div class="job-detail-hero-inner">
+        <div class="job-detail-title-wrap">
+          {job.category && <span class="tag tag-lg tag-category">{job.category.name}</span>}
+          <h1>{job.title}</h1>
+          <p class="job-detail-lead">
+            <span class="job-detail-company">{job.company.name}</span>
+            <span class="job-detail-sep" aria-hidden="true">·</span>
+            <span class="job-detail-city">{job.city.name}/RJ</span>
+          </p>
+        </div>
+        <div class="job-detail-hero-meta">
+          <span>Publicada em {formatJobPublishedBr(job.publishedAt)}</span>
+          {typeLabel && <span>{typeLabel}</span>}
+          {job.salary && <span>{job.salary}</span>}
+        </div>
+      </div>
+    </header>
+
+    <div class="job-detail-layout">
+      <div class="job-detail-main">
+        <section class="panel panel-description">
+          <h2>Descrição da vaga</h2>
+          <div class="prose job-description" set:html={job.description} />
+        </section>
+        <section class="panel panel-warning panel-security panel-security-inline">
+          <div class="panel-security-icon" aria-hidden="true">!</div>
+          <div>
+            <h2>Aviso de segurança</h2>
+            <p>O Vagas RJ apenas divulga oportunidades. Desconfie de cobranças para candidatura.</p>
+          </div>
+        </section>
+      </div>
+
+      <aside class="job-aside">
+        <JobApplyBox channel={applyChannel} />
+        <section class="panel panel-compact panel-summary">
+          <h3>Resumo</h3>
+          <ul class="summary-list">
+            <li><span>Empresa</span><strong>{job.company.name}</strong></li>
+            <li><span>Cidade</span><strong>{job.city.name}/RJ</strong></li>
+            {job.category && <li><span>Categoria</span><strong>{job.category.name}</strong></li>}
+            <li><span>Publicação</span><strong>{formatJobPublishedBr(job.publishedAt)}</strong></li>
+            <li><span>Validade</span><strong>{formatJobValidThroughBr(job.validThrough, job.publishedAt)}</strong></li>
+          </ul>
+        </section>
+        <a class="btn btn-outline btn-full" href="/vagas">← Ver mais vagas</a>
+      </aside>
+    </div>
+  </article>
+
+  {relatedJobs.length > 0 && (
+    <section class="related-section">
+      <div class="section-head">
+        <h2>Outras vagas em {job.city.name}</h2>
+        <a class="section-link" href={`/vagas/cidade/${job.city.slug}`}>Ver todas →</a>
+      </div>
+      <div class="job-grid job-grid-listing">
+        {relatedJobs.map((j) => <JobCard job={j} />)}
+      </div>
+    </section>
+  )}
+</BaseLayout>

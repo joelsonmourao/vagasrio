@@ -1,0 +1,42 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { companiesWithStats } from '../../lib/portal';
+import { baseUrl, siteConfig } from '../../lib/config';
+
+const companies = await companiesWithStats();
+---
+<BaseLayout
+  title={`Empresas com vagas no Rio de Janeiro - ${siteConfig.name}`}
+  description="Veja empresas com oportunidades abertas no estado do Rio de Janeiro."
+  canonical={baseUrl('/empresas')}
+>
+  <div class="page-stack">
+    <header class="page-hero page-hero-compact">
+      <div class="page-hero-inner">
+        <p class="section-kicker" style="color:#93c5fd;margin:0 0 8px">Empregadores</p>
+        <h1>Empresas com vagas no RJ</h1>
+        <p>Conheça empresas que publicam oportunidades no Rio de Janeiro e acesse as vagas abertas.</p>
+      </div>
+    </header>
+
+    <div class="entity-grid">
+      {companies.map((company) => (
+        <article class="entity-card card-hover">
+          <h2><a href={`/empresas/${company.slug}`}>{company.name}</a></h2>
+          {company.description && <p>{company.description}</p>}
+          <p class="entity-meta">
+            {company.jobCount} vaga{company.jobCount !== 1 ? 's' : ''} ativa{company.jobCount !== 1 ? 's' : ''}
+          </p>
+          <a class="btn btn-sm btn-outline" href={`/empresas/${company.slug}`}>Ver vagas</a>
+        </article>
+      ))}
+    </div>
+
+    {companies.length === 0 && (
+      <div class="empty-state empty-state-large">
+        <h3>Nenhuma empresa cadastrada</h3>
+        <p><a href="/vagas">Ver vagas</a></p>
+      </div>
+    )}
+  </div>
+</BaseLayout>

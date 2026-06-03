@@ -1,0 +1,91 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import JobCard from '../components/JobCard.astro';
+import BlogCard from '../components/BlogCard.astro';
+import { homeData } from '../lib/portal';
+import { baseUrl, siteConfig } from '../lib/config';
+import { getSiteSettingsSafe, SETTING_KEYS } from '../lib/site-settings';
+import { buildPublisherOrganizationSchema, buildWebSiteSchema, mergeJsonLd } from '../lib/seo';
+
+let data;
+try {
+  data = await homeData();
+} catch {
+  data = { featuredJobs: [], recentPosts: [], stats: { jobs: 0, activeJobs: 0, posts: 0, companies: 0, cities: 0 } };
+}
+
+const settings = await getSiteSettingsSafe();
+const homeTitle = settings[SETTING_KEYS.homeSeoTitle] || `${siteConfig.name} - Empregos no Rio de Janeiro`;
+const homeDesc =
+  settings[SETTING_KEYS.homeSeoDescription] ||
+  'Encontre vagas de emprego no Rio de Janeiro (RJ) por cidade, empresa e categoria em todo o RJ.';
+const jsonLd = mergeJsonLd(
+  buildWebSiteSchema(settings),
+  buildPublisherOrganizationSchema(settings),
+);
+---
+<BaseLayout title={homeTitle} description={homeDesc} canonical={baseUrl('/', settings)} jsonLd={jsonLd}>
+  <section class="hero hero-home">
+    <div class="hero-pattern" aria-hidden="true"></div>
+    <div class="hero-copy">
+      <p class="hero-kicker">Portal regional · Rio de Janeiro</p>
+      <h1>Vagas de emprego no Rio de Janeiro</h1>
+      <p>Encontre oportunidades por cidade, empresa e categoria em todo o RJ.</p>
+      <form class="search-form search-form-hero" action="/vagas" method="get">
+        <input type="search" name="q" placeholder="Exemplo: assistente, logística, jovem aprendiz" aria-label="Cargo ou palavra-chave" />
+        <input type="text" name="city" placeholder="Exemplo: Rio de Janeiro, Niterói, Duque de Caxias" aria-label="Cidade" list="home-city-list" />
+        <button class="btn btn-hero" type="submit">Buscar vagas</button>
+      </form>
+      <datalist id="home-city-list">
+        {siteConfig.allowedCities.map((c) => <option value={c} />)}
+      </datalist>
+    </div>
+    <div class="hero-stats">
+      <article><strong>{data.stats.activeJobs}</strong><span>vagas públicas</span></article>
+      <article><strong>{data.stats.cities}</strong><span>cidades</span></article>
+      <article><strong>{data.stats.posts}</strong><span>artigos no blog</span></article>
+    </div>
+  </section>
+
+  <section class="home-section home-section-jobs">
+    <div class="section-head">
+      <div>
+        <p class="section-kicker">Oportunidades</p>
+        <h2>Vagas em destaque</h2>
+      </div>
+      <a class="section-link" href="/vagas">Ver todas →</a>
+    </div>
+    <div class="job-grid job-grid-home">
+      {data.featuredJobs.map((job) => <JobCard job={job} />)}
+    </div>
+    {data.featuredJobs.length === 0 && (
+      <p class="section-text">
+        {data.stats.activeJobs === 0
+          ? 'Ainda não há vagas públicas ativas. '
+          : ''}
+        Novas oportunidades serão publicadas em breve. <a href="/vagas">Explorar vagas</a>.
+      </p>
+    )}
+  </section>
+
+  {data.recentPosts.length > 0 && (
+    <section class="home-section home-section-soft">
+      <div class="section-head">
+        <div>
+          <p class="section-kicker">Carreira</p>
+          <h2>Blog</h2>
+        </div>
+        <a class="section-link" href="/blog">Todos os artigos →</a>
+      </div>
+      <div class="entity-grid blog-grid blog-grid-compact">
+        {data.recentPosts.map((post) => <BlogCard article={post} />)}
+      </div>
+    </section>
+  )}
+
+  <section class="cta-band">
+    <h2>Pronto para sua próxima oportunidade?</h2>
+    <p>Explore vagas disponíveis no Rio de Janeiro, filtre por cidade e acompanhe novas oportunidades.</p>
+    <a class="btn btn-lg" href="/vagas">Ver todas as vagas</a>
+  </section>
+</BaseLayout>

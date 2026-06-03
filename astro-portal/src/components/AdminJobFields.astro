@@ -1,0 +1,65 @@
+---
+import { formatDateInputValue } from '../lib/datetime-brazil';
+
+interface Props {
+  job?: {
+    title: string;
+    slug: string;
+    description: string;
+    state: string;
+    salary: string | null;
+    employmentType: string | null;
+    applyUrl: string | null;
+    isActive: boolean;
+    isDemo?: boolean;
+    isIndexable?: boolean;
+    publishedAt: Date;
+    validThrough: Date | null;
+    seoTitle: string | null;
+    seoDescription: string | null;
+    canonicalUrl: string | null;
+    company: { name: string };
+    city: { name: string };
+    category: { name: string } | null;
+  };
+  categories: { name: string }[];
+  allowedCities: string[];
+  isEdit?: boolean;
+}
+const { job, categories, allowedCities, isEdit = false } = Astro.props;
+---
+<fieldset class="admin-fieldset">
+  <legend>Dados da vaga</legend>
+  <div class="admin-form-grid">
+    <label class="admin-field admin-field-span-2">Título da vaga <input name="title" value={job?.title || ''} required /></label>
+    <label>Empresa <input name="company" value={job?.company.name || ''} required /></label>
+    <label>Cidade <input name="city" value={job?.city.name || ''} list="admin-cities" required /></label>
+    <datalist id="admin-cities">{allowedCities.map((c) => <option value={c} />)}</datalist>
+    <label>Estado (UF) <input name="state" value={job?.state || 'RJ'} required maxlength="2" /></label>
+    <label>Categoria <input name="category" value={job?.category?.name || ''} list="admin-cats" /></label>
+    <datalist id="admin-cats">{categories.map((c) => <option value={c.name} />)}</datalist>
+    <label class="admin-field-span-2">Descrição <textarea name="description" rows="10" required>{job?.description || ''}</textarea></label>
+    <label>Link de candidatura <input name="apply_url" type="text" value={job?.applyUrl || ''} placeholder="https://... ou email@empresa.com" /></label>
+    <label>Salário (texto livre) <input name="salary" value={job?.salary || ''} placeholder="Ex.: R$ 2.500,00" /></label>
+    <label>Tipo de contratação <input name="employment_type" value={job?.employmentType || ''} placeholder="Ex.: CLT, tempo integral" /></label>
+    <label>Data de publicação <input name="published_at" type="date" value={job ? formatDateInputValue(job.publishedAt) : ''} /></label>
+    <label>Validade da vaga <input name="valid_through" type="date" value={job?.validThrough ? formatDateInputValue(job.validThrough) : ''} /></label>
+    <label class="admin-field-check"><input type="checkbox" name="is_active" value="1" checked={job ? job.isActive : true} /> Vaga ativa (visível no site)</label>
+  </div>
+</fieldset>
+
+<fieldset class="admin-fieldset">
+  <legend>SEO e URL da página</legend>
+  <p class="admin-hint">O endereço da página é gerado automaticamente em vagas novas. Em vagas existentes, altere só se necessário.</p>
+  <div class="admin-form-grid">
+    {isEdit && (
+      <label class="admin-field-span-2">Endereço da página (URL)
+        <input name="slug" value={job?.slug || ''} placeholder="ex.: assistente-rio-de-janeiro-rj" />
+      </label>
+    )}
+    <label class="admin-field-span-2">Título para Google (opcional) <input name="seo_title" value={job?.seoTitle || ''} placeholder="Se vazio, usa título + cidade + UF" /></label>
+    <label class="admin-field-span-2">Descrição para Google (opcional) <textarea name="seo_description" rows="3" placeholder="Se vazio, gera resumo da descrição">{job?.seoDescription || ''}</textarea></label>
+    <label class="admin-field-span-2">URL canônica (opcional) <input name="canonical_url" type="url" value={job?.canonicalUrl || ''} placeholder="Deixe vazio para usar a URL padrão" /></label>
+    <label class="admin-field-check"><input type="checkbox" name="is_indexable" value="1" checked={job ? job.isIndexable !== false : true} /> Permitir indexação no Google</label>
+  </div>
+</fieldset>

@@ -1,0 +1,25 @@
+---
+import { siteConfig } from '../../lib/config';
+const error = Astro.url.searchParams.get('error');
+---
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Login Admin | {siteConfig.name}</title>
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="stylesheet" href="/assets/css/app.css" />
+    <link rel="stylesheet" href="/assets/css/portal-v2.css" />
+  </head>
+  <body class="admin-login-page">
+    <main class="container admin-login-box">
+      <h1>Admin · {siteConfig.name}</h1>
+      {error && <p class="flash-error">Credenciais inválidas.</p>}
+      <form method="post" action="/api/auth/login">
+        <label>Usuário <input name="username" required /></label>
+        <label>Senha <input name="password" type="password" required /></label>
+        <button class="btn" type="submit">Entrar</button>
+      </form>
+    </main>
+  </body>
+</html>

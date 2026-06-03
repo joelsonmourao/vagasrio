@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import JobCard from '../../../components/JobCard.astro';
+import Pagination from '../../../components/Pagination.astro';
+import { jobList } from '../../../lib/portal';
+import { baseUrl, siteConfig } from '../../../lib/config';
+
+const uf = (Astro.params.uf || siteConfig.mainUf).toUpperCase();
+const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
+const jobsData = await jobList({ page, state: uf });
+---
+<BaseLayout
+  title={`Vagas em ${siteConfig.mainStateName} (${uf}) - ${siteConfig.name}`}
+  description={`Oportunidades de emprego no estado ${uf}.`}
+  canonical={baseUrl(`/vagas/estado/${uf.toLowerCase()}`)}
+>
+  <div class="page-stack">
+    <header class="page-hero page-hero-compact">
+      <div class="page-hero-inner">
+        <h1>Vagas em {siteConfig.mainStateName} ({uf})</h1>
+        <p>Listagem de oportunidades em todo o estado do Rio de Janeiro.</p>
+        {jobsData.total > 0 && <p class="page-hero-count">{jobsData.total} vagas</p>}
+      </div>
+    </header>
+    <div class="job-grid job-grid-listing">
+      {jobsData.jobs.map((job) => <JobCard job={job} />)}
+    </div>
+    <Pagination page={jobsData.page} totalPages={jobsData.totalPages} basePath={`/vagas/estado/${uf.toLowerCase()}`} />
+  </div>
+</BaseLayout>

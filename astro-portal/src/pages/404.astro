@@ -1,0 +1,64 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { siteConfig } from '../lib/config';
+---
+<BaseLayout
+  title={`Página não encontrada - ${siteConfig.name}`}
+  description="O endereço pode ter mudado ou a página não existe mais."
+  robots="noindex,follow"
+>
+  <section class="page-stack page-404">
+    <header class="page-hero page-hero-compact">
+      <div class="page-hero-inner">
+        <p class="section-kicker" style="color:#93c5fd;margin:0 0 8px">Erro 404</p>
+        <h1>Página não encontrada</h1>
+        <p>
+          O link que você acessou pode ter sido alterado, removido ou digitado incorretamente.
+          Use os atalhos abaixo para continuar navegando no {siteConfig.name}.
+        </p>
+      </div>
+    </header>
+
+    <div class="page-404-actions">
+      <a class="btn btn-lg" href="/vagas">Ir para vagas</a>
+      <a class="btn btn-lg btn-outline" href="/blog">Ir para o blog</a>
+      <a class="btn btn-outline" href="/">Voltar ao início</a>
+    </div>
+
+    <nav class="page-404-links" aria-label="Páginas importantes">
+      <h2>Onde ir agora</h2>
+      <ul>
+        <li><a href="/vagas">Vagas de emprego no RJ</a></li>
+        <li><a href="/empresas">Empresas</a></li>
+        <li><a href="/blog">Blog de carreira</a></li>
+        <li><a href="/sobre">Sobre o portal</a></li>
+        <li><a href="/contato">Contato</a></li>
+      </ul>
+    </nav>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-404-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+  .page-404-links h2 {
+    font-size: 1.1rem;
+    margin: 0 0 12px;
+  }
+  .page-404-links ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .page-404-links a {
+    color: var(--color-primary, #2563eb);
+    font-weight: 600;
+  }
+</style>

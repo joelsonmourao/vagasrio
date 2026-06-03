@@ -1,0 +1,77 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import JobCard from '../../components/JobCard.astro';
+import JobFilters from '../../components/JobFilters.astro';
+import Pagination from '../../components/Pagination.astro';
+import ListingMeta from '../../components/ListingMeta.astro';
+import EmptyState from '../../components/EmptyState.astro';
+import { jobList } from '../../lib/portal';
+import { baseUrl, siteConfig } from '../../lib/config';
+
+const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
+const filterQuery = {
+  q: Astro.url.searchParams.get('q') || '',
+  city: Astro.url.searchParams.get('city') || '',
+  company: Astro.url.searchParams.get('company') || '',
+  category: Astro.url.searchParams.get('category') || '',
+};
+const filters = {
+  page,
+  q: filterQuery.q || undefined,
+  city: filterQuery.city || undefined,
+  company: filterQuery.company || undefined,
+  category: filterQuery.category || undefined,
+};
+
+let jobsData;
+try {
+  jobsData = await jobList(filters);
+} catch {
+  jobsData = { jobs: [], total: 0, page: 1, totalPages: 1 };
+}
+
+const hasFilters = !!(filterQuery.q || filterQuery.city || filterQuery.company || filterQuery.category);
+const hasQueryString = Astro.url.searchParams.toString().length > 0;
+const queryForPager = Object.fromEntries(
+  Object.entries(filterQuery).filter(([, v]) => v !== ''),
+);
+---
+<BaseLayout
+  title={`Vagas no Rio de Janeiro RJ - ${siteConfig.name}`}
+  description="Listagem de vagas de emprego no Rio de Janeiro com filtros por cidade, empresa e categoria."
+  canonical={baseUrl('/vagas')}
+  robots={hasQueryString ? 'noindex,follow' : undefined}
+>
+  <div class="page-stack">
+    <header class="page-hero page-hero-compact">
+      <div class="page-hero-inner">
+        <p class="section-kicker" style="color:#93c5fd;margin:0 0 8px">Rio de Janeiro · RJ</p>
+        <h1>Vagas de emprego no Rio de Janeiro</h1>
+        <p>Encontre oportunidades por cargo, cidade, empresa e categoria. Atualizado com foco no mercado fluminense.</p>
+        {jobsData.total > 0 && <p class="page-hero-count">{jobsData.total} vaga{jobsData.total !== 1 ? 's' : ''} encontrada{jobsData.total !== 1 ? 's' : ''}</p>}
+      </div>
+    </header>
+
+    <JobFilters {...filterQuery} />
+
+    {jobsData.total > 0 && (
+      <ListingMeta page={jobsData.page} totalPages={jobsData.totalPages} total={jobsData.total} noun="vagas" />
+    )}
+
+    {jobsData.jobs.length > 0 ? (
+      <div class="job-grid job-grid-listing">
+        {jobsData.jobs.map((job) => <JobCard job={job} />)}
+      </div>
+    ) : (
+      <EmptyState
+        title="Nenhuma vaga encontrada"
+        message={hasFilters
+          ? 'Não encontramos vagas com esses filtros. Tente outra cidade (ex.: duque) ou palavra-chave.'
+          : 'Ainda não há vagas públicas no site. Oportunidades de demonstração ou com link inválido ficam apenas no painel administrativo.'}
+        clearHref={hasFilters ? '/vagas' : undefined}
+      />
+    )}
+
+    <Pagination page={jobsData.page} totalPages={jobsData.totalPages} basePath="/vagas" query={queryForPager} />
+  </div>
+</BaseLayout>

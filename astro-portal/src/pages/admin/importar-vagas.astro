@@ -1,0 +1,88 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getLastImportSummary } from '../../lib/portal';
+
+const params = Astro.url.searchParams;
+const error = params.get('error');
+const last = await getLastImportSummary();
+---
+<AdminLayout title="Importar vagas">
+  <header class="admin-page-head">
+    <div>
+      <p class="admin-kicker">Importação</p>
+      <h1>Importar vagas</h1>
+      <p class="admin-lead">Envie planilhas CSV ou XLSX com vagas do Rio de Janeiro (UF = RJ).</p>
+    </div>
+  </header>
+
+  {error && <p class="flash-error">{decodeURIComponent(error)}</p>}
+  {params.get('ok') && (
+    <section class="admin-card admin-import-result">
+      <h2>Resultado da última importação</h2>
+      <ul class="admin-import-stats">
+        <li><strong>Linhas lidas:</strong> {params.get('total') || '—'}</li>
+        <li><strong>Importadas:</strong> {params.get('imported') || '0'}</li>
+        <li><strong>Atualizadas:</strong> 0 <span class="admin-hint-inline">(cada linha cria uma vaga nova)</span></li>
+        <li><strong>Ignoradas:</strong> {params.get('ignored') || '0'} <span class="admin-hint-inline">(fora do RJ)</span></li>
+        <li><strong>Com erro:</strong> {params.get('errors') || '0'}</li>
+      </ul>
+    </section>
+  )}
+
+  <section class="admin-card">
+    <h2>Colunas aceitas na planilha</h2>
+    <p class="admin-hint">A primeira linha deve conter os nomes das colunas. Você pode usar português ou inglês.</p>
+    <table class="admin-table admin-table-compact">
+      <thead><tr><th>Coluna</th><th>Obrigatória</th><th>Exemplo</th></tr></thead>
+      <tbody>
+        <tr><td>Título / title / cargo</td><td>Sim</td><td>Assistente administrativo</td></tr>
+        <tr><td>Empresa / company</td><td>Sim</td><td>Empresa Exemplo Ltda</td></tr>
+        <tr><td>Cidade / city</td><td>Sim</td><td>Rio de Janeiro</td></tr>
+        <tr><td>Estado / state / UF</td><td>Sim</td><td>RJ</td></tr>
+        <tr><td>Descrição / description</td><td>Sim</td><td>Texto da vaga</td></tr>
+        <tr><td>Link de candidatura / applyUrl / link</td><td>Sim</td><td>https://...</td></tr>
+        <tr><td>Categoria / category</td><td>Não</td><td>Administrativo</td></tr>
+        <tr><td>Salário / salary</td><td>Não</td><td>R$ 2.500</td></tr>
+        <tr><td>Tipo / employmentType</td><td>Não</td><td>CLT</td></tr>
+        <tr><td>Data publicação / publishedAt</td><td>Não</td><td>2026-06-01</td></tr>
+        <tr><td>Validade / validThrough</td><td>Não</td><td>2026-12-31</td></tr>
+      </tbody>
+    </table>
+    <p class="admin-hint" style="margin-top:12px">
+      Modelo mínimo (CSV): <code>title,company,city,state,description,applyUrl</code>
+    </p>
+  </section>
+
+  {last && !params.get('ok') && (
+    <section class="admin-card">
+      <h2>Última importação no sistema</h2>
+      <ul class="admin-import-stats">
+        <li><strong>Arquivo:</strong> {last.filename}</li>
+        <li><strong>Linhas lidas:</strong> {last.totalRows}</li>
+        <li><strong>Importadas:</strong> {last.importedRows}</li>
+        <li><strong>Ignoradas:</strong> {last.ignoredRows}</li>
+        <li><strong>Com erro:</strong> {last.errorRows}</li>
+      </ul>
+      {last.errors.length > 0 && (
+        <>
+          <h3>Erros por linha</h3>
+          <ul class="admin-error-list">
+            {last.errors.map((e) => (
+              <li><strong>Linha {e.rowNumber}:</strong> {e.reason}</li>
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
+  )}
+
+  <section class="admin-card">
+    <h2>Enviar planilha</h2>
+    <form method="post" action="/api/admin/import" enctype="multipart/form-data" class="admin-form">
+      <label>Planilha (.csv ou .xlsx) <input type="file" name="sheet" accept=".csv,.xlsx" required /></label>
+      <div class="admin-form-actions">
+        <button class="btn" type="submit">Importar vagas</button>
+      </div>
+    </form>
+  </section>
+</AdminLayout>

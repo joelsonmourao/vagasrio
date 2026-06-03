@@ -1,0 +1,45 @@
+---
+import { siteConfig } from '../lib/config';
+const year = new Date().getFullYear();
+---
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <h3>{siteConfig.name}</h3>
+        <p>
+          O {siteConfig.name} organiza oportunidades de emprego no Rio de Janeiro com foco em informação
+          clara e navegação rápida.
+        </p>
+      </div>
+      <div class="footer-col">
+        <h4>Links úteis</h4>
+        <ul>
+          <li><a href="/vagas">Vagas</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/empresas">Empresas</a></li>
+          <li><a href="/vagas/estado/rj">Vagas no RJ</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Institucional</h4>
+        <ul>
+          <li><a href="/sobre">Sobre</a></li>
+          <li><a href="/contato">Contato</a></li>
+          <li><a href="/politica-de-privacidade">Privacidade</a></li>
+          <li><a href="/politica-de-cookies">Cookies</a></li>
+          <li><a href="/termos-de-uso">Termos</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contato</h4>
+        <ul>
+          <li><a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-note">
+      <p>© {year} {siteConfig.name}. Divulgação de vagas no estado do Rio de Janeiro (RJ).</p>
+    </div>
+  </div>
+</footer>

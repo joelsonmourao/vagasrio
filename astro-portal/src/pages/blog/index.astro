@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BlogCard from '../../components/BlogCard.astro';
+import Pagination from '../../components/Pagination.astro';
+import ListingMeta from '../../components/ListingMeta.astro';
+import { articleList } from '../../lib/portal';
+import { baseUrl, siteConfig } from '../../lib/config';
+
+const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
+const hasQueryString = Astro.url.searchParams.toString().length > 0;
+const data = await articleList({ page });
+---
+<BaseLayout
+  title={`Blog de carreira no Rio de Janeiro - ${siteConfig.name}`}
+  description="Dicas de currículo, entrevista e mercado de trabalho no RJ."
+  canonical={baseUrl('/blog')}
+  robots={hasQueryString ? 'noindex,follow' : undefined}
+>
+  <div class="page-stack">
+    <header class="page-hero page-hero-compact">
+      <div class="page-hero-inner">
+        <p class="section-kicker" style="color:#93c5fd;margin:0 0 8px">Carreira · RJ</p>
+        <h1>Blog {siteConfig.name}</h1>
+        <p>Guias práticos sobre currículo, entrevistas, primeiro emprego e mercado de trabalho no Rio de Janeiro.</p>
+      </div>
+    </header>
+
+    {data.total > 0 && (
+      <ListingMeta page={data.page} totalPages={data.totalPages} total={data.total} noun="artigos" countMode="published" />
+    )}
+
+    {data.articles.length > 0 ? (
+      <div class="entity-grid blog-grid blog-grid-list">
+        {data.articles.map((article) => <BlogCard article={article} />)}
+      </div>
+    ) : (
+      <div class="empty-state empty-state-large">
+        <h3>Em breve</h3>
+        <p>Novos artigos serão publicados em breve.</p>
+      </div>
+    )}
+
+    <Pagination page={data.page} totalPages={data.totalPages} basePath="/blog" />
+  </div>
+</BaseLayout>

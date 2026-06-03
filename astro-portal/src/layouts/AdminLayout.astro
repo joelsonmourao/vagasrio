@@ -1,0 +1,64 @@
+---
+import { siteConfig } from '../lib/config';
+import { getSiteSettingsSafe, SETTING_KEYS } from '../lib/site-settings';
+
+const settings = await getSiteSettingsSafe();
+const logoSrc = settings[SETTING_KEYS.logoPath] || '/assets/img/logo-vagas-rj.svg';
+const path = Astro.url.pathname;
+const title = Astro.props.title;
+const links = [
+  { href: '/admin', label: 'Dashboard', exact: true },
+  { href: '/admin/vagas', label: 'Vagas' },
+  { href: '/admin/posts', label: 'Posts' },
+  { href: '/admin/importar-vagas', label: 'Importar' },
+  { href: '/admin/configuracoes', label: 'Configurações' },
+];
+
+function isActive(href: string, exact?: boolean): boolean {
+  if (exact) return path === href || path === `${href}/`;
+  return path === href || path.startsWith(`${href}/`);
+}
+---
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>{title} | Admin {siteConfig.name}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/css/app.css" />
+    <link rel="stylesheet" href="/assets/css/portal-v2.css" />
+  </head>
+  <body class="admin-body">
+    <header class="admin-header">
+      <div class="container admin-header-inner">
+        <a class="admin-brand-link" href="/admin">
+          <img class="admin-brand-logo" src={logoSrc} alt={siteConfig.name} width="160" height="38" />
+          <span>
+            <strong>Painel admin</strong>
+            <small>{siteConfig.name}</small>
+          </span>
+        </a>
+        <button type="button" class="admin-nav-toggle" data-admin-nav-toggle aria-expanded="false" aria-controls="admin-main-nav">
+          Menu
+        </button>
+        <nav id="admin-main-nav" class="admin-nav" aria-label="Admin">
+          {links.map((l) => (
+            <a href={l.href} class:list={{ active: isActive(l.href, l.exact) }}>{l.label}</a>
+          ))}
+          <form method="post" action="/api/auth/logout" class="admin-logout-form">
+            <button class="btn btn-sm btn-outline" type="submit">Sair</button>
+          </form>
+        </nav>
+      </div>
+    </header>
+    <div id="admin-nav-backdrop" class="admin-nav-backdrop" aria-hidden="true"></div>
+    <main class="container admin-main">
+      <slot />
+    </main>
+    <script src="/assets/js/app.js" defer></script>
+  </body>
+</html>

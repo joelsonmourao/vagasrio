@@ -1,0 +1,150 @@
+// Schema producao — PostgreSQL (Coolify / VPS)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  slug        String   @unique
+  website     String?
+  description String?
+  logo        String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  jobs        Job[]
+
+  @@map("companies")
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  jobs      Job[]
+
+  @@map("categories")
+}
+
+model City {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  state     String
+  createdAt DateTime @default(now()) @map("created_at")
+  jobs      Job[]
+
+  @@map("cities")
+}
+
+model Job {
+  id              Int       @id @default(autoincrement())
+  title           String
+  slug            String    @unique
+  companyId       Int       @map("company_id")
+  categoryId      Int?      @map("category_id")
+  cityId          Int       @map("city_id")
+  state           String
+  description     String
+  requirements    String?
+  activities      String?
+  benefits        String?
+  additionalInfo  String?   @map("additional_info")
+  salary          String?
+  employmentType  String?   @map("employment_type")
+  applyUrl        String?   @map("apply_url")
+  isActive        Boolean   @default(true) @map("is_active")
+  publishedAt     DateTime  @map("published_at")
+  validThrough    DateTime? @map("valid_through")
+  source          String?
+  isDemo          Boolean   @default(false) @map("is_demo")
+  seoTitle        String?   @map("seo_title")
+  seoDescription  String?   @map("seo_description")
+  canonicalUrl    String?   @map("canonical_url")
+  isIndexable     Boolean   @default(true) @map("is_indexable")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  company  Company   @relation(fields: [companyId], references: [id])
+  category Category? @relation(fields: [categoryId], references: [id])
+  city     City      @relation(fields: [cityId], references: [id])
+
+  @@index([cityId])
+  @@index([state])
+  @@index([isActive, publishedAt(sort: Desc)])
+  @@map("jobs")
+}
+
+model BlogCategory {
+  id          Int         @id @default(autoincrement())
+  name        String
+  slug        String      @unique
+  description String
+  isActive    Boolean     @default(true) @map("is_active")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  posts       BlogPost[]
+
+  @@map("blog_categories")
+}
+
+model BlogPost {
+  id              Int          @id @default(autoincrement())
+  categoryId      Int          @map("category_id")
+  title           String
+  slug            String       @unique
+  excerpt         String
+  content         String
+  seoTitle        String       @map("seo_title")
+  seoDescription  String       @map("seo_description")
+  featuredImage   String?      @map("featured_image")
+  canonicalUrl    String?      @map("canonical_url")
+  isIndexable     Boolean      @default(true) @map("is_indexable")
+  publishedAt     DateTime     @map("published_at")
+  isActive        Boolean      @default(true) @map("is_active")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  category BlogCategory @relation(fields: [categoryId], references: [id])
+
+  @@index([categoryId, isActive, publishedAt(sort: Desc)])
+  @@map("blog_posts")
+}
+
+model Import {
+  id            Int      @id @default(autoincrement())
+  filename      String
+  totalRows     Int      @default(0) @map("total_rows")
+  importedRows  Int      @default(0) @map("imported_rows")
+  ignoredRows   Int      @default(0) @map("ignored_rows")
+  errorRows     Int      @default(0) @map("error_rows")
+  summaryJson   String?  @map("summary_json")
+  createdAt     DateTime @default(now()) @map("created_at")
+  errors        ImportError[]
+
+  @@map("imports")
+}
+
+model ImportError {
+  id        Int    @id @default(autoincrement())
+  importId  Int    @map("import_id")
+  rowNumber Int    @map("row_number")
+  reason    String
+  rawData   String? @map("raw_data")
+  import    Import @relation(fields: [importId], references: [id])
+
+  @@map("import_errors")
+}
+
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("site_settings")
+}

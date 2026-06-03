@@ -1,0 +1,63 @@
+---
+import { buildJobPostingSchema } from '../lib/job-posting';
+import { jobGoogleJobsIssues, jobIsExpired, isBlockedApplyUrl } from '../lib/public-content';
+import { getSiteSettingsSafe } from '../lib/site-settings';
+
+interface Props {
+  job: {
+    id: number;
+    title: string;
+    slug: string;
+    description: string;
+    publishedAt: Date;
+    validThrough: Date | null;
+    applyUrl: string | null;
+    isActive: boolean;
+    isDemo: boolean;
+    isIndexable: boolean;
+    employmentType: string | null;
+    salary: string | null;
+    company: { name: string; website: string | null; logo: string | null };
+    city: { name: string };
+  };
+}
+
+const { job } = Astro.props;
+const settings = await getSiteSettingsSafe();
+const now = new Date();
+const expired = jobIsExpired(job);
+const issues = jobGoogleJobsIssues(job);
+const googleJobsOk = issues.length === 0 && job.isActive && !expired;
+const schema = buildJobPostingSchema(job, settings);
+const schemaJson = JSON.stringify(schema, null, 2);
+---
+<section class="admin-card admin-job-status">
+  <h2 class="admin-card-title">Status e Google Jobs</h2>
+  <ul class="admin-status-list">
+    <li>
+      <span class="admin-badge" class:list={[job.isActive && !expired ? 'admin-badge-success' : 'admin-badge-muted']}>
+        {job.isDemo ? 'Demo' : !job.isActive ? 'Inativa' : expired ? 'Expirada' : 'Ativa'}
+      </span>
+    </li>
+    <li>
+      <span class="admin-badge" class:list={[job.isIndexable ? 'admin-badge-success' : 'admin-badge-muted']}>
+        {job.isIndexable ? 'Indexável' : 'Noindex'}
+      </span>
+    </li>
+    <li><code>/vagas/{job.slug}</code></li>
+  </ul>
+  {isBlockedApplyUrl(job.applyUrl) && (
+    <p class="admin-warn">Link de candidatura inválido ou example.com — não aparece como botão público nem no JobPosting.</p>
+  )}
+  {googleJobsOk ? (
+    <p class="admin-ok">Elegível para JobPosting indexável (directApply: false).</p>
+  ) : (
+    <ul class="admin-warn-list">
+      {issues.map((msg) => <li>{msg}</li>)}
+    </ul>
+  )}
+  <details class="admin-details">
+    <summary>Prévia do JSON-LD JobPosting</summary>
+    <pre class="admin-code-preview"><code>{schemaJson}</code></pre>
+  </details>
+</section>

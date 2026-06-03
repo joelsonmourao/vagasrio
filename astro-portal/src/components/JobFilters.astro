@@ -1,0 +1,49 @@
+---
+interface Props {
+  q?: string;
+  city?: string;
+  company?: string;
+  category?: string;
+  action?: string;
+}
+const { q = '', city = '', company = '', category = '', action = '/vagas' } = Astro.props;
+---
+<section class="filters-panel" aria-labelledby="filters-title">
+  <h2 id="filters-title" class="filters-title">Filtrar vagas</h2>
+  <p class="filters-hint">Dica: na cidade você pode digitar só parte do nome — ex.: <strong>duque</strong>, <strong>niteroi</strong> ou <strong>rio</strong>.</p>
+  <form class="search-form filters" method="get" action={action}>
+    <label class="filter-field">
+      <span class="filter-label">Cargo ou palavra-chave</span>
+      <input type="search" name="q" value={q} placeholder="Exemplo: assistente, logística, jovem aprendiz" autocomplete="off" />
+    </label>
+    <label class="filter-field">
+      <span class="filter-label">Cidade</span>
+      <input
+        type="text"
+        name="city"
+        value={city}
+        placeholder="Exemplo: Rio de Janeiro, Niterói, Duque de Caxias"
+        autocomplete="off"
+        list="city-suggestions"
+      />
+    </label>
+    <label class="filter-field">
+      <span class="filter-label">Empresa</span>
+      <input type="text" name="company" value={company} placeholder="Nome da empresa" autocomplete="off" />
+    </label>
+    <label class="filter-field">
+      <span class="filter-label">Categoria</span>
+      <input type="text" name="category" value={category} placeholder="Exemplo: Administrativo, Comercial, Logística" autocomplete="off" />
+    </label>
+    <button class="btn" type="submit">Buscar</button>
+  </form>
+  <datalist id="city-suggestions">
+    <option value="Rio de Janeiro"></option>
+    <option value="Niterói"></option>
+    <option value="Duque de Caxias"></option>
+    <option value="São Gonçalo"></option>
+    <option value="Nova Iguaçu"></option>
+    <option value="Macaé"></option>
+    <option value="Cabo Frio"></option>
+  </datalist>
+</section>

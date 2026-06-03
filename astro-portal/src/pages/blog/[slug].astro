@@ -1,0 +1,70 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { articleBySlug, articleList } from '../../lib/portal';
+import {
+  buildArticleSchema,
+  buildBlogPageTitle,
+  buildBlogPageDescription,
+  buildBreadcrumbSchema,
+  blogCanonical,
+  blogRobotsMeta,
+  mergeJsonLd,
+} from '../../lib/seo';
+import { getSiteSettingsSafe, isIndexingEnabled } from '../../lib/site-settings';
+import { formatDateBr } from '../../lib/format';
+
+const { slug } = Astro.params;
+const article = slug ? await articleBySlug(slug) : null;
+if (!article) return Astro.redirect('/404');
+
+const settings = await getSiteSettingsSafe();
+const indexingOn = isIndexingEnabled(settings);
+const title = buildBlogPageTitle(article, settings);
+const description = buildBlogPageDescription(article);
+const canonical = blogCanonical(article, settings);
+const robots = blogRobotsMeta(article, indexingOn);
+const jsonLd = mergeJsonLd(
+  buildArticleSchema(article, settings),
+  buildBreadcrumbSchema(
+    [
+      { name: 'Início', path: '/' },
+      { name: 'Blog', path: '/blog' },
+      { name: article.title, path: `/blog/${article.slug}` },
+    ],
+    settings,
+  ),
+);
+
+const more = await articleList({ page: 1, perPage: 6, category: article.category.slug });
+const related = more.articles.filter((a) => a.slug !== article.slug).slice(0, 5);
+---
+<BaseLayout title={title} description={description} canonical={canonical} robots={robots} jsonLd={jsonLd}>
+  <nav class="breadcrumb" aria-label="Navegação">
+    <a href="/">Início</a><span>/</span>
+    <a href="/blog">Blog</a><span>/</span>
+    <span>{article.title}</span>
+  </nav>
+
+  <div class="article-page">
+    <div class="article-page-grid">
+      <article class="article-content">
+        <header class="panel article-header">
+          <p class="article-meta-kicker">{article.category.name}</p>
+          <h1>{article.title}</h1>
+          <p class="article-meta">{formatDateBr(article.publishedAt)}</p>
+        </header>
+        <div class="panel prose article-body" set:html={article.content} />
+      </article>
+      {related.length > 0 && (
+        <aside class="article-sidebar">
+          <h2>Leia também</h2>
+          <ul class="article-related-list">
+            {related.map((a) => (
+              <li><a href={`/blog/${a.slug}`}>{a.title}</a></li>
+            ))}
+          </ul>
+        </aside>
+      )}
+    </div>
+  </div>
+</BaseLayout>

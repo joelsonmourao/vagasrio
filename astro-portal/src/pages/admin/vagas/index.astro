@@ -1,0 +1,115 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import AdminJobsNotice from '../../../components/AdminJobsNotice.astro';
+import { dashboardStats, jobList } from '../../../lib/portal';
+import { formatDateBr } from '../../../lib/format';
+import { jobIsPubliclyVisible } from '../../../lib/public-content';
+import { isBlockedApplyUrl } from '../../../lib/public-content';
+
+const q = Astro.url.searchParams.get('q') || undefined;
+const data = await jobList({ page: Number(Astro.url.searchParams.get('page') || 1), perPage: 20, activeOnly: false, q });
+const panelStats = await dashboardStats();
+const ok = Astro.url.searchParams.get('ok');
+const now = new Date();
+---
+<AdminLayout title="Vagas">
+  <header class="admin-page-head">
+    <div>
+      <p class="admin-kicker">Conteúdo</p>
+      <h1>Gerenciar vagas</h1>
+      <p class="admin-lead">
+        {data.total} vaga(s) no cadastro · {panelStats.publicJobs} pública(s) no site · página {data.page} de {data.totalPages}
+      </p>
+    </div>
+  </header>
+
+  <AdminJobsNotice
+    publicJobs={panelStats.publicJobs}
+    activeJobs={panelStats.activeJobs}
+    demoJobs={panelStats.demoJobs}
+    hiddenActiveJobs={panelStats.hiddenActiveJobs}
+  />
+
+  {ok && <p class="flash-ok">Operação concluída com sucesso.</p>}
+
+  <div class="admin-actions-bar">
+    <a class="btn" href="/admin/vagas/nova">Nova vaga</a>
+    <a class="btn btn-outline" href="/admin/importar-vagas">Importar planilha</a>
+  </div>
+
+  <section class="admin-card">
+    <form method="get" class="search-form filters filters-admin">
+      <label>
+        <span class="filter-label">Buscar por título</span>
+        <input type="search" name="q" value={q || ''} placeholder="Ex.: assistente, logística..." />
+      </label>
+      <button class="btn" type="submit">Buscar</button>
+    </form>
+  </section>
+
+  <section class="admin-card admin-card-table">
+    <div class="admin-table-wrap">
+      <table class="admin-table admin-table-dense">
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Empresa</th>
+            <th>Cidade/UF</th>
+            <th>Categoria</th>
+            <th>Status / SEO</th>
+            <th>Publicação</th>
+            <th>Validade</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.jobs.map((job) => {
+            const expired = job.validThrough && job.validThrough < now;
+            const isPublic = jobIsPubliclyVisible(job);
+            return (
+              <tr>
+                <td><strong>{job.title}</strong></td>
+                <td>{job.company.name}</td>
+                <td>{job.city.name}/{job.state}</td>
+                <td>{job.category?.name || '—'}</td>
+                <td>
+                  <span class:list={['admin-badge', job.isActive && !expired ? 'admin-badge-success' : 'admin-badge-muted']}>
+                    {job.isDemo ? 'Demo' : !job.isActive ? 'Inativa' : expired ? 'Expirada' : 'Ativa'}
+                  </span>
+                  {isPublic ? (
+                    <span class="admin-badge admin-badge-success">Pública</span>
+                  ) : (
+                    <span class="admin-badge admin-badge-muted">Oculta</span>
+                  )}
+                  {!job.isIndexable && <span class="admin-badge admin-badge-muted">Noindex</span>}
+                  {isBlockedApplyUrl(job.applyUrl) && <span class="admin-badge admin-badge-warn" title="Link inválido">URL ⚠</span>}
+                </td>
+                <td>{formatDateBr(job.publishedAt)}</td>
+                <td>{job.validThrough ? formatDateBr(job.validThrough) : '—'}</td>
+                <td class="admin-actions">
+                  <a class="admin-action" href={`/admin/vagas/editar/${job.id}`}>Editar</a>
+                  {isPublic ? (
+                    <a class="admin-action" href={`/vagas/${job.slug}`} target="_blank" rel="noopener">Ver no site</a>
+                  ) : (
+                    <span class="admin-action admin-action-muted" title="Vaga não publicada no site">Sem prévia pública</span>
+                  )}
+                  <form method="post" action="/api/admin/jobs" class="admin-inline-form">
+                    <input type="hidden" name="_action" value="toggle" />
+                    <input type="hidden" name="id" value={job.id} />
+                    <button type="submit" class="admin-action admin-action-btn">{job.isActive ? 'Desativar' : 'Ativar'}</button>
+                  </form>
+                  <form method="post" action="/api/admin/jobs" class="admin-inline-form" onsubmit="return confirm('Excluir esta vaga permanentemente?')">
+                    <input type="hidden" name="_action" value="delete" />
+                    <input type="hidden" name="id" value={job.id} />
+                    <button type="submit" class="admin-action admin-action-btn admin-action-danger">Excluir</button>
+                  </form>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+    {data.jobs.length === 0 && <p class="admin-empty">Nenhuma vaga encontrada.</p>}
+  </section>
+</AdminLayout>

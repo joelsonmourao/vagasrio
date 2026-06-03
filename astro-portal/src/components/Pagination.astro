@@ -1,0 +1,60 @@
+---
+import { buildPaginationItems } from '../lib/pagination-pages';
+
+interface Props {
+  page: number;
+  totalPages: number;
+  basePath?: string;
+  query?: Record<string, string>;
+}
+const { page, totalPages, basePath = '', query = {} } = Astro.props;
+
+function pageUrl(p: number): string {
+  const params = new URLSearchParams(query);
+  if (p > 1) params.set('page', String(p));
+  else params.delete('page');
+  const qs = params.toString();
+  return `${basePath}${qs ? `?${qs}` : ''}`;
+}
+
+const items = buildPaginationItems(page, totalPages);
+const isFirst = page <= 1;
+const isLast = page >= totalPages;
+---
+{totalPages > 1 && (
+  <nav class="pagination-pro" aria-label="Paginação">
+    <p class="pagination-pro__summary">
+      Página <strong>{page}</strong> de <strong>{totalPages}</strong>
+    </p>
+
+    <div class="pagination-pro__bar">
+      {isFirst ? (
+        <span class="pagination-pro__btn pagination-pro__btn--disabled" aria-disabled="true">← Anterior</span>
+      ) : (
+        <a class="pagination-pro__btn pagination-pro__btn--nav" href={pageUrl(page - 1)} rel="prev">← Anterior</a>
+      )}
+
+      <div class="pagination-pro__pages pagination-pro__pages--desktop" aria-hidden="false">
+        {items.map((item) =>
+          item === 'ellipsis' ? (
+            <span class="pagination-pro__ellipsis" aria-hidden="true">…</span>
+          ) : item === page ? (
+            <span class="pagination-pro__page is-current" aria-current="page">{item}</span>
+          ) : (
+            <a class="pagination-pro__page" href={pageUrl(item)}>{item}</a>
+          ),
+        )}
+      </div>
+
+      <span class="pagination-pro__mobile-label">
+        {page} <span class="pagination-pro__mobile-of">de</span> {totalPages}
+      </span>
+
+      {isLast ? (
+        <span class="pagination-pro__btn pagination-pro__btn--disabled" aria-disabled="true">Próxima →</span>
+      ) : (
+        <a class="pagination-pro__btn pagination-pro__btn--nav" href={pageUrl(page + 1)} rel="next">Próxima →</a>
+      )}
+    </div>
+  </nav>
+)}

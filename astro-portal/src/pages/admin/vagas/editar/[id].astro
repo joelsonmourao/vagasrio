@@ -1,0 +1,46 @@
+---
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+import AdminJobFields from '../../../../components/AdminJobFields.astro';
+import AdminJobStatus from '../../../../components/AdminJobStatus.astro';
+import { jobById } from '../../../../lib/portal';
+import { jobIsPubliclyVisible } from '../../../../lib/public-content';
+import { prisma } from '../../../../lib/db';
+import { siteConfig } from '../../../../lib/config';
+
+const id = Number(Astro.params.id);
+const job = await jobById(id, true);
+if (!job) return Astro.redirect('/admin/vagas');
+const isPublic = jobIsPubliclyVisible(job);
+const cats = await prisma.category.findMany({ orderBy: { name: 'asc' } });
+const error = Astro.url.searchParams.get('error');
+---
+<AdminLayout title="Editar vaga">
+  <header class="admin-page-head">
+    <div>
+      <p class="admin-kicker">Conteúdo</p>
+      <h1>Editar vaga</h1>
+      <p class="admin-lead">
+        {isPublic ? (
+          <a href={`/vagas/${job.slug}`} target="_blank" rel="noopener">Ver no site →</a>
+        ) : (
+          <span class="admin-lead-muted">Esta vaga não está publicada no site (demo, link inválido, inativa, expirada ou noindex).</span>
+        )}
+      </p>
+    </div>
+  </header>
+  {error && <p class="flash-error">{decodeURIComponent(error)}</p>}
+  <AdminJobStatus job={job} />
+  <form method="post" action="/api/admin/jobs" class="admin-form admin-form-stacked">
+    <input type="hidden" name="id" value={job.id} />
+    <AdminJobFields job={job} categories={cats} allowedCities={siteConfig.allowedCities} isEdit />
+    <div class="admin-form-actions">
+      <button class="btn" type="submit">Atualizar vaga</button>
+      <a class="btn btn-outline" href="/admin/vagas">Voltar</a>
+    </div>
+  </form>
+  <form method="post" action="/api/admin/jobs" class="admin-form-danger" onsubmit="return confirm('Excluir esta vaga permanentemente?')">
+    <input type="hidden" name="_action" value="delete" />
+    <input type="hidden" name="id" value={job.id} />
+    <button class="btn btn-outline admin-btn-danger" type="submit">Excluir vaga</button>
+  </form>
+</AdminLayout>

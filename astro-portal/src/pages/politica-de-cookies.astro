@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { institutionalPages } from '../lib/institutional';
+import { baseUrl, siteConfig } from '../lib/config';
+import { getSiteSettingsSafe } from '../lib/site-settings';
+const page = institutionalPages['politica-de-cookies'];
+const settings = await getSiteSettingsSafe();
+---
+<BaseLayout title={`${page.title} - ${siteConfig.name}`} description={page.description} canonical={baseUrl('/politica-de-cookies', settings)}>
+  <h1>{page.title}</h1>
+  <div class="prose" set:html={page.html} />
+</BaseLayout>

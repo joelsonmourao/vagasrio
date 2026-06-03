@@ -1,0 +1,29 @@
+---
+interface Props {
+  publicJobs: number;
+  activeJobs: number;
+  demoJobs: number;
+  hiddenActiveJobs: number;
+}
+const { publicJobs, activeJobs, demoJobs, hiddenActiveJobs } = Astro.props;
+---
+{hiddenActiveJobs > 0 && (
+  <section class="admin-card admin-notice" role="note">
+    <h2 class="admin-card-title">Por que o site público não mostra todas as vagas ativas?</h2>
+    <p>
+      O painel lista <strong>{activeJobs}</strong> vaga(s) ativa(s) no cadastro, mas apenas
+      <strong>{publicJobs}</strong> aparecem em <a href="/vagas" target="_blank" rel="noopener">/vagas</a> e na home.
+    </p>
+    <ul>
+      <li>Vagas <strong>demo</strong> ou com link <code>example.com</code> não são publicadas no site.</li>
+      <li>Vagas <strong>inativas</strong>, <strong>expiradas</strong> ou com <strong>noindex</strong> também ficam fora do site público.</li>
+      {demoJobs > 0 && <li>Há <strong>{demoJobs}</strong> vaga(s) de demonstração no banco.</li>}
+      {hiddenActiveJobs > 0 && (
+        <li>
+          <strong>{hiddenActiveJobs}</strong> vaga(s) ativa(s) no painel não são públicas — use &quot;Editar&quot; para revisar
+          candidatura, demo e indexação.
+        </li>
+      )}
+    </ul>
+  </section>
+)}

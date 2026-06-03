@@ -1,0 +1,17 @@
+---
+interface Props {
+  title?: string;
+  message?: string;
+  clearHref?: string;
+}
+const {
+  title = 'Nenhum resultado encontrado',
+  message = 'Tente outros termos de busca ou remova os filtros.',
+  clearHref = '/vagas',
+} = Astro.props;
+---
+<div class="empty-state empty-state-large">
+  <h3>{title}</h3>
+  <p>{message}</p>
+  {clearHref && <a class="btn btn-outline" href={clearHref}>Limpar filtros</a>}
+</div>

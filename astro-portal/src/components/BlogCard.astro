@@ -1,0 +1,21 @@
+---
+import { formatDateBr } from '../lib/format';
+
+interface Props {
+  article: {
+    slug: string;
+    title: string;
+    excerpt: string;
+    publishedAt: Date;
+    category: { name: string };
+  };
+}
+const { article } = Astro.props;
+---
+<article class="entity-card blog-card blog-card-list card-hover">
+  <p class="blog-card-category">{article.category.name}</p>
+  <h2><a href={`/blog/${article.slug}`}>{article.title}</a></h2>
+  <p class="blog-card-date">{formatDateBr(article.publishedAt)}</p>
+  <p>{article.excerpt}</p>
+  <a class="btn btn-sm btn-outline" href={`/blog/${article.slug}`}>Ler artigo</a>
+</article>

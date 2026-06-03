@@ -1,0 +1,47 @@
+---
+import { excerpt, formatDateBr, formatDatetimeIsoAttr, employmentTypeLabel } from '../lib/format';
+
+interface Props {
+  job: {
+    slug: string;
+    title: string;
+    description: string;
+    publishedAt: Date;
+    salary: string | null;
+    employmentType?: string | null;
+    company: { name: string };
+    city: { name: string };
+    category: { name: string } | null;
+  };
+}
+const { job } = Astro.props;
+const date = formatDateBr(job.publishedAt);
+const typeLabel = employmentTypeLabel(job.employmentType);
+---
+<article class="job-card job-card-premium card-hover">
+  <div class="job-card-accent" aria-hidden="true"></div>
+  <div class="job-card-body">
+    <div class="job-card-top">
+      {job.category ? (
+        <span class="tag tag-category">{job.category.name}</span>
+      ) : (
+        <span class="tag tag-muted">Vaga</span>
+      )}
+      <time datetime={formatDatetimeIsoAttr(job.publishedAt)}>{date}</time>
+    </div>
+    <h3><a href={`/vagas/${job.slug}`}>{job.title}</a></h3>
+    <div class="job-card-meta">
+      <span class="job-card-company">{job.company.name}</span>
+      <span class="job-card-location">
+        <span class="loc-dot" aria-hidden="true"></span>
+        {job.city.name}/RJ
+      </span>
+    </div>
+    {typeLabel && <p class="job-card-type">{typeLabel}</p>}
+    <p class="job-card-excerpt">{excerpt(job.description, 155)}</p>
+    <div class="job-card-footer">
+      {job.salary && <span class="job-salary">{job.salary}</span>}
+      <a class="btn btn-sm btn-card" href={`/vagas/${job.slug}`}>Ver vaga</a>
+    </div>
+  </div>
+</article>

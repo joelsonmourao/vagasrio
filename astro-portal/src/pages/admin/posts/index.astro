@@ -1,0 +1,59 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { articleList } from '../../../lib/portal';
+import { formatDateBr } from '../../../lib/format';
+
+const data = await articleList({ page: Number(Astro.url.searchParams.get('page') || 1), perPage: 20, activeOnly: false });
+---
+<AdminLayout title="Posts">
+  <header class="admin-page-head">
+    <div>
+      <p class="admin-kicker">Blog</p>
+      <h1>Posts do blog</h1>
+      <p class="admin-lead">{data.total} artigo(s) · página {data.page} de {data.totalPages}</p>
+    </div>
+  </header>
+
+  <div class="admin-actions-bar">
+    <a class="btn" href="/admin/posts/novo">Novo post</a>
+  </div>
+
+  <section class="admin-card admin-card-table">
+    <div class="admin-table-wrap">
+      <table class="admin-table admin-table-dense">
+        <thead>
+          <tr><th>Título</th><th>Categoria</th><th>Status</th><th>Data</th><th>Ações</th></tr>
+        </thead>
+        <tbody>
+          {data.articles.map((post) => (
+            <tr>
+              <td><strong>{post.title}</strong></td>
+              <td>{post.category.name}</td>
+              <td>
+                <span class:list={['admin-badge', post.isActive ? 'admin-badge-success' : 'admin-badge-muted']}>
+                  {post.isActive ? 'Publicado' : 'Rascunho'}
+                </span>
+              </td>
+              <td>{formatDateBr(post.publishedAt)}</td>
+              <td class="admin-actions">
+                <a class="admin-action" href={`/admin/posts/editar/${post.id}`}>Editar</a>
+                <a class="admin-action" href={`/blog/${post.slug}`} target="_blank" rel="noopener">Ver</a>
+                <form method="post" action="/api/admin/posts" class="admin-inline-form">
+                  <input type="hidden" name="_action" value="toggle" />
+                  <input type="hidden" name="id" value={post.id} />
+                  <button type="submit" class="admin-action admin-action-btn">{post.isActive ? 'Desativar' : 'Ativar'}</button>
+                </form>
+                <form method="post" action="/api/admin/posts" class="admin-inline-form" onsubmit="return confirm('Excluir este post?')">
+                  <input type="hidden" name="_action" value="delete" />
+                  <input type="hidden" name="id" value={post.id} />
+                  <button type="submit" class="admin-action admin-action-btn admin-action-danger">Excluir</button>
+                </form>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    {data.articles.length === 0 && <p class="admin-empty">Nenhum post encontrado.</p>}
+  </section>
+</AdminLayout>

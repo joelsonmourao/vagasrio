@@ -1,0 +1,67 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import JobCard from '../../components/JobCard.astro';
+import Pagination from '../../components/Pagination.astro';
+import EmptyState from '../../components/EmptyState.astro';
+import { companyBySlug, jobList } from '../../lib/portal';
+import { baseUrl } from '../../lib/config';
+import { getSiteSettingsSafe } from '../../lib/site-settings';
+import { buildCompanyPageTitle, buildOrganizationSchema, buildBreadcrumbSchema, mergeJsonLd } from '../../lib/seo';
+
+const { slug } = Astro.params;
+const company = slug ? await companyBySlug(slug) : null;
+if (!company) return Astro.redirect('/404');
+
+const settings = await getSiteSettingsSafe();
+const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
+const jobsData = await jobList({ company: company.slug, page });
+const title = buildCompanyPageTitle(company.name, settings);
+const description = `Confira vagas de emprego na ${company.name} no Rio de Janeiro (RJ). Oportunidades atualizadas no Vagas RJ.`;
+const jsonLd = mergeJsonLd(
+  buildOrganizationSchema(company, settings),
+  buildBreadcrumbSchema(
+    [
+      { name: 'Início', path: '/' },
+      { name: 'Empresas', path: '/empresas' },
+      { name: company.name, path: `/empresas/${company.slug}` },
+    ],
+    settings,
+  ),
+);
+---
+<BaseLayout title={title} description={description} canonical={baseUrl(`/empresas/${company.slug}`, settings)} jsonLd={jsonLd}>
+  <div class="page-stack">
+    <header class="page-hero page-hero-compact">
+      <div class="page-hero-inner">
+        <p class="section-kicker" style="color:#93c5fd;margin:0 0 8px">Empresa</p>
+        <h1>Vagas na {company.name}</h1>
+        {company.description ? <p>{company.description}</p> : (
+          <p>Oportunidades publicadas pela {company.name} no Rio de Janeiro.</p>
+        )}
+        {jobsData.total > 0 && (
+          <p class="page-hero-count">{jobsData.total} vaga{jobsData.total !== 1 ? 's' : ''}</p>
+        )}
+      </div>
+    </header>
+
+    <nav class="breadcrumb">
+      <a href="/">Início</a><span>/</span>
+      <a href="/empresas">Empresas</a><span>/</span>
+      <span>{company.name}</span>
+    </nav>
+
+    {jobsData.jobs.length > 0 ? (
+      <div class="job-grid job-grid-listing">
+        {jobsData.jobs.map((job) => <JobCard job={job} />)}
+      </div>
+    ) : (
+      <EmptyState title="Sem vagas abertas" message="Esta empresa não possui vagas ativas no momento." clearHref="/vagas" />
+    )}
+
+    <Pagination
+      page={jobsData.page}
+      totalPages={jobsData.totalPages}
+      basePath={`/empresas/${company.slug}`}
+    />
+  </div>
+</BaseLayout>

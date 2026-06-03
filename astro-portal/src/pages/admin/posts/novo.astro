@@ -1,0 +1,24 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import AdminPostFields from '../../../components/AdminPostFields.astro';
+import { blogCategories } from '../../../lib/portal';
+
+const categories = await blogCategories(false);
+const error = Astro.url.searchParams.get('error');
+---
+<AdminLayout title="Novo post">
+  <header class="admin-page-head">
+    <div>
+      <p class="admin-kicker">Blog</p>
+      <h1>Novo post</h1>
+    </div>
+  </header>
+  {error && <p class="flash-error">{decodeURIComponent(error)}</p>}
+  <form method="post" action="/api/admin/posts" class="admin-form admin-form-stacked">
+    <AdminPostFields categories={categories} />
+    <div class="admin-form-actions">
+      <button class="btn" type="submit">Publicar</button>
+      <a class="btn btn-outline" href="/admin/posts">Cancelar</a>
+    </div>
+  </form>
+</AdminLayout>

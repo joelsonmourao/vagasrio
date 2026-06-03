@@ -1,0 +1,25 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import AdminJobFields from '../../../components/AdminJobFields.astro';
+import { siteConfig } from '../../../lib/config';
+import { prisma } from '../../../lib/db';
+
+const error = Astro.url.searchParams.get('error');
+const cats = await prisma.category.findMany({ orderBy: { name: 'asc' } });
+---
+<AdminLayout title="Nova vaga">
+  <header class="admin-page-head">
+    <div>
+      <p class="admin-kicker">Conteúdo</p>
+      <h1>Nova vaga</h1>
+    </div>
+  </header>
+  {error && <p class="flash-error">{decodeURIComponent(error)}</p>}
+  <form method="post" action="/api/admin/jobs" class="admin-form admin-form-stacked">
+    <AdminJobFields categories={cats} allowedCities={siteConfig.allowedCities} />
+    <div class="admin-form-actions">
+      <button class="btn" type="submit">Salvar vaga</button>
+      <a class="btn btn-outline" href="/admin/vagas">Cancelar</a>
+    </div>
+  </form>
+</AdminLayout>

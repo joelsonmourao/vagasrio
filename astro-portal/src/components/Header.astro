@@ -1,0 +1,37 @@
+---
+import { siteConfig } from '../lib/config';
+import { getSiteSettingsSafe, SETTING_KEYS } from '../lib/site-settings';
+
+const settings = await getSiteSettingsSafe();
+const logoSrc = settings[SETTING_KEYS.logoPath] || '/assets/img/logo-vagas-rj.svg';
+const path = Astro.url.pathname;
+const nav = [
+  { href: '/vagas', label: 'Vagas' },
+  { href: '/empresas', label: 'Empresas' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/sobre', label: 'Sobre' },
+];
+---
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="logo" href="/" aria-label={`${siteConfig.name} — início`}>
+      <img class="logo-image" src={logoSrc} alt={siteConfig.name} width="180" height="42" />
+    </a>
+    <button type="button" class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="site-main-nav">
+      <span></span><span></span><span></span>
+      <span class="sr-only">Abrir menu</span>
+    </button>
+    <nav id="site-main-nav" class="main-nav" aria-label="Principal">
+      {nav.map((item) => (
+        <a
+          href={item.href}
+          class:list={{ active: path === item.href || (item.href !== '/' && path.startsWith(item.href)) }}
+        >
+          {item.label}
+        </a>
+      ))}
+      <a class="btn btn-sm btn-nav" href="/vagas">Ver vagas</a>
+    </nav>
+  </div>
+</header>
+<div id="site-nav-backdrop" class="site-nav-backdrop" aria-hidden="true"></div>

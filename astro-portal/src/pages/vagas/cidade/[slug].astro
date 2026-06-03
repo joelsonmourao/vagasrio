@@ -1,0 +1,71 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import JobCard from '../../../components/JobCard.astro';
+import Pagination from '../../../components/Pagination.astro';
+import EmptyState from '../../../components/EmptyState.astro';
+import { cityBySlug, jobList } from '../../../lib/portal';
+import { baseUrl } from '../../../lib/config';
+import { getSiteSettingsSafe } from '../../../lib/site-settings';
+import { buildCityPageTitle, buildBreadcrumbSchema, mergeJsonLd } from '../../../lib/seo';
+
+const { slug } = Astro.params;
+const city = slug ? await cityBySlug(slug) : null;
+if (!city) return Astro.redirect('/404');
+
+const settings = await getSiteSettingsSafe();
+const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
+const jobsData = await jobList({ page, city: city.slug });
+const title = buildCityPageTitle(city.name, settings);
+const description = `Vagas de emprego em ${city.name}, Rio de Janeiro. Oportunidades atualizadas por empresa e categoria.`;
+const jsonLd = mergeJsonLd(
+  buildBreadcrumbSchema(
+    [
+      { name: 'Início', path: '/' },
+      { name: 'Vagas', path: '/vagas' },
+      { name: city.name, path: `/vagas/cidade/${city.slug}` },
+    ],
+    settings,
+  ),
+);
+---
+<BaseLayout title={title} description={description} canonical={baseUrl(`/vagas/cidade/${city.slug}`, settings)} jsonLd={jsonLd}>
+  <div class="page-stack">
+    <header class="page-hero">
+      <div class="page-hero-inner">
+        <p class="section-kicker" style="color:#93c5fd;margin:0 0 8px">Cidade · RJ</p>
+        <h1>Vagas em {city.name}</h1>
+        <p>
+          Oportunidades de emprego em {city.name}/{city.state}. Encontre vagas por empresa e categoria
+          no {siteConfig.name}.
+        </p>
+        {jobsData.total > 0 && (
+          <p class="page-hero-count">{jobsData.total} vaga{jobsData.total !== 1 ? 's' : ''} ativa{jobsData.total !== 1 ? 's' : ''}</p>
+        )}
+      </div>
+    </header>
+
+    <nav class="breadcrumb">
+      <a href="/">Início</a><span>/</span>
+      <a href="/vagas">Vagas</a><span>/</span>
+      <span>{city.name}</span>
+    </nav>
+
+    {jobsData.jobs.length > 0 ? (
+      <div class="job-grid job-grid-listing">
+        {jobsData.jobs.map((job) => <JobCard job={job} />)}
+      </div>
+    ) : (
+      <EmptyState
+        title={`Nenhuma vaga em ${city.name} no momento`}
+        message="Confira outras cidades ou a listagem geral de vagas no RJ."
+        clearHref="/vagas"
+      />
+    )}
+
+    <Pagination
+      page={jobsData.page}
+      totalPages={jobsData.totalPages}
+      basePath={`/vagas/cidade/${city.slug}`}
+    />
+  </div>
+</BaseLayout>

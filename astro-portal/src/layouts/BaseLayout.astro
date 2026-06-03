@@ -1,0 +1,63 @@
+---
+import SeoHead from '../components/SeoHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import {
+  getSiteSettingsSafe,
+  isAdsenseEnabled,
+  isIndexingEnabled,
+  SETTING_KEYS,
+} from '../lib/site-settings';
+import { absoluteUrl } from '../lib/config';
+
+interface Props {
+  title: string;
+  description: string;
+  canonical?: string;
+  robots?: string;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const props = Astro.props;
+const settings = await getSiteSettingsSafe();
+const indexingOn = isIndexingEnabled(settings);
+const robots = props.robots ?? (indexingOn ? 'index,follow' : 'noindex,nofollow');
+const canonicalAbsolute = props.canonical
+  ? absoluteUrl(props.canonical, settings)
+  : absoluteUrl(Astro.url.pathname, settings);
+---
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <SeoHead
+      title={props.title}
+      description={props.description}
+      canonical={canonicalAbsolute}
+      robots={robots}
+      jsonLd={props.jsonLd}
+      siteName={settings[SETTING_KEYS.siteName]}
+      ogImage={settings[SETTING_KEYS.ogImage]}
+      faviconPath={settings[SETTING_KEYS.faviconPath]}
+      gscVerification={settings[SETTING_KEYS.gscVerification]}
+      gaCode={settings[SETTING_KEYS.gaCode]}
+      adsenseClient={settings[SETTING_KEYS.adsenseClient]}
+      adsenseEnabled={isAdsenseEnabled(settings)}
+      adsenseScript={settings[SETTING_KEYS.adsenseScript]}
+    />
+  </head>
+  <body>
+    <Header />
+    <main class="container site-main">
+      <slot />
+    </main>
+    <Footer />
+    <aside id="cookie-banner" class="cookie-banner" role="dialog" aria-label="Aviso de cookies">
+      <p>
+        Utilizamos cookies essenciais e, com seu consentimento, cookies de análise e publicidade (Google).
+        <a href="/politica-de-cookies">Saiba mais</a>
+      </p>
+      <button type="button" class="btn btn-sm" id="cookie-accept">Aceitar cookies</button>
+    </aside>
+    <script src="/assets/js/app.js" defer></script>
+  </body>
+</html>

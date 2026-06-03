@@ -1,0 +1,123 @@
+---
+import type { ApplyChannel } from '../lib/apply-channel';
+
+interface Props {
+  channel: ApplyChannel;
+}
+
+const { channel } = Astro.props;
+const invalidMessage =
+  'O canal de candidatura desta vaga ainda não foi informado corretamente.';
+---
+
+<section class="job-apply-box">
+  <p class="apply-kicker">Próximo passo</p>
+  <h2>Candidatura</h2>
+
+  {channel.type === 'email' && channel.email && (
+    <div class="job-apply-channel job-apply-email" data-job-apply-email>
+      <button type="button" class="btn btn-lg btn-full btn-accent" data-email-toggle>
+        Ver e-mail de candidatura
+      </button>
+      <div class="job-apply-email-panel" hidden data-email-panel>
+        <p class="apply-email-label">E-mail para candidatura:</p>
+        <p class="apply-email-value" data-email-value>{channel.email}</p>
+        <div class="job-apply-email-actions">
+          <button type="button" class="btn btn-outline btn-sm" data-email-copy>Copiar e-mail</button>
+          {channel.mailto && (
+            <a class="btn btn-outline btn-sm" href={channel.mailto}>Enviar por e-mail</a>
+          )}
+        </div>
+      </div>
+    </div>
+  )}
+
+  {channel.type === 'url' && channel.href && (
+    <>
+      <a class="btn btn-lg btn-full btn-accent" href={channel.href} target="_blank" rel="noopener noreferrer">
+        Candidatar-se
+      </a>
+      <p class="apply-note">Você será direcionado ao site ou contato da empresa.</p>
+    </>
+  )}
+
+  {channel.type === 'whatsapp' && channel.href && (
+    <>
+      <a class="btn btn-lg btn-full btn-accent" href={channel.href} target="_blank" rel="noopener noreferrer">
+        Candidatar-se pelo WhatsApp
+      </a>
+      <p class="apply-note">Você será direcionado ao WhatsApp da empresa.</p>
+    </>
+  )}
+
+  {channel.type === 'phone' && channel.href && (
+    <>
+      <a class="btn btn-lg btn-full btn-accent" href={channel.href}>
+        Ligar para candidatura
+      </a>
+      <p class="apply-note">Use o telefone informado pela empresa.</p>
+    </>
+  )}
+
+  {(channel.type === 'empty' || channel.type === 'invalid') && (
+    <p class="empty-state">{invalidMessage}</p>
+  )}
+</section>
+
+<script>
+  function initJobApplyEmail(root: HTMLElement) {
+    const toggle = root.querySelector('[data-email-toggle]');
+    const panel = root.querySelector('[data-email-panel]');
+    const copyBtn = root.querySelector('[data-email-copy]');
+    const valueEl = root.querySelector('[data-email-value]');
+    if (!toggle || !panel || !copyBtn || !valueEl) return;
+
+    toggle.addEventListener('click', () => {
+      const hidden = panel.hasAttribute('hidden');
+      if (hidden) panel.removeAttribute('hidden');
+      else panel.setAttribute('hidden', '');
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      const text = valueEl.textContent?.trim() || '';
+      try {
+        await navigator.clipboard.writeText(text);
+        copyBtn.textContent = 'Copiado!';
+        setTimeout(() => {
+          copyBtn.textContent = 'Copiar e-mail';
+        }, 2000);
+      } catch {
+        copyBtn.textContent = 'Não foi possível copiar';
+      }
+    });
+  }
+
+  document.querySelectorAll('[data-job-apply-email]').forEach((el) => {
+    if (el instanceof HTMLElement) initJobApplyEmail(el);
+  });
+</script>
+
+<style>
+  .job-apply-email-panel {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    background: var(--color-surface-muted, #f8fafc);
+    border: 1px solid var(--color-border, #e2e8f0);
+  }
+  .apply-email-label {
+    margin: 0 0 4px;
+    font-size: 0.85rem;
+    color: #64748b;
+  }
+  .apply-email-value {
+    margin: 0 0 12px;
+    font-weight: 700;
+    word-break: break-all;
+  }
+  .job-apply-email-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+</style>

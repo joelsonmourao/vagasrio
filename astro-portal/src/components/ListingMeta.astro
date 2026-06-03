@@ -1,0 +1,24 @@
+---
+interface Props {
+  page: number;
+  totalPages: number;
+  total: number;
+  noun?: string;
+  /** found = encontrada(s); published = publicado(s) — para concordância no blog */
+  countMode?: 'found' | 'published';
+}
+const { page, totalPages, total, noun = 'vagas', countMode = 'found' } = Astro.props;
+const countWord =
+  countMode === 'published'
+    ? total === 1
+      ? 'publicado'
+      : 'publicados'
+    : total === 1
+      ? 'encontrada'
+      : 'encontradas';
+---
+<p class="listing-results" role="status">
+  Página <strong>{page}</strong> de <strong>{totalPages}</strong>
+  <span class="listing-results__sep" aria-hidden="true">•</span>
+  <strong>{total}</strong> {noun} {countWord}
+</p>

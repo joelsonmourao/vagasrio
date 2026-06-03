@@ -1,0 +1,54 @@
+---
+interface Props {
+  post?: {
+    title: string;
+    slug: string;
+    excerpt: string;
+    content: string;
+    seoTitle: string | null;
+    seoDescription: string | null;
+    featuredImage: string | null;
+    canonicalUrl: string | null;
+    isIndexable?: boolean;
+    isActive: boolean;
+    publishedAt: Date;
+    categoryId: number;
+  };
+  categories: { id: number; name: string }[];
+  isEdit?: boolean;
+}
+const { post, categories, isEdit = false } = Astro.props;
+---
+<fieldset class="admin-fieldset">
+  <legend>Conteúdo do post</legend>
+  <div class="admin-form-grid">
+    <label class="admin-field-span-2">Título <input name="title" value={post?.title || ''} required /></label>
+    <label>Categoria
+      <select name="category_id" required>
+        {categories.map((c) => (
+          <option value={c.id} selected={post?.categoryId === c.id}>{c.name}</option>
+        ))}
+      </select>
+    </label>
+    <label>Data de publicação <input name="published_at" type="date" value={post ? post.publishedAt.toISOString().slice(0, 10) : ''} /></label>
+    <label class="admin-field-span-2">Resumo (aparece na listagem) <textarea name="excerpt" rows="3" required>{post?.excerpt || ''}</textarea></label>
+    <label class="admin-field-span-2">Conteúdo (HTML permitido) <textarea name="content" rows="12" required>{post?.content || ''}</textarea></label>
+    <label class="admin-field-span-2">Imagem destacada (URL) <input name="featured_image" type="url" value={post?.featuredImage || ''} placeholder="https://... ou /uploads/..." /></label>
+    <label class="admin-field-check"><input type="checkbox" name="is_active" value="1" checked={post ? post.isActive : true} /> Publicado no site</label>
+  </div>
+</fieldset>
+
+<fieldset class="admin-fieldset">
+  <legend>SEO e URL da página</legend>
+  <div class="admin-form-grid">
+    {isEdit && (
+      <label class="admin-field-span-2">Endereço da página (URL)
+        <input name="slug" value={post?.slug || ''} placeholder="ex.: dicas-para-entrevista" />
+      </label>
+    )}
+    <label class="admin-field-span-2">Título para Google (opcional) <input name="seo_title" value={post?.seoTitle || ''} placeholder="Se vazio, usa o título do post" /></label>
+    <label class="admin-field-span-2">Descrição para Google (opcional) <textarea name="seo_description" rows="3" placeholder="Se vazio, usa o resumo">{post?.seoDescription || ''}</textarea></label>
+    <label class="admin-field-span-2">URL canônica (opcional) <input name="canonical_url" type="url" value={post?.canonicalUrl || ''} /></label>
+    <label class="admin-field-check"><input type="checkbox" name="is_indexable" value="1" checked={post ? post.isIndexable !== false : true} /> Permitir indexação no Google</label>
+  </div>
+</fieldset>

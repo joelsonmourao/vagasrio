@@ -1,0 +1,91 @@
+---
+import { absoluteUrl, siteConfig } from '../lib/config';
+
+interface Props {
+  title: string;
+  description: string;
+  canonical: string;
+  robots?: string;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  siteName?: string;
+  ogImage?: string;
+  faviconPath?: string;
+  gscVerification?: string;
+  gaCode?: string;
+  adsenseClient?: string;
+  adsenseEnabled?: boolean;
+  adsenseScript?: string;
+}
+
+const {
+  title,
+  description,
+  canonical,
+  robots = 'index,follow',
+  jsonLd,
+  siteName,
+  ogImage,
+  faviconPath = '/favicon.svg',
+  gscVerification,
+  gaCode,
+  adsenseClient,
+  adsenseEnabled = false,
+  adsenseScript = '',
+} = Astro.props;
+
+const brand = siteName?.trim() || siteConfig.name;
+const imageUrl = ogImage?.startsWith('http') ? ogImage : absoluteUrl(ogImage || '/assets/img/og-vagas-rj.png');
+const favicon = faviconPath?.startsWith('http') ? faviconPath : absoluteUrl(faviconPath);
+const ldJson = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+
+const adsScript = adsenseScript?.trim() || '';
+const loadAdsenseAuto =
+  adsenseEnabled && !adsScript && adsenseClient?.startsWith('ca-pub-');
+const loadAdsenseCustom = adsenseEnabled && adsScript.length > 0;
+---
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{title}</title>
+<meta name="description" content={description} />
+<meta name="robots" content={robots} />
+<link rel="canonical" href={canonical} />
+<meta property="og:type" content="website" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={imageUrl} />
+<meta property="og:site_name" content={brand} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={imageUrl} />
+{gscVerification && <meta name="google-site-verification" content={gscVerification} />}
+<link rel="icon" href={favicon} type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,500;0,600;0,700;0,800;1,500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/assets/css/app.css" />
+<link rel="stylesheet" href="/assets/css/portal-v2.css" />
+{ldJson.map((schema) => (
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+))}
+{gaCode && gaCode.includes('<script') && <Fragment set:html={gaCode} />}
+{gaCode && !gaCode.includes('<script') && gaCode.startsWith('G-') && (
+  <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaCode}`}></script>
+)}
+{gaCode && !gaCode.includes('<script') && gaCode.startsWith('G-') && (
+  <script is:inline define:vars={{ gaCode }}>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', gaCode);
+  </script>
+)}
+{loadAdsenseCustom && <Fragment set:html={adsScript} />}
+{loadAdsenseAuto && (
+  <script
+    async
+    src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
+    crossorigin="anonymous"
+  ></script>
+)}
