@@ -748,16 +748,12 @@ main.container,
   flex-direction: column;
   gap: 8px;
   margin: 0;
-  font-weight: inherit;
-}
-
-.admin-login-label {
   font-weight: 600;
   font-size: 0.9rem;
   color: #334155;
 }
 
-.admin-login-input {
+.admin-login-field input {
   display: block;
   width: 100%;
   box-sizing: border-box;
@@ -766,11 +762,12 @@ main.container,
   border-radius: 10px;
   font-size: 1rem;
   line-height: 1.4;
+  font-weight: 400;
   background: #fff;
   color: #0f172a;
 }
 
-.admin-login-input:focus {
+.admin-login-field input:focus {
   outline: 2px solid #2563eb;
   outline-offset: 1px;
   border-color: #2563eb;

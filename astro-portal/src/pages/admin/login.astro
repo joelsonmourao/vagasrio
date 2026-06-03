@@ -19,31 +19,26 @@ const error = Astro.url.searchParams.get('error');
 
         {error && (
           <p class="admin-login-error" role="alert">
-            Usuário ou senha incorretos. Confira se digitou o usuário no primeiro campo e a senha no segundo.
+            Credenciais inválidas. Use o campo <strong>Usuário</strong> para o login e o campo <strong>Senha</strong> para a senha.
           </p>
         )}
 
-        <form class="admin-login-form" method="post" action="/api/auth/login">
+        <form
+          class="admin-login-form"
+          method="post"
+          action="/api/auth/login"
+          enctype="application/x-www-form-urlencoded"
+        >
           <label class="admin-login-field">
-            <span class="admin-login-label">Usuário</span>
-            <input
-              class="admin-login-input"
-              type="text"
-              name="username"
-              autocomplete="username"
-              required
-            />
+            Usuário
+            <input name="username" type="text" autocomplete="username" required />
           </label>
+
           <label class="admin-login-field">
-            <span class="admin-login-label">Senha</span>
-            <input
-              class="admin-login-input"
-              type="password"
-              name="password"
-              autocomplete="current-password"
-              required
-            />
+            Senha
+            <input name="password" type="password" autocomplete="current-password" required />
           </label>
+
           <button class="btn btn-accent admin-login-submit" type="submit">Entrar</button>
         </form>
 
