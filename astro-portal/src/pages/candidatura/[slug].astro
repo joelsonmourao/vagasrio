@@ -1,0 +1,165 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import JobCard from '../../components/JobCard.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import { jobBySlug } from '../../lib/portal';
+import { siteConfig } from '../../lib/config';
+import { loadJobRetentionRelated } from '../../lib/job-retention';
+import {
+  getApplyFinalCta,
+  isValidApplyChannel,
+  parseApplyChannel,
+} from '../../lib/apply-channel';
+
+const { slug } = Astro.params;
+const job = slug ? await jobBySlug(slug) : null;
+if (!job) return Astro.redirect('/404');
+
+const applyChannel = parseApplyChannel(job.applyUrl);
+const finalCta = getApplyFinalCta(applyChannel);
+const channelOk = isValidApplyChannel(applyChannel);
+
+if (!channelOk) {
+  return Astro.redirect(`/vagas/${job.slug}`);
+}
+
+const { relatedCityJobs, relatedCategoryJobs, blogRelated } = await loadJobRetentionRelated(job);
+
+const title = `Antes de continuar sua candidatura - ${job.title} | ${siteConfig.name}`;
+const description = `Confira os avisos e siga para o canal oficial de candidatura da vaga ${job.title} em ${job.company.name}, ${job.city.name}/RJ.`;
+const canonical = `/candidatura/${job.slug}`;
+---
+
+<BaseLayout title={title} description={description} canonical={canonical} robots="noindex,follow">
+  <nav class="breadcrumb" aria-label="Navegação">
+    <a href="/">Início</a><span>/</span>
+    <a href="/vagas">Vagas</a><span>/</span>
+    <a href={`/vagas/${job.slug}`}>{job.title}</a><span>/</span>
+    <span>Candidatura</span>
+  </nav>
+
+  <article class="apply-landing">
+    <header class="apply-landing-hero panel">
+      <p class="apply-landing-kicker">Candidatura segura</p>
+      <h1>Antes de continuar sua candidatura</h1>
+      <p class="apply-landing-lead">
+        Revise os dados da vaga e os avisos abaixo. O próximo passo é o canal informado pela empresa contratante.
+      </p>
+    </header>
+
+    <section class="panel apply-landing-job">
+      <h2 class="visually-hidden">Dados da vaga</h2>
+      <ul class="summary-list">
+        <li><span>Vaga</span><strong>{job.title}</strong></li>
+        <li><span>Empresa</span><strong>{job.company.name}</strong></li>
+        <li><span>Local</span><strong>{job.city.name}/RJ</strong></li>
+      </ul>
+      <p class="apply-landing-back">
+        <a href={`/vagas/${job.slug}`}>← Voltar para a página da vaga</a>
+      </p>
+    </section>
+
+    <section class="panel apply-landing-notice">
+      <h2>Como funciona no Vagas RJ</h2>
+      <p>
+        O Vagas RJ apenas divulga oportunidades de emprego e não participa do processo seletivo. A candidatura
+        será feita no site, formulário ou e-mail informado pela empresa.
+      </p>
+    </section>
+
+    <section class="panel panel-warning panel-security apply-landing-security">
+      <div class="panel-security-icon" aria-hidden="true">!</div>
+      <div>
+        <h2>Aviso de segurança</h2>
+        <p>
+          Nunca pague taxas para participar de processos seletivos. Desconfie de pedidos de dinheiro, documentos
+          sensíveis antecipados ou links suspeitos.
+        </p>
+      </div>
+    </section>
+
+    {applyChannel.type === 'email' && applyChannel.email && (
+      <section class="panel apply-landing-email-hint">
+        <h2>E-mail de candidatura</h2>
+        <p>
+          A empresa indicou o endereço <strong>{applyChannel.email}</strong>. Use o botão abaixo para abrir seu
+          programa de e-mail com uma nova mensagem.
+        </p>
+      </section>
+    )}
+
+    <AdSlot class="ad-slot-apply-landing" minHeight={120} />
+
+    {finalCta && (
+      <section class="apply-landing-actions panel">
+        <a
+          class="btn btn-accent btn-lg btn-full"
+          href={finalCta.href}
+          aria-label={finalCta.ariaLabel}
+          {...(finalCta.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        >
+          {finalCta.label}
+        </a>
+        <p class="apply-landing-actions-note">
+          {finalCta.external
+            ? 'O link abre em nova aba. Você pode manter esta página aberta para consultar os avisos.'
+            : 'Você será direcionado ao aplicativo de e-mail ou telefone do seu dispositivo.'}
+        </p>
+      </section>
+    )}
+
+    <section class="apply-landing-tips panel">
+      <h2>Dicas rápidas antes de enviar</h2>
+      <ul class="apply-landing-tips-list">
+        <li>Leia a descrição completa da vaga na página anterior e confira requisitos e prazos.</li>
+        <li>Prepare currículo e mensagem objetiva; evite compartilhar senhas ou dados bancários.</li>
+        <li>Guarde comprovantes de envio e desconfie de cobranças para “garantir” a vaga.</li>
+      </ul>
+      <p>
+        <a href="/blog">Ver artigos sobre candidatura segura no blog →</a>
+      </p>
+    </section>
+  </article>
+
+  <section class="job-retention apply-landing-retention" aria-label="Continue explorando">
+    {relatedCityJobs.length > 0 && (
+      <section class="related-section">
+        <div class="section-head">
+          <h2>Outras vagas em {job.city.name}</h2>
+          <a class="section-link" href={`/vagas/cidade/${job.city.slug}`}>Ver todas →</a>
+        </div>
+        <div class="job-grid job-grid-listing">
+          {relatedCityJobs.map((j) => <JobCard job={j} />)}
+        </div>
+      </section>
+    )}
+
+    {job.category && relatedCategoryJobs.length > 0 && (
+      <section class="related-section">
+        <div class="section-head">
+          <h2>Mais vagas em {job.category.name}</h2>
+          <a class="section-link" href={`/vagas?category=${job.category.slug}`}>Ver todas →</a>
+        </div>
+        <div class="job-grid job-grid-listing">
+          {relatedCategoryJobs.map((j) => <JobCard job={j} />)}
+        </div>
+      </section>
+    )}
+
+    {blogRelated.length > 0 && (
+      <section class="related-section related-articles">
+        <div class="section-head">
+          <h2>Artigos sobre candidatura segura</h2>
+          <a class="section-link" href="/blog">Ver blog →</a>
+        </div>
+        <ul class="job-blog-related-list">
+          {blogRelated.map((post) => (
+            <li>
+              <a href={`/blog/${post.slug}`}>{post.title}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </section>
+</BaseLayout>

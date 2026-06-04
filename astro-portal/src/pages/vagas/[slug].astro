@@ -3,8 +3,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import JobCard from '../../components/JobCard.astro';
 import JobApplyBox from '../../components/JobApplyBox.astro';
 import JobApplyCta from '../../components/JobApplyCta.astro';
-import JobMobileApplyBar from '../../components/JobMobileApplyBar.astro';
-import { jobBySlug, jobList, articleList } from '../../lib/portal';
+import { jobBySlug } from '../../lib/portal';
+import { loadJobRetentionRelated } from '../../lib/job-retention';
 import { buildJobPostingSchema, formatJobStreetAddressDisplay, resolveJobStreetAddress } from '../../lib/job-posting';
 import {
   buildJobPageTitle,
@@ -52,29 +52,7 @@ const jobStreetAddress = resolveJobStreetAddress(job);
 const jobAddressDisplay = formatJobStreetAddressDisplay(job);
 const jobSalaryDisplay = formatSalaryDisplay(job.salary);
 
-function filterRelated<T extends { slug: string }>(items: T[], currentSlug: string): T[] {
-  return items.filter((j) => j.slug !== currentSlug && j.slug.trim());
-}
-
-const [relatedCity, relatedCategory, blogSafety, blogTips] = await Promise.all([
-  jobList({ city: job.city.slug, perPage: 4, page: 1 }),
-  job.category ? jobList({ category: job.category.slug, perPage: 4, page: 1 }) : Promise.resolve({ jobs: [] }),
-  articleList({ category: 'seguranca-para-candidatos', perPage: 4, activeOnly: true }),
-  articleList({ category: 'dicas-para-candidatura', perPage: 4, activeOnly: true }),
-]);
-
-const relatedCityJobs = filterRelated(relatedCity.jobs, job.slug)
-  .filter((j) => jobIsPubliclyVisible(j))
-  .slice(0, 3);
-const relatedCategoryJobs = filterRelated(relatedCategory.jobs, job.slug)
-  .filter((j) => jobIsPubliclyVisible(j))
-  .slice(0, 3);
-
-const blogRelatedMap = new Map<string, (typeof blogSafety.articles)[number]>();
-for (const post of [...blogSafety.articles, ...blogTips.articles]) {
-  if (!blogRelatedMap.has(post.slug)) blogRelatedMap.set(post.slug, post);
-}
-const blogRelated = [...blogRelatedMap.values()].slice(0, 4);
+const { relatedCityJobs, relatedCategoryJobs, blogRelated } = await loadJobRetentionRelated(job);
 ---
 
 <BaseLayout title={title} description={description} canonical={canonical} robots={robots} jsonLd={jsonLd}>
@@ -119,7 +97,7 @@ const blogRelated = [...blogRelatedMap.values()].slice(0, 4);
         </section>
 
         <div class="job-apply-flow">
-          <JobApplyCta channel={applyChannel} />
+          <JobApplyCta channel={applyChannel} jobSlug={job.slug} />
         </div>
 
         <section class="panel panel-description">
@@ -128,7 +106,11 @@ const blogRelated = [...blogRelatedMap.values()].slice(0, 4);
         </section>
 
         <div class="job-apply-flow">
-          <JobApplyCta channel={applyChannel} note="Leu a descrição? Continue a candidatura no canal oficial da empresa." />
+          <JobApplyCta
+            channel={applyChannel}
+            jobSlug={job.slug}
+            note="Leu a descrição? Continue a candidatura no canal oficial da empresa."
+          />
         </div>
 
         <section class="panel panel-warning panel-security panel-security-inline">
@@ -142,7 +124,7 @@ const blogRelated = [...blogRelatedMap.values()].slice(0, 4);
 
       <aside class="job-aside">
         <div class="job-apply-card job-apply-card--desktop">
-          <JobApplyBox channel={applyChannel} />
+          <JobApplyBox channel={applyChannel} jobSlug={job.slug} />
         </div>
         <section class="panel panel-compact panel-summary">
           <h3>Resumo</h3>
@@ -162,8 +144,6 @@ const blogRelated = [...blogRelatedMap.values()].slice(0, 4);
       </aside>
     </div>
   </article>
-
-  <JobMobileApplyBar channel={applyChannel} />
 
   <section class="job-retention" aria-label="Explore mais no Vagas RJ">
     <nav class="job-explore-links panel panel-compact">

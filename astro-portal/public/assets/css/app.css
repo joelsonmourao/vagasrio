@@ -499,36 +499,30 @@ th{background:#f8fafc;font-size:.82rem;text-transform:uppercase;letter-spacing:.
 .job-blog-related-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .job-blog-related-list a{font-weight:600;color:var(--navy);text-decoration:none;line-height:1.4}
 .job-blog-related-list a:hover{color:#1d4ed8;text-decoration:underline}
-.mobile-apply-bar{
-  position:fixed;left:0;right:0;bottom:0;z-index:999;
-  padding:10px 12px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));
-  background:#fff;border-top:1px solid #dbe4f0;
-  box-shadow:0 -8px 24px rgba(15,23,42,.12);
-  transition:transform .2s ease,opacity .2s ease
-}
-.mobile-apply-bar--hidden{transform:translateY(110%);opacity:0;pointer-events:none;visibility:hidden}
-.mobile-apply-bar__close{
-  position:absolute;top:6px;right:10px;width:32px;height:32px;border:0;background:transparent;
-  font-size:1.5rem;line-height:1;color:#64748b;cursor:pointer;border-radius:8px
-}
-.mobile-apply-bar__close:hover{background:#f1f5f9}
-.mobile-apply-bar__btn,.mobile-apply-bar .btn{
-  width:100%;min-height:48px;display:flex;align-items:center;justify-content:center;
-  border-radius:12px;font-weight:700;font-size:.95rem;padding-right:28px
-}
-body.job-page--sticky-cta{padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
 @media (max-width:1080px){
   .job-apply-flow{display:block}
   .job-apply-card--desktop{display:none}
 }
-@media (max-width:768px){
-  .mobile-apply-bar:not(.mobile-apply-bar--hidden){transform:translateY(0);opacity:1;pointer-events:auto;visibility:visible}
-}
 @media (min-width:1081px){
   .job-apply-flow{display:none!important}
   .job-apply-card--desktop{display:block}
-  .mobile-apply-bar{display:none!important}
 }
+.apply-landing{display:grid;gap:18px;margin-bottom:8px}
+.apply-landing-hero h1{margin:8px 0 10px;font-size:clamp(1.35rem,3vw,1.75rem);color:var(--navy)}
+.apply-landing-kicker{margin:0;font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--blue)}
+.apply-landing-lead{margin:0;color:var(--muted);line-height:1.55;max-width:62ch}
+.apply-landing-back{margin:14px 0 0;font-size:.9rem}
+.apply-landing-back a{color:#1d4ed8;font-weight:600;text-decoration:none}
+.apply-landing-back a:hover{text-decoration:underline}
+.apply-landing-notice h2,.apply-landing-security h2,.apply-landing-email-hint h2,.apply-landing-tips h2{margin:0 0 10px;font-size:1.05rem;color:var(--navy)}
+.apply-landing-notice p,.apply-landing-email-hint p{margin:0;line-height:1.6;color:#334155}
+.ad-slot-apply-landing{margin:8px 0 32px}
+.apply-landing-actions{margin-top:0;padding:22px}
+.apply-landing-actions-note{margin:12px 0 0;font-size:.88rem;color:var(--muted);line-height:1.5}
+.apply-landing-tips-list{margin:0 0 14px;padding-left:1.2rem;display:grid;gap:8px;color:#334155;line-height:1.5}
+.apply-landing-tips a{font-weight:600;color:#1d4ed8;text-decoration:none}
+.apply-landing-tips a:hover{text-decoration:underline}
+.apply-landing-retention{margin-top:12px}
 .article-layout-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
 .article-sidebar-desktop,.job-aside-ad-desktop{display:block}
 .blog-grid-compact{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}

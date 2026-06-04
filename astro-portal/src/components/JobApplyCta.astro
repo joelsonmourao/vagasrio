@@ -1,16 +1,17 @@
 ---
 import type { ApplyChannel } from '../lib/apply-channel';
-import { getApplyPrimaryCta } from '../lib/apply-channel';
+import { getApplyJobStepCta } from '../lib/apply-channel';
 
 interface Props {
   channel: ApplyChannel;
+  jobSlug: string;
   note?: string;
 }
 
-const { channel, note } = Astro.props;
-const cta = getApplyPrimaryCta(channel);
+const { channel, jobSlug, note } = Astro.props;
+const cta = getApplyJobStepCta(channel, jobSlug);
 const defaultNote =
-  'O Vagas RJ divulga vagas de terceiros. A candidatura é concluída no site ou contato da empresa contratante.';
+  'O Vagas RJ divulga vagas de terceiros. Na próxima etapa você confere os avisos e segue para o canal oficial da empresa.';
 ---
 
 {cta && (
@@ -21,7 +22,6 @@ const defaultNote =
         class="btn btn-accent btn-lg btn-full job-apply-cta-btn"
         href={cta.href}
         aria-label={cta.ariaLabel}
-        {...(cta.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       >
         {cta.label}
       </a>

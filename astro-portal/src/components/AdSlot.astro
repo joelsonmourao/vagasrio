@@ -1,0 +1,41 @@
+---
+import { getSiteSettingsSafe, isAdsenseEnabled, SETTING_KEYS } from '../lib/site-settings';
+
+interface Props {
+  class?: string;
+  minHeight?: number;
+}
+
+const { class: className = '', minHeight = 90 } = Astro.props;
+const path = Astro.url.pathname;
+const hideAds =
+  path.startsWith('/admin') ||
+  path.startsWith('/api/') ||
+  path === '/404' ||
+  path.includes('/login');
+
+const settings = await getSiteSettingsSafe();
+const adsOn = isAdsenseEnabled(settings) && !hideAds;
+const client = settings[SETTING_KEYS.adsenseClient]?.trim() || '';
+const showUnit = adsOn && client.startsWith('ca-pub-');
+---
+
+{adsOn && (
+  <div
+    class:list={['ad-slot', className]}
+    style={`min-height:${minHeight}px`}
+    data-ad-reserved="1"
+  >
+    {showUnit ? (
+      <ins
+        class="adsbygoogle"
+        style="display:block"
+        data-ad-client={client}
+        data-ad-format="auto"
+        data-full-width-responsive="true"
+      />
+    ) : (
+      <div class="ad-placeholder" aria-hidden="true">Espaço reservado para publicidade</div>
+    )}
+  </div>
+)}

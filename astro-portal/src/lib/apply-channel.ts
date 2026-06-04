@@ -193,7 +193,90 @@ export type ApplyPrimaryCta = {
   ariaLabel: string;
 };
 
-/** CTA principal (agregador — candidatura no canal da empresa). */
+/** Caminho da página intermediária de candidatura (agregador). */
+export function applyLandingPath(jobSlug: string): string {
+  const slug = jobSlug.trim();
+  return slug ? `/candidatura/${slug}` : '/vagas';
+}
+
+/** Botão na página da vaga → leva à página intermediária. */
+export function getApplyJobStepCta(channel: ApplyChannel, jobSlug: string): ApplyPrimaryCta | null {
+  if (!isValidApplyChannel(channel)) return null;
+  const href = applyLandingPath(jobSlug);
+
+  if (channel.type === 'email') {
+    return {
+      href,
+      label: 'Candidatar-se por e-mail',
+      external: false,
+      ariaLabel: 'Continuar candidatura por e-mail',
+    };
+  }
+  if (channel.type === 'url') {
+    return {
+      href,
+      label: 'Candidatar-se no site da empresa',
+      external: false,
+      ariaLabel: 'Continuar candidatura no site da empresa',
+    };
+  }
+  if (channel.type === 'whatsapp') {
+    return {
+      href,
+      label: 'Candidatar-se no WhatsApp da empresa',
+      external: false,
+      ariaLabel: 'Continuar candidatura via WhatsApp',
+    };
+  }
+  if (channel.type === 'phone') {
+    return {
+      href,
+      label: 'Ligar para candidatura',
+      external: false,
+      ariaLabel: 'Continuar candidatura por telefone',
+    };
+  }
+  return null;
+}
+
+/** Botão final na página /candidatura/{slug} → canal da empresa. */
+export function getApplyFinalCta(channel: ApplyChannel): ApplyPrimaryCta | null {
+  if (channel.type === 'url' && channel.href) {
+    return {
+      href: channel.href,
+      label: 'Ir para o site da empresa',
+      external: true,
+      ariaLabel: 'Ir para o site da empresa (abre em nova aba)',
+    };
+  }
+  if (channel.type === 'email' && channel.mailto) {
+    return {
+      href: channel.mailto,
+      label: 'Enviar candidatura por e-mail',
+      external: false,
+      ariaLabel: 'Enviar candidatura por e-mail',
+    };
+  }
+  if (channel.type === 'whatsapp' && channel.href) {
+    return {
+      href: channel.href,
+      label: 'Continuar no WhatsApp da empresa',
+      external: true,
+      ariaLabel: 'Abrir WhatsApp da empresa (nova aba)',
+    };
+  }
+  if (channel.type === 'phone' && channel.href) {
+    return {
+      href: channel.href,
+      label: 'Ligar para a empresa',
+      external: false,
+      ariaLabel: 'Ligar para candidatura',
+    };
+  }
+  return null;
+}
+
+/** CTA principal legado (link direto ao canal). Preferir getApplyJobStepCta / getApplyFinalCta. */
 export function getApplyPrimaryCta(channel: ApplyChannel): ApplyPrimaryCta | null {
   if (channel.type === 'url' && channel.href) {
     return {
