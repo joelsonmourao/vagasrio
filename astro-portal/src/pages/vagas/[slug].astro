@@ -2,7 +2,9 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import JobCard from '../../components/JobCard.astro';
 import JobApplyBox from '../../components/JobApplyBox.astro';
-import { jobBySlug, jobList } from '../../lib/portal';
+import JobApplyCta from '../../components/JobApplyCta.astro';
+import JobMobileApplyBar from '../../components/JobMobileApplyBar.astro';
+import { jobBySlug, jobList, articleList } from '../../lib/portal';
 import { buildJobPostingSchema, formatJobStreetAddressDisplay, resolveJobStreetAddress } from '../../lib/job-posting';
 import {
   buildJobPageTitle,
@@ -45,15 +47,36 @@ const jsonLd = mergeJsonLd(
   ),
 );
 const typeLabel = employmentTypeLabel(job.employmentType);
-const related = await jobList({ city: job.city.slug, perPage: 3, page: 1 });
-const relatedJobs = related.jobs
-  .filter((j) => j.slug !== job.slug && j.slug.trim() && jobIsPubliclyVisible(j))
-  .slice(0, 3);
 const applyChannel = parseApplyChannel(job.applyUrl);
 const jobStreetAddress = resolveJobStreetAddress(job);
 const jobAddressDisplay = formatJobStreetAddressDisplay(job);
 const jobSalaryDisplay = formatSalaryDisplay(job.salary);
+
+function filterRelated<T extends { slug: string }>(items: T[], currentSlug: string): T[] {
+  return items.filter((j) => j.slug !== currentSlug && j.slug.trim());
+}
+
+const [relatedCity, relatedCategory, blogSafety, blogTips] = await Promise.all([
+  jobList({ city: job.city.slug, perPage: 4, page: 1 }),
+  job.category ? jobList({ category: job.category.slug, perPage: 4, page: 1 }) : Promise.resolve({ jobs: [] }),
+  articleList({ category: 'seguranca-para-candidatos', perPage: 4, activeOnly: true }),
+  articleList({ category: 'dicas-para-candidatura', perPage: 4, activeOnly: true }),
+]);
+
+const relatedCityJobs = filterRelated(relatedCity.jobs, job.slug)
+  .filter((j) => jobIsPubliclyVisible(j))
+  .slice(0, 3);
+const relatedCategoryJobs = filterRelated(relatedCategory.jobs, job.slug)
+  .filter((j) => jobIsPubliclyVisible(j))
+  .slice(0, 3);
+
+const blogRelatedMap = new Map<string, (typeof blogSafety.articles)[number]>();
+for (const post of [...blogSafety.articles, ...blogTips.articles]) {
+  if (!blogRelatedMap.has(post.slug)) blogRelatedMap.set(post.slug, post);
+}
+const blogRelated = [...blogRelatedMap.values()].slice(0, 4);
 ---
+
 <BaseLayout title={title} description={description} canonical={canonical} robots={robots} jsonLd={jsonLd}>
   <nav class="breadcrumb" aria-label="Navegação">
     <a href="/">Início</a><span>/</span>
@@ -61,7 +84,7 @@ const jobSalaryDisplay = formatSalaryDisplay(job.salary);
     <span>{job.title}</span>
   </nav>
 
-  <article class="job-detail">
+  <article class="job-detail" data-job-detail-page>
     <header class="job-detail-hero">
       <div class="job-detail-hero-inner">
         <div class="job-detail-title-wrap">
@@ -83,10 +106,31 @@ const jobSalaryDisplay = formatSalaryDisplay(job.salary);
 
     <div class="job-detail-layout">
       <div class="job-detail-main">
+        <section class="panel panel-compact job-detail-intro">
+          <h2 class="visually-hidden">Resumo da vaga</h2>
+          <ul class="summary-list summary-list--inline">
+            <li><span>Empresa</span><strong>{job.company.name}</strong></li>
+            <li><span>Cidade</span><strong>{job.city.name}/RJ</strong></li>
+            <li><span>Salário</span><strong>{jobSalaryDisplay}</strong></li>
+            {!jobStreetAddress && (
+              <li><span>Endereço</span><strong>{jobAddressDisplay}</strong></li>
+            )}
+          </ul>
+        </section>
+
+        <div class="job-apply-flow">
+          <JobApplyCta channel={applyChannel} />
+        </div>
+
         <section class="panel panel-description">
           <h2>Descrição da vaga</h2>
           <div class="prose job-description" set:html={job.description} />
         </section>
+
+        <div class="job-apply-flow">
+          <JobApplyCta channel={applyChannel} note="Leu a descrição? Continue a candidatura no canal oficial da empresa." />
+        </div>
+
         <section class="panel panel-warning panel-security panel-security-inline">
           <div class="panel-security-icon" aria-hidden="true">!</div>
           <div>
@@ -97,7 +141,9 @@ const jobSalaryDisplay = formatSalaryDisplay(job.salary);
       </div>
 
       <aside class="job-aside">
-        <JobApplyBox channel={applyChannel} />
+        <div class="job-apply-card job-apply-card--desktop">
+          <JobApplyBox channel={applyChannel} />
+        </div>
         <section class="panel panel-compact panel-summary">
           <h3>Resumo</h3>
           <ul class="summary-list">
@@ -117,15 +163,63 @@ const jobSalaryDisplay = formatSalaryDisplay(job.salary);
     </div>
   </article>
 
-  {relatedJobs.length > 0 && (
-    <section class="related-section">
-      <div class="section-head">
-        <h2>Outras vagas em {job.city.name}</h2>
-        <a class="section-link" href={`/vagas/cidade/${job.city.slug}`}>Ver todas →</a>
-      </div>
-      <div class="job-grid job-grid-listing">
-        {relatedJobs.map((j) => <JobCard job={j} />)}
-      </div>
-    </section>
-  )}
+  <JobMobileApplyBar channel={applyChannel} />
+
+  <section class="job-retention" aria-label="Explore mais no Vagas RJ">
+    <nav class="job-explore-links panel panel-compact">
+      <h2>Explorar no portal</h2>
+      <ul class="job-explore-list">
+        <li>
+          <a href={`/vagas/cidade/${job.city.slug}`}>Vagas em {job.city.name}/RJ</a>
+        </li>
+        {job.category && (
+          <li>
+            <a href={`/vagas?category=${job.category.slug}`}>Vagas em {job.category.name}</a>
+          </li>
+        )}
+        <li><a href="/vagas">Todas as vagas</a></li>
+        <li><a href="/blog">Artigos e dicas</a></li>
+      </ul>
+    </nav>
+
+    {relatedCityJobs.length > 0 && (
+      <section class="related-section">
+        <div class="section-head">
+          <h2>Outras vagas em {job.city.name}</h2>
+          <a class="section-link" href={`/vagas/cidade/${job.city.slug}`}>Ver todas →</a>
+        </div>
+        <div class="job-grid job-grid-listing">
+          {relatedCityJobs.map((j) => <JobCard job={j} />)}
+        </div>
+      </section>
+    )}
+
+    {job.category && relatedCategoryJobs.length > 0 && (
+      <section class="related-section">
+        <div class="section-head">
+          <h2>Mais vagas em {job.category.name}</h2>
+          <a class="section-link" href={`/vagas?category=${job.category.slug}`}>Ver todas →</a>
+        </div>
+        <div class="job-grid job-grid-listing">
+          {relatedCategoryJobs.map((j) => <JobCard job={j} />)}
+        </div>
+      </section>
+    )}
+
+    {blogRelated.length > 0 && (
+      <section class="related-section related-articles">
+        <div class="section-head">
+          <h2>Dicas sobre candidatura segura</h2>
+          <a class="section-link" href="/blog">Ver blog →</a>
+        </div>
+        <ul class="job-blog-related-list">
+          {blogRelated.map((post) => (
+            <li>
+              <a href={`/blog/${post.slug}`}>{post.title}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </section>
 </BaseLayout>

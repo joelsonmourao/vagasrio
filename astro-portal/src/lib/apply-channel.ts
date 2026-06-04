@@ -185,3 +185,47 @@ export function resolveApplyHref(channel: ApplyChannel): string | null {
   if (channel.type === 'email') return channel.mailto ?? null;
   return channel.href ?? null;
 }
+
+export type ApplyPrimaryCta = {
+  href: string;
+  label: string;
+  external: boolean;
+  ariaLabel: string;
+};
+
+/** CTA principal (agregador — candidatura no canal da empresa). */
+export function getApplyPrimaryCta(channel: ApplyChannel): ApplyPrimaryCta | null {
+  if (channel.type === 'url' && channel.href) {
+    return {
+      href: channel.href,
+      label: 'Candidatar-se no site da empresa',
+      external: true,
+      ariaLabel: 'Candidatar-se no site da empresa (abre em nova aba)',
+    };
+  }
+  if (channel.type === 'email' && channel.mailto) {
+    return {
+      href: channel.mailto,
+      label: 'Candidatar-se por e-mail',
+      external: false,
+      ariaLabel: 'Candidatar-se por e-mail',
+    };
+  }
+  if (channel.type === 'whatsapp' && channel.href) {
+    return {
+      href: channel.href,
+      label: 'Candidatar-se no WhatsApp da empresa',
+      external: true,
+      ariaLabel: 'Candidatar-se no WhatsApp da empresa (abre em nova aba)',
+    };
+  }
+  if (channel.type === 'phone' && channel.href) {
+    return {
+      href: channel.href,
+      label: 'Ligar para candidatura',
+      external: false,
+      ariaLabel: 'Ligar para candidatura',
+    };
+  }
+  return null;
+}

@@ -1,16 +1,18 @@
 ---
 import type { ApplyChannel } from '../lib/apply-channel';
+import { getApplyPrimaryCta } from '../lib/apply-channel';
 
 interface Props {
   channel: ApplyChannel;
 }
 
 const { channel } = Astro.props;
+const primaryCta = getApplyPrimaryCta(channel);
 const invalidMessage =
   'O canal de candidatura desta vaga ainda não foi informado corretamente.';
 ---
 
-<section class="job-apply-box">
+<section class="job-apply-box job-apply-card">
   <p class="apply-kicker">Próximo passo</p>
   <h2>Candidatura</h2>
 
@@ -25,28 +27,38 @@ const invalidMessage =
         <div class="job-apply-email-actions">
           <button type="button" class="btn btn-outline btn-sm" data-email-copy>Copiar e-mail</button>
           {channel.mailto && (
-            <a class="btn btn-outline btn-sm" href={channel.mailto}>Enviar por e-mail</a>
+            <a class="btn btn-outline btn-sm" href={channel.mailto}>Candidatar-se por e-mail</a>
           )}
         </div>
       </div>
     </div>
   )}
 
-  {channel.type === 'url' && channel.href && (
+  {channel.type === 'url' && primaryCta && (
     <>
-      <a class="btn btn-lg btn-full btn-accent" href={channel.href} target="_blank" rel="noopener noreferrer">
-        Candidatar-se
+      <a
+        class="btn btn-lg btn-full btn-accent"
+        href={primaryCta.href}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {primaryCta.label}
       </a>
-      <p class="apply-note">Você será direcionado ao site ou contato da empresa.</p>
+      <p class="apply-note">Você será direcionado ao site da empresa em uma nova aba. O Vagas RJ permanece aberto aqui.</p>
     </>
   )}
 
-  {channel.type === 'whatsapp' && channel.href && (
+  {channel.type === 'whatsapp' && primaryCta && (
     <>
-      <a class="btn btn-lg btn-full btn-accent" href={channel.href} target="_blank" rel="noopener noreferrer">
-        Candidatar-se pelo WhatsApp
+      <a
+        class="btn btn-lg btn-full btn-accent"
+        href={primaryCta.href}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {primaryCta.label}
       </a>
-      <p class="apply-note">Você será direcionado ao WhatsApp da empresa.</p>
+      <p class="apply-note">Você será direcionado ao WhatsApp da empresa em uma nova aba.</p>
     </>
   )}
 

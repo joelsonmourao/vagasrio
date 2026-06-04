@@ -483,6 +483,52 @@ th{background:#f8fafc;font-size:.82rem;text-transform:uppercase;letter-spacing:.
   .admin-page-head{flex-direction:column}
   .admin-metrics,.admin-filters,.admin-summary-grid{grid-template-columns:1fr}
 }
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.job-apply-card--desktop{display:block}
+.job-apply-flow{display:none}
+.job-apply-cta-wrap{margin:20px 0}
+.job-apply-cta{padding:18px;border:1px solid var(--line-soft);border-radius:var(--radius);background:#f8fbff}
+.job-apply-cta-note{margin:0 0 12px;font-size:.88rem;line-height:1.5;color:var(--muted)}
+.job-detail-intro{margin-bottom:0}
+.summary-list--inline{margin:0}
+.job-retention{display:grid;gap:28px;margin-top:32px;margin-bottom:40px}
+.job-explore-links h2{margin:0 0 12px;font-size:1.05rem;color:var(--navy)}
+.job-explore-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.job-explore-list a{font-weight:600;color:#1d4ed8;text-decoration:none}
+.job-explore-list a:hover{text-decoration:underline}
+.job-blog-related-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.job-blog-related-list a{font-weight:600;color:var(--navy);text-decoration:none;line-height:1.4}
+.job-blog-related-list a:hover{color:#1d4ed8;text-decoration:underline}
+.mobile-apply-bar{
+  position:fixed;left:0;right:0;bottom:0;z-index:999;
+  padding:10px 12px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));
+  background:#fff;border-top:1px solid #dbe4f0;
+  box-shadow:0 -8px 24px rgba(15,23,42,.12);
+  transition:transform .2s ease,opacity .2s ease
+}
+.mobile-apply-bar--hidden{transform:translateY(110%);opacity:0;pointer-events:none;visibility:hidden}
+.mobile-apply-bar__close{
+  position:absolute;top:6px;right:10px;width:32px;height:32px;border:0;background:transparent;
+  font-size:1.5rem;line-height:1;color:#64748b;cursor:pointer;border-radius:8px
+}
+.mobile-apply-bar__close:hover{background:#f1f5f9}
+.mobile-apply-bar__btn,.mobile-apply-bar .btn{
+  width:100%;min-height:48px;display:flex;align-items:center;justify-content:center;
+  border-radius:12px;font-weight:700;font-size:.95rem;padding-right:28px
+}
+body.job-page--sticky-cta{padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+@media (max-width:1080px){
+  .job-apply-flow{display:block}
+  .job-apply-card--desktop{display:none}
+}
+@media (max-width:768px){
+  .mobile-apply-bar:not(.mobile-apply-bar--hidden){transform:translateY(0);opacity:1;pointer-events:auto;visibility:visible}
+}
+@media (min-width:1081px){
+  .job-apply-flow{display:none!important}
+  .job-apply-card--desktop{display:block}
+  .mobile-apply-bar{display:none!important}
+}
 .article-layout-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
 .article-sidebar-desktop,.job-aside-ad-desktop{display:block}
 .blog-grid-compact{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}

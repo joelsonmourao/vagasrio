@@ -131,6 +131,7 @@ export function buildJobPostingSchema(job: JobForSchema, settings?: SiteSettings
       value: String(job.id),
     },
     url: baseUrl(`/vagas/${job.slug}`, settings),
+    /** Agregador: candidatura no site/e-mail da empresa, não no Vagas RJ. */
     directApply: false,
   };
 

@@ -1,0 +1,92 @@
+---
+import type { ApplyChannel } from '../lib/apply-channel';
+import { getApplyPrimaryCta } from '../lib/apply-channel';
+
+interface Props {
+  channel: ApplyChannel;
+}
+
+const { channel } = Astro.props;
+const cta = getApplyPrimaryCta(channel);
+---
+
+{cta && (
+  <div
+    class="mobile-apply-bar mobile-apply-bar--hidden"
+    data-job-apply-scroll-bar
+    role="region"
+    aria-label="Candidatura rápida"
+    aria-hidden="true"
+  >
+    <button
+      type="button"
+      class="mobile-apply-bar__close"
+      data-apply-bar-close
+      aria-label="Fechar barra de candidatura"
+    >
+      ×
+    </button>
+    <a
+      class="btn btn-accent mobile-apply-bar__btn"
+      href={cta.href}
+      aria-label={cta.ariaLabel}
+      {...(cta.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+    >
+      {cta.label}
+    </a>
+  </div>
+)}
+
+<script>
+  const SCROLL_SHOW_RATIO = 0.35;
+  const DISMISS_KEY = 'vagasrj_apply_bar_dismiss';
+
+  function initMobileApplyBar(bar: HTMLElement) {
+    if (window.matchMedia('(min-width: 769px)').matches) return;
+
+    const closeBtn = bar.querySelector('[data-apply-bar-close]');
+    const show = () => {
+      bar.classList.remove('mobile-apply-bar--hidden');
+      bar.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('job-page--sticky-cta');
+    };
+    const hide = () => {
+      bar.classList.add('mobile-apply-bar--hidden');
+      bar.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('job-page--sticky-cta');
+    };
+
+    if (sessionStorage.getItem(DISMISS_KEY) === '1') {
+      hide();
+      return;
+    }
+
+    closeBtn?.addEventListener('click', () => {
+      sessionStorage.setItem(DISMISS_KEY, '1');
+      hide();
+    });
+
+    const onScroll = () => {
+      const doc = document.documentElement;
+      const maxScroll = doc.scrollHeight - window.innerHeight;
+      if (maxScroll <= 0) return;
+
+      const ratio = window.scrollY / maxScroll;
+      const nearBottom = window.scrollY + window.innerHeight >= doc.scrollHeight - 100;
+
+      if (nearBottom) {
+        hide();
+        return;
+      }
+      if (ratio >= SCROLL_SHOW_RATIO) show();
+      else hide();
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  document.querySelectorAll('[data-job-apply-scroll-bar]').forEach((el) => {
+    if (el instanceof HTMLElement) initMobileApplyBar(el);
+  });
+</script>
