@@ -39,7 +39,7 @@ export function resolvePublicApplyUrl(url: string | null | undefined): string | 
   return resolveApplyHref(parseApplyChannel(url));
 }
 
-const SITE_LOGO_MARKERS = ['logo-vagas-rj', 'og-vagas-rj', 'favicon'];
+const SITE_LOGO_MARKERS = ['logo-vagas-rj', 'logo-vagas-rj-jobposting', 'og-vagas-rj', 'favicon'];
 
 /** Logo da empresa contratante — nunca a marca do portal Vagas RJ. */
 export function isRealCompanyLogo(logo: string | null | undefined): boolean {

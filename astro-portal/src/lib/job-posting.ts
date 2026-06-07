@@ -5,8 +5,8 @@ import { isValidApplyChannel, parseApplyChannel } from './apply-channel';
 import { isRealCompanyLogo, sanitizeSchemaUrl } from './public-content';
 import type { SiteSettingsMap } from './site-settings';
 
-/** Logo padrão do portal (fallback no hiringOrganization.logo). */
-export const SITE_LOGO_SCHEMA_PATH = '/assets/img/logo-vagas-rj.svg';
+/** Ícone quadrado do portal — fallback em hiringOrganization.logo (JobPosting). */
+export const SITE_LOGO_SCHEMA_PATH = '/assets/img/logo-vagas-rj-jobposting.svg';
 
 const STREET_ADDRESS_FALLBACK = 'Não informado';
 
