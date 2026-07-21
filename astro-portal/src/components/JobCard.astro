@@ -1,53 +1,69 @@
 ---
 import {
-  excerpt,
   formatDateBr,
   formatDatetimeIsoAttr,
   employmentTypeLabel,
-  formatSalaryDisplay,
 } from '../lib/format';
 
 interface Props {
   job: {
     slug: string;
     title: string;
-    description: string;
     publishedAt: Date;
-    salary: string | null;
     employmentType?: string | null;
-    company: { name: string };
+    company: { name: string; logo?: string | null };
     city: { name: string };
     category: { name: string } | null;
   };
 }
+
 const { job } = Astro.props;
 const date = formatDateBr(job.publishedAt);
-const typeLabel = employmentTypeLabel(job.employmentType);
+const typeLabel = employmentTypeLabel(job.employmentType) || 'Efetivo';
+const initials = job.company.name
+  .split(/\s+/)
+  .filter(Boolean)
+  .slice(0, 2)
+  .map((w) => w[0]?.toUpperCase() ?? '')
+  .join('') || 'E';
+const logo = job.company.logo?.trim() || '';
 ---
-<article class="job-card job-card-premium card-hover">
-  <div class="job-card-accent" aria-hidden="true"></div>
-  <div class="job-card-body">
-    <div class="job-card-top">
-      {job.category ? (
-        <span class="tag tag-category">{job.category.name}</span>
+<article class="job-card job-card-market">
+  <a class="job-card-link" href={`/vagas/${job.slug}`}>
+    <header class="job-card-company-row">
+      {logo ? (
+        <img class="job-card-avatar" src={logo} alt="" width="40" height="40" loading="lazy" />
       ) : (
-        <span class="tag tag-muted">Vaga</span>
+        <span class="job-card-avatar job-card-avatar-fallback" aria-hidden="true">{initials}</span>
       )}
-      <time datetime={formatDatetimeIsoAttr(job.publishedAt)}>{date}</time>
-    </div>
-    <h3><a href={`/vagas/${job.slug}`}>{job.title}</a></h3>
-    <div class="job-card-meta">
-      <span class="job-card-company">{job.company.name}</span>
-      <span class="job-card-location">
-        <span class="loc-dot" aria-hidden="true"></span>
-        {job.city.name}/RJ
-      </span>
-    </div>
-    {typeLabel && <p class="job-card-type">{typeLabel}</p>}
-    <p class="job-card-excerpt">{excerpt(job.description, 155)}</p>
-    <div class="job-card-footer">
-      <span class="job-salary">{formatSalaryDisplay(job.salary)}</span>
-      <a class="btn btn-sm btn-card" href={`/vagas/${job.slug}`}>Ver vaga</a>
-    </div>
-  </div>
+      <span class="job-card-company-name">{job.company.name}</span>
+    </header>
+
+    <h3 class="job-card-title">{job.title}</h3>
+
+    <ul class="job-card-facts">
+      <li>
+        <svg class="job-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>
+        <span>{job.city.name} - RJ</span>
+      </li>
+      <li>
+        <svg class="job-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+        <span>Presencial</span>
+      </li>
+      <li>
+        <svg class="job-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM10 4h4v2h-4V4zm10 15H4V8h16v11z"/></svg>
+        <span>{typeLabel}</span>
+      </li>
+      {job.category && (
+        <li>
+          <svg class="job-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.6 11.5 12 2 6.4 11.5H17.6zM12 15.5c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4z"/></svg>
+          <span>{job.category.name}</span>
+        </li>
+      )}
+    </ul>
+
+    <footer class="job-card-published">
+      <time datetime={formatDatetimeIsoAttr(job.publishedAt)}>Publicada em: {date}</time>
+    </footer>
+  </a>
 </article>

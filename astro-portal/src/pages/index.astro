@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import JobCard from '../components/JobCard.astro';
 import BlogCard from '../components/BlogCard.astro';
+import JobFilters from '../components/JobFilters.astro';
 import { homeData } from '../lib/portal';
 import { baseUrl, siteConfig } from '../lib/config';
 import { getSiteSettingsSafe, SETTING_KEYS } from '../lib/site-settings';
@@ -25,37 +26,18 @@ const jsonLd = mergeJsonLd(
 );
 ---
 <BaseLayout title={homeTitle} description={homeDesc} canonical={baseUrl('/', settings)} jsonLd={jsonLd}>
-  <section class="hero hero-home">
-    <div class="hero-pattern" aria-hidden="true"></div>
-    <div class="hero-copy">
-      <p class="hero-kicker">Vagas RJ</p>
-      <h1>Emprego no Rio de Janeiro</h1>
-      <p>Busque por cargo e cidade. Oportunidades em todo o estado, com filtros claros e artigos úteis para candidatura.</p>
-      <form class="search-form search-form-hero" action="/vagas" method="get">
-        <input type="search" name="q" placeholder="Cargo ou palavra-chave" aria-label="Cargo ou palavra-chave" />
-        <input type="text" name="city" placeholder="Cidade no RJ" aria-label="Cidade" list="home-city-list" />
-        <button class="btn btn-hero" type="submit">Buscar</button>
-      </form>
-      <datalist id="home-city-list">
-        {siteConfig.allowedCities.map((c) => <option value={c} />)}
-      </datalist>
-    </div>
-    <div class="hero-stats">
-      <article><strong>{data.stats.activeJobs}</strong><span>vagas ativas</span></article>
-      <article><strong>{data.stats.cities}</strong><span>cidades</span></article>
-      <article><strong>{data.stats.posts}</strong><span>artigos</span></article>
-    </div>
+  <section class="market-top">
+    <p class="market-kicker">{siteConfig.name} · Rio de Janeiro</p>
+    <h1 class="market-title">Vagas de emprego no RJ</h1>
+    <JobFilters compact />
   </section>
 
   <section class="home-section home-section-jobs">
-    <div class="section-head">
-      <div>
-        <p class="section-kicker">Oportunidades</p>
-        <h2>Vagas em destaque</h2>
-      </div>
-      <a class="section-link" href="/vagas">Ver todas →</a>
+    <div class="section-head section-head-market">
+      <h2>Vagas</h2>
+      <a class="section-link" href="/vagas">Ver todas</a>
     </div>
-    <div class="job-grid job-grid-home">
+    <div class="job-grid job-grid-market">
       {data.featuredJobs.map((job) => <JobCard job={job} />)}
     </div>
     {data.featuredJobs.length === 0 && (
@@ -69,23 +51,14 @@ const jsonLd = mergeJsonLd(
   </section>
 
   {data.recentPosts.length > 0 && (
-    <section class="home-section home-section-soft">
-      <div class="section-head">
-        <div>
-          <p class="section-kicker">Carreira</p>
-          <h2>Blog</h2>
-        </div>
-        <a class="section-link" href="/blog">Todos os artigos →</a>
+    <section class="home-section">
+      <div class="section-head section-head-market">
+        <h2>Blog</h2>
+        <a class="section-link" href="/blog">Todos os artigos</a>
       </div>
       <div class="entity-grid blog-grid blog-grid-compact">
         {data.recentPosts.map((post) => <BlogCard article={post} />)}
       </div>
     </section>
   )}
-
-  <section class="cta-band">
-    <h2>Próxima candidatura no RJ</h2>
-    <p>Filtre por cidade, leia a vaga com atenção e use o blog para preparar currículo e entrevista.</p>
-    <a class="btn btn-lg" href="/vagas">Ver vagas</a>
-  </section>
 </BaseLayout>

@@ -1,32 +1,31 @@
-/* Vagas RJ — visual profissional v3 (limpo, editorial, menos “glass”) */
+/* Vagas RJ — layout tipo marketplace (busca + cards limpos) */
 
 :root {
-  --navy: #0a1628;
-  --navy-soft: #132338;
-  --blue: #1a56db;
-  --blue-bright: #2563eb;
-  --blue-light: #e8f0fe;
-  --cyan: #0e7490;
-  --bg: #f3f5f8;
-  --bg-soft: #fafbfc;
+  --navy: #1a1a2e;
+  --navy-soft: #2d2d44;
+  --blue: #1e3a8a;
+  --blue-bright: #1e40af;
+  --blue-light: #eef2ff;
+  --bg: #f4f4f5;
+  --bg-soft: #fafafa;
   --card: #ffffff;
-  --text: #121a26;
-  --muted: #5c6b7f;
-  --line: #d5dde8;
-  --line-soft: #e8eef5;
-  --radius: 14px;
-  --radius-sm: 10px;
-  --shadow: 0 12px 32px rgba(10, 22, 40, 0.08);
-  --shadow-sm: 0 2px 10px rgba(10, 22, 40, 0.05);
-  --header-h: 72px;
+  --text: #18181b;
+  --muted: #71717a;
+  --line: #e4e4e7;
+  --line-soft: #f4f4f5;
+  --radius: 12px;
+  --radius-sm: 999px;
+  --shadow: none;
+  --shadow-sm: none;
+  --header-h: 64px;
   --container-max: 1120px;
 }
 
 body {
   background: var(--bg);
   color: var(--text);
-  font-size: 1.025rem;
-  line-height: 1.65;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 .container,
@@ -34,10 +33,15 @@ body {
   max-width: var(--container-max);
 }
 
-/* Header mais sóbrio */
+main.container,
+.site-main {
+  padding-top: 24px;
+  padding-bottom: 64px;
+}
+
+/* Header limpo */
 .site-header {
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: none;
+  background: #fff;
   border-bottom: 1px solid var(--line);
   box-shadow: none;
   min-height: var(--header-h);
@@ -48,13 +52,13 @@ body {
 }
 
 .logo-image {
-  height: 40px;
+  height: 36px;
 }
 
 .main-nav a {
   border-radius: 8px;
   font-weight: 600;
-  color: #243247;
+  color: #3f3f46;
 }
 
 .main-nav a.active {
@@ -65,7 +69,7 @@ body {
 
 .btn,
 .btn-nav {
-  border-radius: var(--radius-sm) !important;
+  border-radius: 8px !important;
   box-shadow: none !important;
   background: var(--blue) !important;
   transform: none !important;
@@ -75,7 +79,6 @@ body {
 .btn-nav:hover {
   background: var(--navy) !important;
   transform: none !important;
-  box-shadow: none !important;
 }
 
 .btn-outline {
@@ -84,281 +87,389 @@ body {
   border: 1px solid var(--line) !important;
 }
 
-.btn-outline:hover {
-  background: var(--blue-light) !important;
-  border-color: #b7c9e8 !important;
+.btn-nav {
+  background: var(--blue) !important;
+  color: #fff !important;
 }
 
-/* Hero limpo — sem grade e sem cards de vidro */
-.hero {
-  border-radius: var(--radius);
-  padding: clamp(28px, 4vw, 44px) clamp(22px, 3.5vw, 40px);
-  min-height: 0;
-  background: linear-gradient(145deg, #0a1628 0%, #153056 55%, #1a4a8c 100%);
-  border: 0;
-  box-shadow: var(--shadow);
+/* Topo marketplace */
+.market-top {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 28px;
 }
 
-.hero-pattern {
-  opacity: 0.35;
-  background:
-    radial-gradient(ellipse at 80% 20%, rgba(37, 99, 235, 0.35), transparent 50%),
-    radial-gradient(ellipse at 10% 90%, rgba(14, 116, 144, 0.2), transparent 45%);
+.market-kicker {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
-.hero-home {
-  grid-template-columns: 1.7fr 0.9fr;
-  gap: 28px;
+.market-title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
 }
 
-.hero-kicker,
-.section-kicker {
-  letter-spacing: 0.08em;
-  color: #9ec0f5;
+.market-filters-form {
+  display: grid;
+  gap: 14px;
 }
 
-.hero h1 {
-  font-size: clamp(1.85rem, 4.2vw, 2.55rem);
-  font-weight: 750;
-  max-width: 18ch;
-}
-
-.hero p {
-  color: #c5d6ef;
-  max-width: 46ch;
-}
-
-.search-form-hero {
+.market-search {
+  display: flex;
+  align-items: center;
   background: #fff;
-  border: 0;
-  backdrop-filter: none;
-  padding: 8px;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 6px 6px 20px;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
 }
 
-.search-form-hero input {
+.market-search input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 12px 8px;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--text);
+  min-width: 0;
+}
+
+.market-search input:focus {
+  outline: none;
+}
+
+.market-search-btn {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: #3f3f46;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.market-search-btn:hover {
+  background: var(--navy);
+}
+
+.market-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.market-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: #3f3f46;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.market-pill-primary {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
+.market-pill-primary.is-active {
+  background: #172554;
+  border-color: #172554;
+}
+
+.market-pill-field {
+  padding: 0 4px 0 14px;
+}
+
+.market-pill-field.is-active {
+  border-color: var(--blue);
+  background: var(--blue-light);
+  color: var(--blue);
+}
+
+.market-pill-field input {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: inherit;
+  padding: 10px 12px 10px 0;
+  min-width: 140px;
+  max-width: 200px;
+}
+
+.market-pill-field input:focus {
+  outline: none;
+}
+
+.market-pill-field input::placeholder {
+  color: #71717a;
+  font-weight: 500;
+}
+
+.market-pill-submit {
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+}
+
+.market-pill-submit:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.market-pill-clear {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.market-pill-clear:hover {
+  color: var(--text);
+}
+
+/* Esconde herói antigo se sobrar em alguma página */
+.hero-home {
+  display: none !important;
+}
+
+.page-hero {
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+  border: 0;
+  padding: 0 0 8px;
+  margin: 0;
+}
+
+.page-hero h1 {
+  color: var(--text);
+}
+
+.page-hero p {
+  color: var(--muted);
+}
+
+.section-head-market {
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.section-head-market h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.section-link {
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.home-section-soft {
   background: transparent;
   border: 0;
   box-shadow: none;
-}
-
-.hero-stats article {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  backdrop-filter: none;
-  box-shadow: none;
-  min-height: 88px;
-  padding: 16px;
-}
-
-.hero-stats strong {
-  font-size: 1.65rem;
-}
-
-/* Seções e cards */
-.home-section-soft {
-  background: #fff;
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius);
-  box-shadow: none;
-  padding: 22px 24px;
-}
-
-.section-head h2 {
-  font-size: clamp(1.25rem, 2.2vw, 1.55rem);
-}
-
-.job-card,
-.entity-card,
-.card,
-.panel {
-  border-radius: var(--radius);
-  box-shadow: none;
-  border-color: var(--line);
-}
-
-.job-card:hover,
-.card-hover:hover,
-.entity-card:hover {
-  transform: none;
-  box-shadow: var(--shadow-sm);
-  border-color: #b8c7dc;
-}
-
-.job-card-premium {
-  min-height: 280px;
-}
-
-.job-card-accent {
-  width: 3px;
-  background: var(--blue);
+  padding: 0;
 }
 
 .cta-band {
-  border-radius: var(--radius);
-  background: var(--navy);
-  box-shadow: none;
-  text-align: left;
-  padding: 28px 30px;
+  display: none;
+}
+
+/* Grid de vagas 3 colunas */
+.job-grid,
+.job-grid-home,
+.job-grid-listing,
+.job-grid-market {
   display: grid;
-  gap: 8px;
-  justify-items: start;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
 }
 
-.cta-band p {
-  margin-left: 0;
-  margin-right: 0;
-}
-
-/* Blog cards com capa */
-.blog-card {
-  padding: 0;
-  overflow: hidden;
-  gap: 0 !important;
+/* Card estilo Gupy */
+.job-card-market {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
   min-height: 0;
-}
-
-.blog-card-cover {
-  display: block;
-  aspect-ratio: 16 / 9;
   overflow: hidden;
-  background: var(--navy-soft);
+  box-shadow: none;
+  padding: 0;
 }
 
-.blog-card-cover img {
-  width: 100%;
+.job-card-market:hover {
+  transform: none;
+  border-color: #c4c4cc;
+  box-shadow: 0 4px 16px rgba(24, 24, 27, 0.06);
+}
+
+.job-card-link {
+  display: grid;
+  gap: 14px;
+  padding: 18px 18px 16px;
+  color: inherit;
+  text-decoration: none;
   height: 100%;
-  object-fit: cover;
+  align-content: start;
 }
 
-.blog-card-body {
-  display: grid;
-  gap: 8px;
-  padding: 16px 18px 18px;
-}
-
-.blog-card-body .btn {
-  justify-self: start;
-  margin-top: 4px;
-}
-
-.article-cover {
-  border-radius: var(--radius);
-  overflow: hidden;
-  border: 1px solid var(--line-soft);
-  margin-bottom: 4px;
-}
-
-.article-cover img {
-  width: 100%;
-  max-height: 360px;
-  object-fit: cover;
-}
-
-.article-header {
-  border: 1px solid var(--line);
-  box-shadow: none;
-}
-
-.prose,
-.article-body {
-  border: 1px solid var(--line);
-  box-shadow: none;
-}
-
-.prose .magnet-hook {
-  font-size: 1.08rem;
-  color: var(--navy);
-  border-left: 3px solid var(--blue);
-  padding-left: 14px;
-  margin: 0 0 1.25em;
-}
-
-.prose .magnet-cta-box {
-  display: grid;
+.job-card-company-row {
+  display: flex;
+  align-items: center;
   gap: 10px;
-  margin: 1.5em 0;
-  padding: 16px 18px;
-  background: var(--bg-soft);
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius-sm);
+  min-width: 0;
 }
 
-.prose .magnet-cta-box a {
+.job-card-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #e4e4e7;
+}
+
+.job-card-avatar-fallback {
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
   font-weight: 700;
+  color: var(--blue);
+  background: var(--blue-light);
+}
+
+.job-card-company-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #3f3f46;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.job-card-title {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.35;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.job-card-facts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+}
+
+.job-card-facts li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #52525b;
+  line-height: 1.35;
+}
+
+.job-ico {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #71717a;
+}
+
+.job-card-published {
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.job-card-published time {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* Remove visual antigo do card premium */
+.job-card-premium .job-card-accent,
+.job-card-market .job-card-accent {
+  display: none;
+}
+
+.filters-panel {
+  display: none;
+}
+
+/* Blog cards mais limpos */
+.blog-card {
+  border-radius: 12px;
+  border-color: var(--line);
+}
+
+.entity-card:hover,
+.card-hover:hover {
+  transform: none;
 }
 
 /* Footer */
 .site-footer {
-  background: var(--navy);
+  background: #18181b;
   margin-top: 48px;
-  padding: 40px 0 24px;
 }
 
-/* AdSense readiness */
-.readiness-grid {
-  display: grid;
-  gap: 12px;
-}
-
-.readiness-item {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 12px;
-  align-items: start;
-  padding: 14px 16px;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-}
-
-.readiness-badge {
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 6px;
-  white-space: nowrap;
-}
-
-.readiness-ok {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.readiness-bad {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.readiness-warn {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-@media (max-width: 900px) {
-  .hero-home {
-    grid-template-columns: 1fr;
-  }
-
-  .hero-stats {
-    grid-template-columns: repeat(3, 1fr);
-    display: grid;
-  }
-
-  .hero-stats article {
-    min-height: 72px;
+@media (max-width: 960px) {
+  .job-grid,
+  .job-grid-home,
+  .job-grid-listing,
+  .job-grid-market {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 640px) {
-  .hero-stats {
+  .job-grid,
+  .job-grid-home,
+  .job-grid-listing,
+  .job-grid-market {
     grid-template-columns: 1fr;
   }
 
-  .cta-band {
-    text-align: center;
-    justify-items: center;
+  .market-search {
+    max-width: none;
+  }
+
+  .market-filter-row {
+    justify-content: flex-start;
+  }
+
+  .market-pill-field input {
+    min-width: 120px;
+    max-width: 160px;
+  }
+
+  .job-card-facts {
+    grid-template-columns: 1fr;
   }
 }

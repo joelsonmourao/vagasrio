@@ -5,38 +5,65 @@ interface Props {
   company?: string;
   category?: string;
   action?: string;
+  compact?: boolean;
 }
-const { q = '', city = '', company = '', category = '', action = '/vagas' } = Astro.props;
+const {
+  q = '',
+  city = '',
+  company = '',
+  category = '',
+  action = '/vagas',
+  compact = false,
+} = Astro.props;
+
+const activeCount = [city, company, category].filter(Boolean).length;
 ---
-<section class="filters-panel" aria-labelledby="filters-title">
-  <h2 id="filters-title" class="filters-title">Filtrar vagas</h2>
-  <p class="filters-hint">Dica: na cidade você pode digitar só parte do nome — ex.: <strong>duque</strong>, <strong>niteroi</strong> ou <strong>rio</strong>.</p>
-  <form class="search-form filters" method="get" action={action}>
-    <label class="filter-field">
-      <span class="filter-label">Cargo ou palavra-chave</span>
-      <input type="search" name="q" value={q} placeholder="Exemplo: assistente, logística, jovem aprendiz" autocomplete="off" />
-    </label>
-    <label class="filter-field">
-      <span class="filter-label">Cidade</span>
+<section class:list={['market-filters', compact && 'market-filters-compact']} aria-label="Busca e filtros de vagas">
+  <form class="market-filters-form" method="get" action={action}>
+    <div class="market-search">
       <input
-        type="text"
-        name="city"
-        value={city}
-        placeholder="Exemplo: Rio de Janeiro, Niterói, Duque de Caxias"
+        type="search"
+        name="q"
+        value={q}
+        placeholder="Busque por nome da vaga"
         autocomplete="off"
-        list="city-suggestions"
+        aria-label="Busque por nome da vaga"
       />
-    </label>
-    <label class="filter-field">
-      <span class="filter-label">Empresa</span>
-      <input type="text" name="company" value={company} placeholder="Nome da empresa" autocomplete="off" />
-    </label>
-    <label class="filter-field">
-      <span class="filter-label">Categoria</span>
-      <input type="text" name="category" value={category} placeholder="Exemplo: Administrativo, Comercial, Logística" autocomplete="off" />
-    </label>
-    <button class="btn" type="submit">Buscar</button>
+      <button class="market-search-btn" type="submit" aria-label="Buscar vagas">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path fill="currentColor" d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0C7 14 5 12 5 9.5S7 5 9.5 5 14 7 14 9.5 12 14 9.5 14z"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="market-filter-row">
+      <span class:list={['market-pill', 'market-pill-primary', activeCount > 0 && 'is-active']}>
+        Filtrar{activeCount > 0 ? ` (${activeCount})` : ''}
+      </span>
+
+      <label class:list={['market-pill', 'market-pill-field', city && 'is-active']}>
+        <span class="sr-only">Local de trabalho</span>
+        <input type="text" name="city" value={city} placeholder="Local de trabalho" list="city-suggestions" autocomplete="off" />
+      </label>
+
+      <label class:list={['market-pill', 'market-pill-field', company && 'is-active']}>
+        <span class="sr-only">Empresa</span>
+        <input type="text" name="company" value={company} placeholder="Empresa" autocomplete="off" />
+      </label>
+
+      <label class:list={['market-pill', 'market-pill-field', category && 'is-active']}>
+        <span class="sr-only">Categoria</span>
+        <input type="text" name="category" value={category} placeholder="Área / categoria" autocomplete="off" />
+      </label>
+
+      <button class="market-pill market-pill-submit" type="submit">Aplicar</button>
+
+      {(q || city || company || category) && (
+        <a class="market-pill market-pill-clear" href={action}>Limpar</a>
+      )}
+    </div>
   </form>
+
   <datalist id="city-suggestions">
     <option value="Rio de Janeiro"></option>
     <option value="Niterói"></option>
@@ -45,5 +72,8 @@ const { q = '', city = '', company = '', category = '', action = '/vagas' } = As
     <option value="Nova Iguaçu"></option>
     <option value="Macaé"></option>
     <option value="Cabo Frio"></option>
+    <option value="Petrópolis"></option>
+    <option value="Volta Redonda"></option>
+    <option value="Campos dos Goytacazes"></option>
   </datalist>
 </section>
