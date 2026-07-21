@@ -1,0 +1,54 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { categoriesWithStats } from '../../lib/portal';
+import { baseUrl, siteConfig } from '../../lib/config';
+import { getSiteSettingsSafe } from '../../lib/site-settings';
+import { buildBreadcrumbSchema, mergeJsonLd } from '../../lib/seo';
+
+const settings = await getSiteSettingsSafe();
+const categories = await categoriesWithStats();
+const withJobs = categories.filter((c) => c.jobCount > 0);
+const title = `Vagas por Área e Categoria no RJ | ${siteConfig.name}`;
+const description = `Encontre vagas de emprego por área no Rio de Janeiro: ${(withJobs.slice(0, 6).map((c) => c.name).join(', ') || 'administrativo, logística e mais')}. Portal ${siteConfig.name}.`;
+
+const jsonLd = mergeJsonLd(
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: title,
+    description,
+    url: baseUrl('/categorias', settings),
+  },
+  buildBreadcrumbSchema(
+    [
+      { name: 'Início', path: '/' },
+      { name: 'Categorias', path: '/categorias' },
+    ],
+    settings,
+  ),
+);
+---
+<BaseLayout title={title} description={description} canonical={baseUrl('/categorias', settings)} jsonLd={jsonLd}>
+  <div class="page-stack page-stack-market">
+    <section class="market-top">
+      <h1 class="market-title">Vagas por área no Rio de Janeiro</h1>
+      <p class="market-lead">
+        Escolha a categoria e veja empregos RJ filtrados por área de atuação.
+      </p>
+    </section>
+
+    {withJobs.length > 0 ? (
+      <ul class="city-chips" style="list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:10px;">
+        {withJobs.map((cat) => (
+          <li>
+            <a class="city-chip" href={`/vagas/categoria/${cat.slug}`}>
+              {cat.name} ({cat.jobCount})
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p>Nenhuma categoria com vagas públicas no momento. <a href="/vagas">Ver todas as vagas</a>.</p>
+    )}
+  </div>
+</BaseLayout>

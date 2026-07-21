@@ -250,6 +250,22 @@ export async function companyBySlug(slug: string) {
   return prisma.company.findFirst({ where: { slug } });
 }
 
+export async function categoryBySlug(slug: string) {
+  return prisma.category.findFirst({ where: { slug } });
+}
+
+export async function categoriesWithStats() {
+  const now = new Date();
+  const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
+  const counts = await prisma.job.groupBy({
+    by: ['categoryId'],
+    where: { state: siteConfig.mainUf, ...publicJobPrismaFilter(now), categoryId: { not: null } },
+    _count: true,
+  });
+  const map = new Map(counts.map((c) => [c.categoryId, c._count]));
+  return categories.map((c) => ({ ...c, jobCount: map.get(c.id) ?? 0 }));
+}
+
 export async function citiesWithStats() {
   const now = new Date();
   const cities = await prisma.city.findMany({

@@ -25,6 +25,7 @@ export const SITEMAP_PAGE_PATHS = [
   '/politica-de-cookies',
   '/termos-de-uso',
   '/politica-editorial',
+  '/categorias',
   `/vagas/estado/${siteConfig.mainUf.toLowerCase()}`,
 ] as const;
 
@@ -80,7 +81,24 @@ function jobWhereIndexable(includeIndexableColumn: boolean) {
 
 export async function fetchSitemapPages(): Promise<SitemapUrlEntry[]> {
   const timestamps = getStaticSiteTimestamps();
-  return SITEMAP_PAGE_PATHS.map((path) => toEntry(path, timestamps));
+  const staticPages = SITEMAP_PAGE_PATHS.map((path) => toEntry(path, timestamps));
+
+  try {
+    const cats = await prisma.category.findMany({
+      where: {
+        slug: { not: '' },
+        jobs: { some: { state: siteConfig.mainUf, ...publicJobPrismaFilter() } },
+      },
+      select: { slug: true, createdAt: true },
+      orderBy: { name: 'asc' },
+    });
+    const categoryPages = cats
+      .filter((r) => isValidSlug(r.slug))
+      .map((r) => toEntry(`/vagas/categoria/${r.slug}`, { createdAt: r.createdAt }));
+    return [...staticPages, ...categoryPages];
+  } catch {
+    return staticPages;
+  }
 }
 
 export async function fetchSitemapJobs(includeIndexable = true): Promise<SitemapUrlEntry[]> {

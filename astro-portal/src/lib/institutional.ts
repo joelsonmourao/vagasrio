@@ -6,6 +6,8 @@ export const institutionalPages: Record<string, { title: string; description: st
       'Conheça o Vagas RJ RIO: portal regional de divulgação de vagas de emprego no Rio de Janeiro (RJ), com busca por cidade, empresa e categoria.',
     html: `
 <p>O <strong>Vagas RJ RIO</strong> é um portal regional independente de <strong>divulgação de oportunidades de emprego</strong>, com foco exclusivo no estado do Rio de Janeiro (RJ). Não somos empresa contratante: reunimos anúncios publicados por terceiros para facilitar a busca de quem procura trabalho na região.</p>
+<h2>Quem opera o portal</h2>
+<p>O Vagas RJ RIO é mantido por responsável editorial pessoa física, com atuação independente no Rio de Janeiro. Não há CNPJ vinculado: o contato oficial para assuntos do site, conteúdo e privacidade é o e-mail <a href="mailto:contato@vagasrj.rio.br">contato@vagasrj.rio.br</a>.</p>
 <h2>O que fazemos</h2>
 <ul>
   <li>Organizamos vagas por cidade, empresa, categoria e palavra-chave.</li>
@@ -27,9 +29,9 @@ export const institutionalPages: Record<string, { title: string; description: st
     description:
       'Entre em contato com o Vagas RJ RIO para dúvidas, correções de vagas, sugestões e questões sobre privacidade ou publicidade.',
     html: `
-<p>Use os canais abaixo para falar conosco. Respondemos solicitações relacionadas ao portal, conteúdo publicado e políticas do site.</p>
-<h2>E-mail</h2>
-<p>Envie sua mensagem para <a href="mailto:contato@vagasrj.rio.br">contato@vagasrj.rio.br</a>.</p>
+<p>Use o formulário abaixo ou o e-mail. Respondemos solicitações relacionadas ao portal, conteúdo publicado e políticas do site.</p>
+<h2>E-mail oficial</h2>
+<p><a href="mailto:contato@vagasrj.rio.br"><strong>contato@vagasrj.rio.br</strong></a></p>
 <h2>Quando entrar em contato</h2>
 <ul>
   <li><strong>Dúvidas gerais</strong> sobre navegação, filtros ou cadastro de vagas.</li>
@@ -84,7 +86,7 @@ export const institutionalPages: Record<string, { title: string; description: st
   <li><strong>Publicidade</strong> — Google AdSense e parceiros, quando ativos, para exibir e medir anúncios.</li>
 </ul>
 <h2>Consentimento</h2>
-<p>Ao clicar em &quot;Aceitar&quot; no aviso de cookies do site, você concorda com cookies não essenciais conforme esta política. Você pode recusar ou apagar cookies nas configurações do navegador a qualquer momento; parte do site pode deixar de funcionar corretamente.</p>
+<p>Ao clicar em &quot;Aceitar cookies&quot; no aviso do site, você concorda com cookies não essenciais conforme esta política. Se clicar em &quot;Recusar&quot;, mantemos apenas cookies essenciais (ex.: preferência de consentimento) e não carregamos medição/publicidade dependente de consentimento. Você também pode apagar cookies nas configurações do navegador a qualquer momento.</p>
 <h2>Como gerenciar cookies</h2>
 <ul>
   <li>Chrome, Firefox, Safari e Edge: menu de privacidade / cookies do navegador.</li>

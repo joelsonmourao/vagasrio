@@ -1,0 +1,95 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import JobCard from '../../../components/JobCard.astro';
+import Pagination from '../../../components/Pagination.astro';
+import EmptyState from '../../../components/EmptyState.astro';
+import JobsFaq from '../../../components/JobsFaq.astro';
+import { categoryBySlug, jobList } from '../../../lib/portal';
+import { baseUrl, siteConfig } from '../../../lib/config';
+import { getSiteSettingsSafe, SETTING_KEYS } from '../../../lib/site-settings';
+import { getRjJobsFaqs } from '../../../lib/jobs-faq';
+import {
+  buildBreadcrumbSchema,
+  buildFaqPageSchema,
+  buildJobsListingSeo,
+  mergeJsonLd,
+} from '../../../lib/seo';
+
+const { slug } = Astro.params;
+const category = slug ? await categoryBySlug(slug) : null;
+if (!category) return Astro.redirect('/404');
+
+const settings = await getSiteSettingsSafe();
+const brand = settings[SETTING_KEYS.siteName] || siteConfig.name;
+const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
+const jobsData = await jobList({ page, category: category.slug });
+const { title, description } = buildJobsListingSeo({
+  total: jobsData.total,
+  jobTitles: jobsData.jobs.map((j) => j.title),
+  placeLabel: `${category.name} no Rio de Janeiro`,
+  brand,
+  settings,
+});
+
+const faqItems = getRjJobsFaqs({
+  brand,
+  jobCount: jobsData.total,
+  cities: siteConfig.allowedCities,
+}).slice(0, 6);
+
+const jsonLd = mergeJsonLd(
+  buildBreadcrumbSchema(
+    [
+      { name: 'Início', path: '/' },
+      { name: 'Vagas', path: '/vagas' },
+      { name: category.name, path: `/vagas/categoria/${category.slug}` },
+    ],
+    settings,
+  ),
+  buildFaqPageSchema(
+    faqItems.map((f) => ({ question: f.question, answer: f.answer })),
+    baseUrl(`/vagas/categoria/${category.slug}`, settings),
+  ),
+);
+---
+<BaseLayout title={title} description={description} canonical={baseUrl(`/vagas/categoria/${category.slug}`, settings)} jsonLd={jsonLd}>
+  <div class="page-stack page-stack-market">
+    <section class="market-top">
+      <nav class="breadcrumb">
+        <a href="/">Início</a><span>/</span>
+        <a href="/vagas">Vagas</a><span>/</span>
+        <span>{category.name}</span>
+      </nav>
+      <h1 class="market-title">Vagas de {category.name} no Rio de Janeiro</h1>
+      <p class="market-lead">
+        {jobsData.total > 0
+          ? `${jobsData.total} vagas de emprego em ${category.name} no RJ. Empregos atualizados na área.`
+          : `Oportunidades de emprego em ${category.name} no estado do Rio de Janeiro.`}
+      </p>
+    </section>
+
+    {jobsData.jobs.length > 0 ? (
+      <div class="job-grid job-grid-market">
+        {jobsData.jobs.map((job) => <JobCard job={job} />)}
+      </div>
+    ) : (
+      <EmptyState
+        title={`Nenhuma vaga em ${category.name} no momento`}
+        message="Veja todas as vagas ou outras áreas de atuação."
+        clearHref="/vagas"
+      />
+    )}
+
+    <Pagination
+      page={jobsData.page}
+      totalPages={jobsData.totalPages}
+      basePath={`/vagas/categoria/${category.slug}`}
+    />
+
+    <JobsFaq
+      items={faqItems}
+      title={`Perguntas frequentes — vagas de ${category.name}`}
+      lead={`Tire dúvidas sobre empregos de ${category.name} e vagas RJ.`}
+    />
+  </div>
+</BaseLayout>

@@ -92,6 +92,9 @@ const jsonLd = mergeJsonLd(
         <a class="city-chip" href={`/vagas?city=${encodeURIComponent(name)}`}>{name}</a>
       ))}
     </div>
+    <p class="section-text" style="margin-top:12px">
+      Prefere filtrar por área? <a href="/categorias">Ver vagas por categoria</a>.
+    </p>
   </section>
 
   {data.recentPosts.length > 0 && (

@@ -80,7 +80,7 @@ function buildScheduleSlots(count, from = new Date()) {
   return slots;
 }
 
-const PILOT = 45;
+const PILOT = 205; // todos publicados no seed; use accelerate script se precisar reabrir agenda
 const scheduleSlots = buildScheduleSlots(Math.max(0, catalog.length - PILOT));
 
 function seoTitle(title) {

@@ -66,9 +66,9 @@ const checks = [
   {
     id: 'volume',
     label: 'Volume público substancial (meta interna ≥ 45)',
-    ok: rjPublic >= 45,
-    detail: `${rjPublic} post(s) rj-local públicos agora (piloto/agenda). Total rj-local no banco: ${rjLocal}.`,
-    level: rjPublic >= 45 ? 'ok' as const : rjPublic >= 15 ? 'warn' as const : 'bad' as const,
+    ok: rjPublic >= 100,
+    detail: `${rjPublic} post(s) rj-local públicos agora (piloto/agenda). Total rj-local no banco: ${rjLocal}. Meta acelerada: ≥100 (ideal 205).`,
+    level: rjPublic >= 100 ? 'ok' as const : rjPublic >= 45 ? 'warn' as const : 'bad' as const,
   },
   {
     id: 'covers',
@@ -110,7 +110,7 @@ const checks = [
 ];
 
 const blockers = checks.filter((c) => c.level === 'bad');
-const ready = blockers.length === 0 && rjPublic >= 45 && oldActive === 0 && !adsOn;
+const ready = blockers.length === 0 && rjPublic >= 100 && oldActive === 0 && !adsOn;
 ---
 <AdminLayout title="AdSense — Rota da Aprovação">
   <header class="admin-page-head">

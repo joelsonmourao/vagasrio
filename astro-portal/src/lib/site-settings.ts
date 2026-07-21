@@ -27,11 +27,13 @@ export const SETTING_KEYS = {
 
 export type SiteSettingsMap = Record<string, string>;
 
-/** Troca marca legada "Vagas RJ" / "Vagas Rio" pela marca atual, sem duplicar "RIO". */
+/** Troca marcas legadas pela marca atual, sem duplicar "RIO". */
 export function upgradeBrandText(text: string, brand = siteConfig.name): string {
   if (!text) return text;
   return text
     .replace(/Vagas RJ RIO/g, '\u0000BRAND\u0000')
+    .replace(/Empregos no Rio de Janeiro - Rio Vagas/gi, brand)
+    .replace(/Rio Vagas/gi, brand)
     .replace(/Vagas RJ/g, brand)
     .replace(/Vagas Rio(?!\s+de\s+Janeiro)/gi, brand)
     .replace(/\u0000BRAND\u0000/g, brand);

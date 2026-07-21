@@ -2,6 +2,7 @@
   var consentKey = "portal_vagas_cookie_ok";
   var banner = document.getElementById("cookie-banner");
   var accept = document.getElementById("cookie-accept");
+  var refuse = document.getElementById("cookie-refuse");
 
   if (banner && !localStorage.getItem(consentKey)) {
     banner.classList.add("show");
@@ -10,6 +11,13 @@
   if (accept) {
     accept.addEventListener("click", function () {
       localStorage.setItem(consentKey, "1");
+      if (banner) banner.classList.remove("show");
+    });
+  }
+
+  if (refuse) {
+    refuse.addEventListener("click", function () {
+      localStorage.setItem(consentKey, "0");
       if (banner) banner.classList.remove("show");
     });
   }
