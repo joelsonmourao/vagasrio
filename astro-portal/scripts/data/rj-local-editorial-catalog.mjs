@@ -1,5 +1,5 @@
 /**
- * Catálogo editorial RJ — 205 pautas locais (Vagas RJ).
+ * Catálogo editorial RJ — 205 pautas locais (Vagas RJ RIO).
  * Conteúdo gerado de forma determinística para evitar clones entre posts.
  */
 export const MIN_USEFUL_CHARS = 3400;
@@ -118,7 +118,7 @@ const TOPIC_BANK = {
     "Demanda por atendimento ao cliente no estado",
     "Construção civil e obras: cuidados na candidatura",
     "Educação e apoio escolar: vagas e requisitos típicos",
-    "Como usar o Vagas RJ para mapear bairros e cidades",
+    "Como usar o Vagas RJ RIO para mapear bairros e cidades",
   ],
   "seguranca-para-candidatos": [
     "Como identificar vaga falsa no WhatsApp e Telegram",
@@ -136,7 +136,7 @@ const TOPIC_BANK = {
     "Intermediário que cobra para ‘indicar’: evite",
     "Segurança no deslocamento até a entrevista",
     "Links encurtados e páginas clonadas de empresas",
-    "O que o Vagas RJ não faz: cobrar candidatura",
+    "O que o Vagas RJ RIO não faz: cobrar candidatura",
     "Como orientar familiar jovem sobre golpes de emprego",
     "Fake de RH pedindo senha do gov.br",
     "Checklist rápido antes de enviar documentos sensíveis",

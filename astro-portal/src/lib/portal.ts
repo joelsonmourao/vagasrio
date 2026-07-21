@@ -149,6 +149,8 @@ export type JobFilters = {
   category?: string;
   state?: string;
   activeOnly?: boolean;
+  /** Admin listagem: filtra só isActive, sem regras de visibilidade pública. */
+  status?: 'all' | 'active' | 'inactive';
 };
 
 export async function jobList(filters: JobFilters = {}) {
@@ -156,7 +158,13 @@ export async function jobList(filters: JobFilters = {}) {
   const perPage = filters.perPage ?? siteConfig.perPage;
   const where: Record<string, unknown> = {};
 
-  if (filters.activeOnly !== false) {
+  if (filters.status === 'active') {
+    where.isActive = true;
+  } else if (filters.status === 'inactive') {
+    where.isActive = false;
+  } else if (filters.status === 'all') {
+    /* admin: todas */
+  } else if (filters.activeOnly !== false) {
     where.isActive = true;
     Object.assign(where, publicJobPrismaFilter());
   }
@@ -268,7 +276,14 @@ export async function companiesWithStats() {
   return companies.map((c) => ({ ...c, jobCount: map.get(c.id) ?? 0 }));
 }
 
-export async function articleList(opts: { page?: number; perPage?: number; category?: string; q?: string; activeOnly?: boolean } = {}) {
+export async function articleList(opts: {
+  page?: number;
+  perPage?: number;
+  category?: string;
+  q?: string;
+  activeOnly?: boolean;
+  status?: 'all' | 'active' | 'inactive';
+} = {}) {
   const page = Math.max(1, opts.page ?? 1);
   const perPage = opts.perPage ?? siteConfig.perPage;
   const where: Record<string, unknown> = {};
@@ -277,6 +292,10 @@ export async function articleList(opts: { page?: number; perPage?: number; categ
       isActive: true,
       publishedAt: { lte: new Date() },
     });
+  } else if (opts.status === 'active') {
+    where.isActive = true;
+  } else if (opts.status === 'inactive') {
+    where.isActive = false;
   }
   if (opts.category) {
     const cat = await prisma.blogCategory.findFirst({ where: { slug: opts.category } });
@@ -475,6 +494,55 @@ export async function toggleBlogPost(id: number) {
 export async function deleteBlogPost(id: number) {
   return prisma.blogPost.delete({ where: { id } });
 }
+
+function parseIdList(raw: unknown): number[] {
+  if (Array.isArray(raw)) {
+    return raw.map((v) => Number(v)).filter((n) => Number.isFinite(n) && n > 0);
+  }
+  if (typeof raw === 'string') {
+    return raw
+      .split(',')
+      .map((v) => Number(v.trim()))
+      .filter((n) => Number.isFinite(n) && n > 0);
+  }
+  return [];
+}
+
+export async function bulkToggleBlogPosts(ids: number[], active: boolean) {
+  const unique = [...new Set(ids)];
+  if (!unique.length) return { count: 0 };
+  const result = await prisma.blogPost.updateMany({
+    where: { id: { in: unique } },
+    data: { isActive: active },
+  });
+  return { count: result.count };
+}
+
+export async function bulkDeleteBlogPosts(ids: number[]) {
+  const unique = [...new Set(ids)];
+  if (!unique.length) return { count: 0 };
+  const result = await prisma.blogPost.deleteMany({ where: { id: { in: unique } } });
+  return { count: result.count };
+}
+
+export async function bulkToggleJobs(ids: number[], active: boolean) {
+  const unique = [...new Set(ids)];
+  if (!unique.length) return { count: 0 };
+  const result = await prisma.job.updateMany({
+    where: { id: { in: unique } },
+    data: { isActive: active },
+  });
+  return { count: result.count };
+}
+
+export async function bulkDeleteJobs(ids: number[]) {
+  const unique = [...new Set(ids)];
+  if (!unique.length) return { count: 0 };
+  const result = await prisma.job.deleteMany({ where: { id: { in: unique } } });
+  return { count: result.count };
+}
+
+export { parseIdList };
 
 export async function getLastImportSummary() {
   const last = await prisma.import.findFirst({ orderBy: { createdAt: 'desc' } });

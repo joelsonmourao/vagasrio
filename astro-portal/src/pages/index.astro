@@ -3,11 +3,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import JobCard from '../components/JobCard.astro';
 import BlogCard from '../components/BlogCard.astro';
 import JobFilters from '../components/JobFilters.astro';
+import JobsFaq from '../components/JobsFaq.astro';
 import { homeData } from '../lib/portal';
 import { baseUrl, siteConfig } from '../lib/config';
-import { getSiteSettingsSafe } from '../lib/site-settings';
+import { getSiteSettingsSafe, SETTING_KEYS } from '../lib/site-settings';
+import { getRjJobsFaqs } from '../lib/jobs-faq';
 import {
+  buildFaqPageSchema,
   buildHomeSeoDefaults,
+  buildJobsListingSeo,
   buildPublisherOrganizationSchema,
   buildWebSiteSchema,
   mergeJsonLd,
@@ -21,18 +25,43 @@ try {
 }
 
 const settings = await getSiteSettingsSafe();
-const homeSeo = buildHomeSeoDefaults(settings);
+const brand = settings[SETTING_KEYS.siteName] || siteConfig.name;
+const jobCount = data.stats.activeJobs || data.stats.jobs || 0;
+const listingSeo = buildJobsListingSeo({
+  total: jobCount,
+  jobTitles: data.featuredJobs.map((j) => j.title),
+  placeLabel: 'Rio de Janeiro',
+  brand,
+  settings,
+});
+const homeDefaults = buildHomeSeoDefaults(settings);
+// Preferir snippet dinâmico (contagem + cargos) quando houver vagas; senão defaults do painel
+const title = jobCount > 0 ? listingSeo.title : homeDefaults.title;
+const description = jobCount > 0 ? listingSeo.description : homeDefaults.description;
+
+const faqItems = getRjJobsFaqs({
+  brand,
+  jobCount,
+  cities: siteConfig.allowedCities,
+});
+
 const jsonLd = mergeJsonLd(
   buildWebSiteSchema(settings),
   buildPublisherOrganizationSchema(settings),
+  buildFaqPageSchema(
+    faqItems.map((f) => ({ question: f.question, answer: f.answer })),
+    baseUrl('/', settings),
+  ),
 );
 ---
-<BaseLayout title={homeSeo.title} description={homeSeo.description} canonical={baseUrl('/', settings)} jsonLd={jsonLd}>
+<BaseLayout title={title} description={description} canonical={baseUrl('/', settings)} jsonLd={jsonLd}>
   <section class="market-top">
-    <p class="market-kicker">{siteConfig.name} · Empregos no Rio de Janeiro</p>
-    <h1 class="market-title">Vagas de emprego no RJ</h1>
+    <p class="market-kicker">{brand} · Empregos no Rio de Janeiro</p>
+    <h1 class="market-title">Vagas de emprego no Rio de Janeiro</h1>
     <p class="market-lead">
-      Busque vagas de emprego por cargo e cidade. Grátis para candidatos em todo o estado do Rio de Janeiro.
+      Busque <strong>vagas Rio</strong>, <strong>empregos RJ</strong> e oportunidades por cargo e cidade.
+      Grátis para candidatos em todo o estado do Rio de Janeiro
+      {jobCount > 0 ? ` — ${jobCount} vaga${jobCount === 1 ? '' : 's'} pública${jobCount === 1 ? '' : 's'} agora` : ''}.
     </p>
     <JobFilters compact />
   </section>
@@ -55,7 +84,7 @@ const jsonLd = mergeJsonLd(
 
   <section class="home-section">
     <div class="section-head section-head-market">
-      <h2>Empregos por cidade</h2>
+      <h2>Empregos por cidade no RJ</h2>
       <a class="section-link" href="/cidades">Todas as cidades</a>
     </div>
     <div class="city-chips">
@@ -76,4 +105,6 @@ const jsonLd = mergeJsonLd(
       </div>
     </section>
   )}
+
+  <JobsFaq items={faqItems} />
 </BaseLayout>

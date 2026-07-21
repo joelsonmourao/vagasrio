@@ -1,6 +1,6 @@
 import { absoluteUrl, baseUrl, siteConfig } from './config';
 import { formatJobPostingDate, formatJobPostingValidThrough } from './datetime-brazil';
-import { parseJobSalaryAmount, SALARY_DISPLAY_FALLBACK } from './format';
+import { parseJobSalaryAmount } from './format';
 import { isValidApplyChannel, parseApplyChannel } from './apply-channel';
 import { isRealCompanyLogo, sanitizeSchemaUrl } from './public-content';
 import type { SiteSettingsMap } from './site-settings';
@@ -83,25 +83,24 @@ function buildPostalAddress(job: JobForSchema): Record<string, string> {
   return address;
 }
 
-export type JobPostingBaseSalary =
-  | string
-  | {
-      '@type': 'MonetaryAmount';
-      currency: string;
-      value: { '@type': 'QuantitativeValue'; value: number; unitText: string };
-    };
+export type JobPostingBaseSalary = {
+  '@type': 'MonetaryAmount';
+  currency: string;
+  value: { '@type': 'QuantitativeValue'; value: number; unitText: string };
+};
 
-/** baseSalary estruturado (valor real) ou texto "A combinar". */
+/**
+ * Google JobPosting exige MonetaryAmount em baseSalary (não aceita texto).
+ * Sem salário informado: value 0 (em vez de omitir ou enviar "A combinar").
+ */
 export function buildBaseSalary(salary: string | null | undefined): JobPostingBaseSalary {
   const amount = parseJobSalaryAmount(salary);
-  if (amount != null && amount > 0) {
-    return {
-      '@type': 'MonetaryAmount',
-      currency: 'BRL',
-      value: { '@type': 'QuantitativeValue', value: amount, unitText: 'MONTH' },
-    };
-  }
-  return SALARY_DISPLAY_FALLBACK;
+  const value = amount != null && amount > 0 ? amount : 0;
+  return {
+    '@type': 'MonetaryAmount',
+    currency: 'BRL',
+    value: { '@type': 'QuantitativeValue', value, unitText: 'MONTH' },
+  };
 }
 
 export function buildJobPostingSchema(job: JobForSchema, settings?: SiteSettingsMap): Record<string, unknown> {
@@ -131,7 +130,7 @@ export function buildJobPostingSchema(job: JobForSchema, settings?: SiteSettings
       value: String(job.id),
     },
     url: baseUrl(`/vagas/${job.slug}`, settings),
-    /** Agregador: candidatura no site/e-mail da empresa, não no Vagas RJ. */
+    /** Agregador: candidatura no site/e-mail da empresa, não no Vagas RJ RIO. */
     directApply: false,
   };
 

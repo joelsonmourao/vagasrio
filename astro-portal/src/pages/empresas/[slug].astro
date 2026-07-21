@@ -5,7 +5,7 @@ import Pagination from '../../components/Pagination.astro';
 import EmptyState from '../../components/EmptyState.astro';
 import { companyBySlug, jobList } from '../../lib/portal';
 import { baseUrl } from '../../lib/config';
-import { getSiteSettingsSafe } from '../../lib/site-settings';
+import { getSiteSettingsSafe, SETTING_KEYS } from '../../lib/site-settings';
 import { buildCompanyPageTitle, buildOrganizationSchema, buildBreadcrumbSchema, mergeJsonLd } from '../../lib/seo';
 
 const { slug } = Astro.params;
@@ -16,7 +16,7 @@ const settings = await getSiteSettingsSafe();
 const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
 const jobsData = await jobList({ company: company.slug, page });
 const title = buildCompanyPageTitle(company.name, settings);
-const description = `Confira vagas de emprego na ${company.name} no Rio de Janeiro (RJ). Oportunidades atualizadas no Vagas RJ.`;
+const description = `Confira vagas de emprego na ${company.name} no Rio de Janeiro (RJ). Oportunidades atualizadas no ${settings[SETTING_KEYS.siteName] || 'Vagas RJ RIO'}.`;
 const jsonLd = mergeJsonLd(
   buildOrganizationSchema(company, settings),
   buildBreadcrumbSchema(

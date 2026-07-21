@@ -14,7 +14,7 @@ import {
   jobRobotsMeta,
   mergeJsonLd,
 } from '../../lib/seo';
-import { getSiteSettingsSafe, isIndexingEnabled } from '../../lib/site-settings';
+import { getSiteSettingsSafe, isIndexingEnabled, SETTING_KEYS } from '../../lib/site-settings';
 import {
   employmentTypeLabel,
   formatJobPublishedBr,
@@ -29,6 +29,7 @@ const job = slug ? await jobBySlug(slug) : null;
 if (!job) return Astro.redirect('/404');
 
 const settings = await getSiteSettingsSafe();
+const brand = settings[SETTING_KEYS.siteName] || 'Vagas RJ RIO';
 const indexingOn = isIndexingEnabled(settings);
 const title = buildJobPageTitle(job, settings);
 const description = buildJobPageDescription(job, settings);
@@ -117,7 +118,7 @@ const { relatedCityJobs, relatedCategoryJobs, blogRelated } = await loadJobReten
           <div class="panel-security-icon" aria-hidden="true">!</div>
           <div>
             <h2>Aviso de segurança</h2>
-            <p>O Vagas RJ apenas divulga oportunidades. Desconfie de cobranças para candidatura.</p>
+            <p>O {brand} apenas divulga oportunidades. Desconfie de cobranças para candidatura.</p>
           </div>
         </section>
       </div>
@@ -145,7 +146,7 @@ const { relatedCityJobs, relatedCategoryJobs, blogRelated } = await loadJobReten
     </div>
   </article>
 
-  <section class="job-retention" aria-label="Explore mais no Vagas RJ">
+  <section class="job-retention" aria-label={`Explore mais no ${brand}`}>
     <nav class="job-explore-links panel panel-compact">
       <h2>Explorar no portal</h2>
       <ul class="job-explore-list">

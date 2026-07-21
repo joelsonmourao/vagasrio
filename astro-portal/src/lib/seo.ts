@@ -52,9 +52,8 @@ export function jobRobotsMeta(
 }
 
 /**
- * Schema para Discover/News-ready: Article + BlogPosting.
- * Google Discover valoriza imagem grande, data clara e conteúdo original.
- * Google News exige inscrição no Publisher Center — o schema ajuda, mas não garante inclusão.
+ * Schema para Discover/News-ready: BlogPosting (com author completo).
+ * Não misturar com microdata itemscope no HTML — o Google conta como 2 artigos.
  */
 export function buildArticleSchema(
   article: {
@@ -73,12 +72,16 @@ export function buildArticleSchema(
   const logo = settings?.[SETTING_KEYS.logoPath] || '/assets/img/logo-vagas-rj.svg';
   const ogDefault = settings?.[SETTING_KEYS.ogImage] || '/assets/img/og-vagas-rj.png';
   const pageUrl = baseUrl(`/blog/${article.slug}`, settings);
+  const aboutUrl = baseUrl('/sobre', settings);
   const logoUrl = logo.startsWith('http') ? logo : baseUrl(logo, settings);
   let imageUrl = ogDefault.startsWith('http') ? ogDefault : baseUrl(ogDefault, settings);
   if (article.featuredImage?.trim()) {
     const img = article.featuredImage.trim();
     imageUrl = img.startsWith('http') ? img : baseUrl(img, settings);
   }
+
+  const plainBody = article.content ? htmlToPlainText(article.content) : '';
+  const wordCount = plainBody ? plainBody.split(/\s+/).filter(Boolean).length : undefined;
 
   const imageObject = {
     '@type': 'ImageObject',
@@ -87,42 +90,203 @@ export function buildArticleSchema(
     height: 675,
   };
 
+  const publisher = {
+    '@type': 'Organization',
+    name: publisherName,
+    url: resolvePublicBaseUrl(settings),
+    logo: {
+      '@type': 'ImageObject',
+      url: logoUrl,
+      width: 600,
+      height: 60,
+    },
+  };
+
   return {
     '@context': 'https://schema.org',
-    '@type': ['BlogPosting', 'Article'],
+    '@type': 'BlogPosting',
     headline: article.title.slice(0, 110),
     alternativeHeadline: article.excerpt.slice(0, 110),
     description: article.excerpt,
     datePublished: formatSchemaDateTime(article.publishedAt),
     dateModified: formatSchemaDateTime(article.updatedAt),
     author: {
-      '@type': 'Person',
-      name: `Redação ${publisherName}`,
-      url: baseUrl('/sobre', settings),
-    },
-    publisher: {
       '@type': 'Organization',
-      name: publisherName,
-      logo: {
-        '@type': 'ImageObject',
-        url: logoUrl,
-        width: 600,
-        height: 60,
-      },
+      name: `Redação ${publisherName}`,
+      url: aboutUrl,
     },
+    publisher,
     mainEntityOfPage: {
       '@type': 'WebPage',
       '@id': pageUrl,
+      url: pageUrl,
+      name: article.title,
+      isPartOf: {
+        '@type': 'WebSite',
+        name: publisherName,
+        url: resolvePublicBaseUrl(settings),
+      },
     },
     url: pageUrl,
     image: [imageObject],
+    thumbnailUrl: imageUrl,
     articleSection: article.category.name,
+    keywords: [article.category.name, 'emprego RJ', 'vagas Rio de Janeiro', publisherName].join(', '),
+    about: [
+      {
+        '@type': 'Thing',
+        name: 'Emprego no Rio de Janeiro',
+      },
+      {
+        '@type': 'Thing',
+        name: article.category.name,
+      },
+    ],
     inLanguage: 'pt-BR',
     isAccessibleForFree: true,
+    ...(wordCount ? { wordCount } : {}),
+    ...(plainBody ? { articleBody: plainBody.slice(0, 8000) } : {}),
     speakable: {
       '@type': 'SpeakableSpecification',
       cssSelector: ['.article-header h1', '.article-body p'],
     },
+  };
+}
+
+function htmlToPlainText(html: string): string {
+  return String(html)
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|h[1-6]|li|tr)>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
+}
+
+function decodeBasicEntities(text: string): string {
+  return text
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Extrai pares pergunta/resposta da seção “Perguntas frequentes” (h3 + p). */
+export function extractFaqPairsFromHtml(html: string): { question: string; answer: string }[] {
+  if (!html) return [];
+  const faqMatch = html.match(
+    /<h2[^>]*>\s*Perguntas frequentes\s*<\/h2>([\s\S]*?)(?=<h2\b|$)/i,
+  );
+  if (!faqMatch) return [];
+  const block = faqMatch[1];
+  const pairs: { question: string; answer: string }[] = [];
+  const re = /<h3[^>]*>([\s\S]*?)<\/h3>\s*<p[^>]*>([\s\S]*?)<\/p>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(block)) !== null) {
+    const question = decodeBasicEntities(m[1].replace(/<[^>]+>/g, ''));
+    const answer = decodeBasicEntities(m[2].replace(/<[^>]+>/g, ''));
+    if (question.length >= 8 && answer.length >= 12) {
+      pairs.push({ question, answer });
+    }
+  }
+  return pairs.slice(0, 8);
+}
+
+export function buildFaqPageSchema(
+  pairs: { question: string; answer: string }[],
+  pageUrl: string,
+): Record<string, unknown> | undefined {
+  if (pairs.length < 2) return undefined;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: pairs.map((pair) => ({
+      '@type': 'Question',
+      name: pair.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: pair.answer,
+      },
+    })),
+    url: pageUrl,
+  };
+}
+
+/** Extrai passos do checklist editorial para HowTo (rich result). */
+export function extractHowToStepsFromHtml(html: string): string[] {
+  if (!html) return [];
+  const sectionMatch = html.match(
+    /<h2[^>]*>\s*(Checklist antes de avançar|Passo a passo prático)\s*<\/h2>([\s\S]*?)(?=<h2\b|$)/i,
+  );
+  if (!sectionMatch) return [];
+  const block = sectionMatch[2];
+  const steps: string[] = [];
+  const re = /<li[^>]*>([\s\S]*?)<\/li>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(block)) !== null) {
+    const text = decodeBasicEntities(m[1].replace(/<[^>]+>/g, ''));
+    if (text.length >= 12) steps.push(text);
+  }
+  return steps.slice(0, 12);
+}
+
+export function buildHowToSchema(
+  name: string,
+  description: string,
+  steps: string[],
+  pageUrl: string,
+  imageUrl?: string,
+): Record<string, unknown> | undefined {
+  if (steps.length < 3) return undefined;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: name.slice(0, 110),
+    description: description.slice(0, 300),
+    url: pageUrl,
+    ...(imageUrl ? { image: imageUrl } : {}),
+    totalTime: 'PT15M',
+    inLanguage: 'pt-BR',
+    step: steps.map((text, index) => ({
+      '@type': 'HowToStep',
+      position: index + 1,
+      name: `Passo ${index + 1}`,
+      text,
+      url: `${pageUrl}#passo-${index + 1}`,
+    })),
+  };
+}
+
+export function buildRelatedPostsItemListSchema(
+  posts: { title: string; slug: string }[],
+  settings?: SiteSettingsMap,
+): Record<string, unknown> | undefined {
+  if (!posts.length) return undefined;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Leia também',
+    itemListOrder: 'https://schema.org/ItemListOrderAscending',
+    numberOfItems: posts.length,
+    itemListElement: posts.map((post, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: post.title,
+      url: baseUrl(`/blog/${post.slug}`, settings),
+    })),
   };
 }
 
@@ -161,7 +325,9 @@ export function buildWebSiteSchema(settings?: SiteSettingsMap) {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name,
-    alternateName: ['Vagas RJ', 'Vagas Rio', 'Empregos RJ'],
+    alternateName: ['Vagas RJ', 'Vagas Rio', 'Empregos RJ', 'Vagas RJ RIO'].filter(
+      (alt, i, arr) => alt !== name && arr.indexOf(alt) === i,
+    ),
     url,
     description: `Portal de vagas de emprego no Rio de Janeiro (RJ). Busque por cidade, empresa e categoria no ${name}.`,
     inLanguage: 'pt-BR',
@@ -185,7 +351,7 @@ export function buildPublisherOrganizationSchema(settings?: SiteSettingsMap) {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name,
-    alternateName: 'Vagas RJ',
+    alternateName: name === 'Vagas RJ RIO' ? ['Vagas RJ', 'Vagas Rio'] : 'Vagas RJ',
     url,
     logo: logo.startsWith('http') ? logo : baseUrl(logo, settings),
     image: ogImage.startsWith('http') ? ogImage : baseUrl(ogImage, settings),
@@ -249,11 +415,51 @@ export function buildCityPageTitle(cityName: string, settings?: SiteSettingsMap)
 export function buildHomeSeoDefaults(settings?: SiteSettingsMap): { title: string; description: string } {
   const brand = brandName(settings);
   return {
-    title: settings?.[SETTING_KEYS.homeSeoTitle]?.trim() || `Vagas de Emprego no Rio de Janeiro | ${brand}`,
+    title:
+      settings?.[SETTING_KEYS.homeSeoTitle]?.trim() ||
+      `Vagas de emprego no Rio de Janeiro | Empregos RJ | ${brand}`,
     description:
       settings?.[SETTING_KEYS.homeSeoDescription]?.trim() ||
-      `Encontre vagas de emprego no Rio de Janeiro. Busque por cidade, empresa e categoria no ${brand}. Grátis para candidatos.`,
+      `Vagas de emprego no Rio de Janeiro (RJ). Busque empregos Rio, vagas RJ e vagas rio por cidade, cargo e empresa no ${brand}. Grátis para candidatos.`,
   };
+}
+
+/**
+ * Título + meta no padrão dos grandes portais (ex.: “430 vagas… Cargo · Cargo · Cargo”).
+ * Ajuda o snippet do Google para consultas como “vagas rio de janeiro”.
+ */
+export function buildJobsListingSeo(opts: {
+  total: number;
+  jobTitles?: string[];
+  placeLabel?: string;
+  brand?: string;
+  settings?: SiteSettingsMap;
+}): { title: string; description: string } {
+  const brand = opts.brand || brandName(opts.settings);
+  const place = opts.placeLabel || 'Rio de Janeiro';
+  const total = Math.max(0, opts.total || 0);
+  const titles = (opts.jobTitles || [])
+    .map((t) => t.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .slice(0, 5);
+
+  const title =
+    total > 0
+      ? `Vagas de emprego em ${place} | ${total} vagas | ${brand}`
+      : `Vagas de emprego em ${place} | Empregos RJ | ${brand}`;
+
+  const head =
+    total > 0
+      ? `${total} vaga${total === 1 ? '' : 's'} de emprego para ${place}.`
+      : `Vagas de emprego para ${place}.`;
+  const sample = titles.length ? ` ${titles.join(' · ')}.` : '';
+  const tail = ` Empregos RJ, vagas rio e vagas RJ atualizadas no ${brand}.`;
+  let description = `${head}${sample}${tail}`.replace(/\s+/g, ' ').trim();
+  if (description.length > 160) {
+    description = `${description.slice(0, 157).trim()}...`;
+  }
+
+  return { title, description };
 }
 
 export function buildOrganizationSchema(

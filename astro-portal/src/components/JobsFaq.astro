@@ -1,0 +1,32 @@
+---
+import type { JobsFaqItem } from '../lib/jobs-faq';
+
+interface Props {
+  items: JobsFaqItem[];
+  title?: string;
+  lead?: string;
+}
+
+const {
+  items,
+  title = 'Perguntas frequentes sobre vagas no Rio de Janeiro',
+  lead = 'Respostas rápidas sobre vagas RJ, empregos Rio e como se candidatar com segurança.',
+} = Astro.props;
+---
+
+{items.length > 0 && (
+  <section class="jobs-faq" aria-labelledby="jobs-faq-title">
+    <div class="jobs-faq-head">
+      <h2 id="jobs-faq-title">{title}</h2>
+      <p class="jobs-faq-lead">{lead}</p>
+    </div>
+    <div class="jobs-faq-list">
+      {items.map((item) => (
+        <details class="jobs-faq-item">
+          <summary>{item.question}</summary>
+          <p>{item.answer}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+)}

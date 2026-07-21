@@ -5,8 +5,17 @@ import JobFilters from '../../components/JobFilters.astro';
 import Pagination from '../../components/Pagination.astro';
 import ListingMeta from '../../components/ListingMeta.astro';
 import EmptyState from '../../components/EmptyState.astro';
+import JobsFaq from '../../components/JobsFaq.astro';
 import { jobList } from '../../lib/portal';
 import { baseUrl, siteConfig } from '../../lib/config';
+import { getSiteSettingsSafe, SETTING_KEYS } from '../../lib/site-settings';
+import { getRjJobsFaqs } from '../../lib/jobs-faq';
+import {
+  buildBreadcrumbSchema,
+  buildFaqPageSchema,
+  buildJobsListingSeo,
+  mergeJsonLd,
+} from '../../lib/seo';
 
 const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
 const filterQuery = {
@@ -30,26 +39,61 @@ try {
   jobsData = { jobs: [], total: 0, page: 1, totalPages: 1 };
 }
 
+const settings = await getSiteSettingsSafe();
+const brand = settings[SETTING_KEYS.siteName] || siteConfig.name;
 const hasFilters = !!(filterQuery.q || filterQuery.city || filterQuery.company || filterQuery.category);
 const hasQueryString = Astro.url.searchParams.toString().length > 0;
 const queryForPager = Object.fromEntries(
   Object.entries(filterQuery).filter(([, v]) => v !== ''),
 );
-const title = `Vagas de Emprego no Rio de Janeiro (RJ) | ${siteConfig.name}`;
-const description = `Confira vagas de emprego no RJ. Filtre por cargo, cidade e empresa no ${siteConfig.name}. Atualizado para candidatos no Rio de Janeiro.`;
+
+const placeLabel = filterQuery.city?.trim() || 'Rio de Janeiro';
+const { title, description } = buildJobsListingSeo({
+  total: jobsData.total,
+  jobTitles: jobsData.jobs.map((j) => j.title),
+  placeLabel,
+  brand,
+  settings,
+});
+
+const faqItems = getRjJobsFaqs({
+  brand,
+  jobCount: jobsData.total,
+  cities: siteConfig.allowedCities,
+});
+
+const jsonLd = !hasQueryString
+  ? mergeJsonLd(
+      buildBreadcrumbSchema(
+        [
+          { name: 'Início', path: '/' },
+          { name: 'Vagas de emprego no RJ', path: '/vagas' },
+        ],
+        settings,
+      ),
+      buildFaqPageSchema(
+        faqItems.map((f) => ({ question: f.question, answer: f.answer })),
+        baseUrl('/vagas', settings),
+      ),
+    )
+  : undefined;
 ---
 <BaseLayout
   title={title}
   description={description}
   canonical={baseUrl('/vagas')}
   robots={hasQueryString ? 'noindex,follow' : undefined}
+  jsonLd={jsonLd}
 >
   <div class="page-stack page-stack-market">
     <section class="market-top">
-      <h1 class="market-title">Vagas de emprego no RJ</h1>
+      <h1 class="market-title">Vagas de emprego em Rio de Janeiro</h1>
       <p class="market-lead">
-        Encontre oportunidades de trabalho no Rio de Janeiro. Use os filtros ou
-        <a href="/cidades">navegue por cidade</a>.
+        {jobsData.total > 0
+          ? `${jobsData.total} vagas de emprego para Rio de Janeiro. Filtre por cargo, cidade e empresa — empregos RJ e vagas rio atualizadas.`
+          : 'Encontre oportunidades de trabalho no Rio de Janeiro. Use os filtros ou '}
+        {jobsData.total === 0 && <a href="/cidades">navegue por cidade</a>}
+        {jobsData.total === 0 && '.'}
       </p>
       <JobFilters {...filterQuery} />
     </section>
@@ -73,5 +117,7 @@ const description = `Confira vagas de emprego no RJ. Filtre por cargo, cidade e 
     )}
 
     <Pagination page={jobsData.page} totalPages={jobsData.totalPages} basePath="/vagas" query={queryForPager} />
+
+    {!hasQueryString && <JobsFaq items={faqItems} />}
   </div>
 </BaseLayout>

@@ -1,6 +1,7 @@
 ---
 import type { ApplyChannel } from '../lib/apply-channel';
 import { getApplyJobStepCta } from '../lib/apply-channel';
+import { siteConfig } from '../lib/config';
 
 interface Props {
   channel: ApplyChannel;
@@ -11,7 +12,7 @@ interface Props {
 const { channel, jobSlug, note } = Astro.props;
 const cta = getApplyJobStepCta(channel, jobSlug);
 const defaultNote =
-  'O Vagas RJ divulga vagas de terceiros. Na próxima etapa você confere os avisos e segue para o canal oficial da empresa.';
+  `O ${siteConfig.name} divulga vagas de terceiros. Na próxima etapa você confere os avisos e segue para o canal oficial da empresa.`;
 ---
 
 {cta && (

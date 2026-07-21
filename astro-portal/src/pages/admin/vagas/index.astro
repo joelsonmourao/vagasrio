@@ -1,24 +1,48 @@
 ---
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import AdminJobsNotice from '../../../components/AdminJobsNotice.astro';
+import Pagination from '../../../components/Pagination.astro';
 import { dashboardStats, jobList } from '../../../lib/portal';
 import { formatDateBr } from '../../../lib/format';
-import { jobIsPubliclyVisible } from '../../../lib/public-content';
-import { isBlockedApplyUrl } from '../../../lib/public-content';
+import { jobIsPubliclyVisible, isBlockedApplyUrl } from '../../../lib/public-content';
 
-const q = Astro.url.searchParams.get('q') || undefined;
-const data = await jobList({ page: Number(Astro.url.searchParams.get('page') || 1), perPage: 20, activeOnly: false, q });
+const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
+const q = Astro.url.searchParams.get('q') || '';
+const statusParam = Astro.url.searchParams.get('status') || 'all';
+const status = (['all', 'active', 'inactive'].includes(statusParam) ? statusParam : 'all') as
+  | 'all'
+  | 'active'
+  | 'inactive';
+
+const data = await jobList({
+  page,
+  perPage: 20,
+  status,
+  q: q || undefined,
+});
 const panelStats = await dashboardStats();
-const ok = Astro.url.searchParams.get('ok');
+const ok = Astro.url.searchParams.get('ok') || '';
 const now = new Date();
+
+const pagerQuery: Record<string, string> = {};
+if (q) pagerQuery.q = q;
+if (status !== 'all') pagerQuery.status = status;
+
+function okMessage(code: string): string {
+  if (code.startsWith('bulk_on_')) return `${code.slice(8)} vaga(s) ativada(s).`;
+  if (code.startsWith('bulk_off_')) return `${code.slice(9)} vaga(s) desativada(s).`;
+  if (code.startsWith('bulk_del_')) return `${code.slice(9)} vaga(s) excluída(s).`;
+  if (code === 'deleted') return 'Vaga excluída.';
+  if (code === 'toggled') return 'Status atualizado.';
+  return 'Operação concluída.';
+}
 ---
 <AdminLayout title="Vagas">
   <header class="admin-page-head">
     <div>
-      <p class="admin-kicker">Conteúdo</p>
       <h1>Gerenciar vagas</h1>
       <p class="admin-lead">
-        {data.total} vaga(s) no cadastro · {panelStats.publicJobs} pública(s) no site · página {data.page} de {data.totalPages}
+        {data.total} vaga(s) no filtro · {panelStats.publicJobs} pública(s) no site · página {data.page} de {data.totalPages}
       </p>
     </div>
   </header>
@@ -30,7 +54,7 @@ const now = new Date();
     hiddenActiveJobs={panelStats.hiddenActiveJobs}
   />
 
-  {ok && <p class="flash-ok">Operação concluída com sucesso.</p>}
+  {ok && <p class="flash-ok">{okMessage(ok)}</p>}
 
   <div class="admin-actions-bar">
     <a class="btn" href="/admin/vagas/nova">Nova vaga</a>
@@ -38,13 +62,46 @@ const now = new Date();
   </div>
 
   <section class="admin-card">
-    <form method="get" class="search-form filters filters-admin">
+    <form method="get" class="admin-list-filters">
       <label>
-        <span class="filter-label">Buscar por título</span>
-        <input type="search" name="q" value={q || ''} placeholder="Ex.: assistente, logística..." />
+        <span>Buscar por título</span>
+        <input type="search" name="q" value={q} placeholder="Ex.: assistente, logística..." />
       </label>
-      <button class="btn" type="submit">Buscar</button>
+      <label>
+        <span>Status</span>
+        <select name="status">
+          <option value="all" selected={status === 'all'}>Todas</option>
+          <option value="active" selected={status === 'active'}>Ativas</option>
+          <option value="inactive" selected={status === 'inactive'}>Inativas</option>
+        </select>
+      </label>
+      <button class="btn" type="submit">Filtrar</button>
+      {(q || status !== 'all') && <a class="admin-link" href="/admin/vagas">Limpar</a>}
     </form>
+  </section>
+
+  <form method="post" action="/api/admin/jobs" id="admin-jobs-bulk"></form>
+
+  <section class="admin-card admin-bulk-bar">
+    <label class="admin-bulk-select-all">
+      <input type="checkbox" form="admin-jobs-bulk" data-bulk-select-all aria-label="Selecionar todos desta página" />
+      Selecionar página
+    </label>
+    <div class="admin-bulk-actions">
+      <button form="admin-jobs-bulk" type="submit" name="_action" value="bulk_activate" class="btn btn-outline btn-sm">Ativar selecionadas</button>
+      <button form="admin-jobs-bulk" type="submit" name="_action" value="bulk_deactivate" class="btn btn-outline btn-sm">Desativar selecionadas</button>
+      <button
+        form="admin-jobs-bulk"
+        type="submit"
+        name="_action"
+        value="bulk_delete"
+        class="btn btn-outline btn-sm admin-bulk-danger"
+        onclick="return confirm('Excluir permanentemente as vagas selecionadas?')"
+      >
+        Excluir selecionadas
+      </button>
+    </div>
+    <p class="admin-bulk-hint"><span data-bulk-count>0</span> selecionada(s) nesta página</p>
   </section>
 
   <section class="admin-card admin-card-table">
@@ -52,6 +109,7 @@ const now = new Date();
       <table class="admin-table admin-table-dense">
         <thead>
           <tr>
+            <th class="admin-col-check"></th>
             <th>Título</th>
             <th>Empresa</th>
             <th>Cidade/UF</th>
@@ -68,6 +126,9 @@ const now = new Date();
             const isPublic = jobIsPubliclyVisible(job);
             return (
               <tr>
+                <td class="admin-col-check">
+                  <input form="admin-jobs-bulk" type="checkbox" name="ids" value={String(job.id)} data-bulk-item />
+                </td>
                 <td><strong>{job.title}</strong></td>
                 <td>{job.company.name}</td>
                 <td>{job.city.name}/{job.state}</td>
@@ -112,4 +173,38 @@ const now = new Date();
     </div>
     {data.jobs.length === 0 && <p class="admin-empty">Nenhuma vaga encontrada.</p>}
   </section>
+
+  <Pagination page={data.page} totalPages={data.totalPages} basePath="/admin/vagas" query={pagerQuery} />
 </AdminLayout>
+
+<script is:inline>
+  (function () {
+    const selectAll = document.querySelector('[data-bulk-select-all]');
+    const countEl = document.querySelector('[data-bulk-count]');
+    const bulkForm = document.getElementById('admin-jobs-bulk');
+    const items = () => Array.from(document.querySelectorAll('[data-bulk-item]'));
+    function refresh() {
+      const list = items();
+      const n = list.filter((el) => el.checked).length;
+      if (countEl) countEl.textContent = String(n);
+      if (selectAll) {
+        selectAll.checked = list.length > 0 && list.every((el) => el.checked);
+        selectAll.indeterminate = n > 0 && n < list.length;
+      }
+    }
+    selectAll?.addEventListener('change', () => {
+      items().forEach((el) => { el.checked = !!selectAll.checked; });
+      refresh();
+    });
+    document.addEventListener('change', (e) => {
+      if (e.target && e.target.matches('[data-bulk-item]')) refresh();
+    });
+    bulkForm?.addEventListener('submit', (e) => {
+      if (items().filter((el) => el.checked).length === 0) {
+        e.preventDefault();
+        alert('Selecione ao menos uma vaga.');
+      }
+    });
+    refresh();
+  })();
+</script>

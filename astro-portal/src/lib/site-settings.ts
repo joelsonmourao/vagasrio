@@ -27,21 +27,32 @@ export const SETTING_KEYS = {
 
 export type SiteSettingsMap = Record<string, string>;
 
+/** Troca marca legada "Vagas RJ" / "Vagas Rio" pela marca atual, sem duplicar "RIO". */
+export function upgradeBrandText(text: string, brand = siteConfig.name): string {
+  if (!text) return text;
+  return text
+    .replace(/Vagas RJ RIO/g, '\u0000BRAND\u0000')
+    .replace(/Vagas RJ/g, brand)
+    .replace(/Vagas Rio(?!\s+de\s+Janeiro)/gi, brand)
+    .replace(/\u0000BRAND\u0000/g, brand);
+}
+
 function envDefaults(): SiteSettingsMap {
+  const brand = siteConfig.name;
   return {
-    [SETTING_KEYS.siteName]: siteConfig.name,
+    [SETTING_KEYS.siteName]: brand,
     [SETTING_KEYS.siteSubtitle]: siteConfig.subtitle,
-    [SETTING_KEYS.homeSeoTitle]: `${siteConfig.name} - Empregos no Rio de Janeiro`,
+    [SETTING_KEYS.homeSeoTitle]: `Vagas de emprego no Rio de Janeiro | Empregos RJ | ${brand}`,
     [SETTING_KEYS.homeSeoDescription]:
-      'Encontre vagas de emprego no Rio de Janeiro (RJ) por cidade, empresa e categoria.',
+      `Vagas de emprego no Rio de Janeiro (RJ). Busque empregos Rio, vagas RJ e vagas rio por cidade, cargo e empresa no ${brand}. Grátis para candidatos.`,
     [SETTING_KEYS.siteBaseUrl]: (process.env.SITE_BASE_URL || 'http://localhost:4321').replace(/\/$/, ''),
     [SETTING_KEYS.contactEmail]: siteConfig.contactEmail,
     [SETTING_KEYS.ogImage]: '/assets/img/og-vagas-rj.png',
     [SETTING_KEYS.logoPath]: '/assets/img/logo-vagas-rj.svg',
     [SETTING_KEYS.faviconPath]: '/favicon.svg',
-    [SETTING_KEYS.jobMetaSuffix]: 'Vagas RJ',
-    [SETTING_KEYS.companyMetaTemplate]: 'Vagas na {empresa} - Rio de Janeiro | Vagas RJ',
-    [SETTING_KEYS.cityMetaTemplate]: 'Vagas em {cidade} RJ - Vagas RJ',
+    [SETTING_KEYS.jobMetaSuffix]: brand,
+    [SETTING_KEYS.companyMetaTemplate]: `Vagas na {empresa} - Rio de Janeiro | ${brand}`,
+    [SETTING_KEYS.cityMetaTemplate]: `Vagas de emprego em {cidade} RJ | Empregos | ${brand}`,
     [SETTING_KEYS.gscVerification]: '',
     [SETTING_KEYS.gaCode]: '',
     [SETTING_KEYS.adsenseClient]: process.env.ADSENSE_CLIENT_ID || '',
@@ -56,6 +67,15 @@ function envDefaults(): SiteSettingsMap {
   };
 }
 
+const BRAND_SETTING_KEYS = [
+  SETTING_KEYS.siteName,
+  SETTING_KEYS.homeSeoTitle,
+  SETTING_KEYS.homeSeoDescription,
+  SETTING_KEYS.jobMetaSuffix,
+  SETTING_KEYS.companyMetaTemplate,
+  SETTING_KEYS.cityMetaTemplate,
+] as const;
+
 export async function getSiteSettings(): Promise<SiteSettingsMap> {
   const defaults = envDefaults();
   const rows = await prisma.siteSetting.findMany();
@@ -63,6 +83,15 @@ export async function getSiteSettings(): Promise<SiteSettingsMap> {
   for (const row of rows) {
     if (row.value !== '') map[row.key] = row.value;
   }
+
+  // SITE_NAME no ambiente (Coolify) prevalece sobre valor antigo no banco
+  const envName = (process.env.SITE_NAME || '').trim();
+  if (envName) map[SETTING_KEYS.siteName] = envName;
+
+  for (const key of BRAND_SETTING_KEYS) {
+    if (map[key]) map[key] = upgradeBrandText(map[key]);
+  }
+
   return map;
 }
 

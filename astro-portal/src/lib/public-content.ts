@@ -41,7 +41,7 @@ export function resolvePublicApplyUrl(url: string | null | undefined): string | 
 
 const SITE_LOGO_MARKERS = ['logo-vagas-rj', 'logo-vagas-rj-jobposting', 'og-vagas-rj', 'favicon'];
 
-/** Logo da empresa contratante — nunca a marca do portal Vagas RJ. */
+/** Logo da empresa contratante — nunca a marca do portal Vagas RJ RIO. */
 export function isRealCompanyLogo(logo: string | null | undefined): boolean {
   if (!logo?.trim()) return false;
   const l = logo.trim().toLowerCase();

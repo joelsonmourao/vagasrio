@@ -279,6 +279,182 @@
   margin-bottom: 18px;
 }
 
+.admin-wp .admin-list-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 14px;
+}
+
+.admin-wp .admin-list-filters label {
+  display: grid;
+  gap: 4px;
+  min-width: min(100%, 180px);
+  flex: 1 1 160px;
+}
+
+.admin-wp .admin-list-filters label span {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--wp-muted);
+}
+
+.admin-wp .admin-list-filters input,
+.admin-wp .admin-list-filters select {
+  width: 100%;
+  border: 1px solid var(--wp-border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font: inherit;
+  background: #fff;
+}
+
+.admin-wp .admin-list-filters .btn {
+  flex: 0 0 auto;
+}
+
+.admin-wp .admin-link {
+  align-self: center;
+  color: var(--wp-link);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.admin-wp .admin-link:hover {
+  text-decoration: underline;
+}
+
+.admin-wp .admin-bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  padding: 12px 16px;
+}
+
+.admin-wp .admin-bulk-select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #2c3338;
+  cursor: pointer;
+}
+
+.admin-wp .admin-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-wp .btn-sm {
+  padding: 6px 10px !important;
+  font-size: 0.82rem !important;
+}
+
+.admin-wp .admin-bulk-danger {
+  color: #b32d2e !important;
+  border-color: #d63638 !important;
+}
+
+.admin-wp .admin-bulk-danger:hover {
+  background: #fcf0f1 !important;
+  color: #b32d2e !important;
+}
+
+.admin-wp .admin-bulk-hint {
+  margin: 0 0 0 auto;
+  font-size: 0.82rem;
+  color: var(--wp-muted);
+}
+
+.admin-wp .admin-col-check {
+  width: 36px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.admin-wp .admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  max-width: 280px;
+}
+
+.admin-wp .admin-action {
+  color: var(--wp-link);
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.admin-wp .admin-action:hover {
+  text-decoration: underline;
+}
+
+.admin-wp .admin-action-muted {
+  color: var(--wp-muted);
+  font-weight: 500;
+  cursor: default;
+}
+
+.admin-wp .admin-action-danger,
+.admin-wp .admin-action-btn.admin-action-danger {
+  color: #b32d2e;
+}
+
+.admin-wp .admin-inline-form {
+  display: inline;
+  margin: 0;
+}
+
+.admin-wp .admin-action-btn {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  color: var(--wp-link);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.admin-wp .admin-action-btn:hover {
+  text-decoration: underline;
+}
+
+.admin-wp .admin-empty {
+  margin: 16px 0 0;
+  color: var(--wp-muted);
+}
+
+.admin-wp .admin-card-table {
+  padding: 0;
+  overflow: hidden;
+}
+
+.admin-wp .admin-card-table .admin-table-wrap {
+  border: 0;
+  border-radius: 0;
+}
+
+.admin-wp .admin-table-dense td,
+.admin-wp .admin-table-dense th {
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  vertical-align: top;
+}
+
+.admin-wp .pagination-pro {
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+
 .admin-wp .admin-table-wrap {
   border: 1px solid var(--wp-border);
   border-radius: 4px;

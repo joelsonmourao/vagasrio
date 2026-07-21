@@ -1,32 +1,131 @@
 ---
 import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { articleList } from '../../../lib/portal';
+import Pagination from '../../../components/Pagination.astro';
+import { articleList, blogCategories } from '../../../lib/portal';
 import { formatDateBr } from '../../../lib/format';
 
-const data = await articleList({ page: Number(Astro.url.searchParams.get('page') || 1), perPage: 20, activeOnly: false });
+const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
+const q = Astro.url.searchParams.get('q') || '';
+const statusParam = Astro.url.searchParams.get('status') || 'all';
+const category = Astro.url.searchParams.get('category') || '';
+const status = (['all', 'active', 'inactive'].includes(statusParam) ? statusParam : 'all') as
+  | 'all'
+  | 'active'
+  | 'inactive';
+
+const [data, categories] = await Promise.all([
+  articleList({
+    page,
+    perPage: 20,
+    activeOnly: false,
+    q: q || undefined,
+    category: category || undefined,
+    status,
+  }),
+  blogCategories(false),
+]);
+
+const ok = Astro.url.searchParams.get('ok') || '';
+const pagerQuery: Record<string, string> = {};
+if (q) pagerQuery.q = q;
+if (status !== 'all') pagerQuery.status = status;
+if (category) pagerQuery.category = category;
+
+function okMessage(code: string): string {
+  if (code.startsWith('bulk_on_')) return `${code.slice(8)} post(s) ativado(s).`;
+  if (code.startsWith('bulk_off_')) return `${code.slice(9)} post(s) desativado(s).`;
+  if (code.startsWith('bulk_del_')) return `${code.slice(9)} post(s) excluído(s).`;
+  if (code === 'deleted') return 'Post excluído.';
+  if (code === 'toggled') return 'Status atualizado.';
+  if (code === 'created') return 'Post criado.';
+  return 'Operação concluída.';
+}
 ---
 <AdminLayout title="Posts">
   <header class="admin-page-head">
     <div>
-      <p class="admin-kicker">Blog</p>
       <h1>Posts do blog</h1>
       <p class="admin-lead">{data.total} artigo(s) · página {data.page} de {data.totalPages}</p>
     </div>
   </header>
 
+  {ok && <p class="flash-ok">{okMessage(ok)}</p>}
+
   <div class="admin-actions-bar">
     <a class="btn" href="/admin/posts/novo">Novo post</a>
   </div>
+
+  <section class="admin-card">
+    <form method="get" class="admin-list-filters">
+      <label>
+        <span>Buscar</span>
+        <input type="search" name="q" value={q} placeholder="Título ou trecho..." />
+      </label>
+      <label>
+        <span>Status</span>
+        <select name="status">
+          <option value="all" selected={status === 'all'}>Todos</option>
+          <option value="active" selected={status === 'active'}>Publicados</option>
+          <option value="inactive" selected={status === 'inactive'}>Rascunhos / inativos</option>
+        </select>
+      </label>
+      <label>
+        <span>Categoria</span>
+        <select name="category">
+          <option value="">Todas</option>
+          {categories.map((c) => (
+            <option value={c.slug} selected={category === c.slug}>{c.name}</option>
+          ))}
+        </select>
+      </label>
+      <button class="btn" type="submit">Filtrar</button>
+      {(q || status !== 'all' || category) && <a class="admin-link" href="/admin/posts">Limpar</a>}
+    </form>
+  </section>
+
+  <form method="post" action="/api/admin/posts" id="admin-posts-bulk"></form>
+
+  <section class="admin-card admin-bulk-bar">
+    <label class="admin-bulk-select-all">
+      <input type="checkbox" form="admin-posts-bulk" data-bulk-select-all aria-label="Selecionar todos desta página" />
+      Selecionar página
+    </label>
+    <div class="admin-bulk-actions">
+      <button form="admin-posts-bulk" type="submit" name="_action" value="bulk_activate" class="btn btn-outline btn-sm">Ativar selecionados</button>
+      <button form="admin-posts-bulk" type="submit" name="_action" value="bulk_deactivate" class="btn btn-outline btn-sm">Desativar selecionados</button>
+      <button
+        form="admin-posts-bulk"
+        type="submit"
+        name="_action"
+        value="bulk_delete"
+        class="btn btn-outline btn-sm admin-bulk-danger"
+        onclick="return confirm('Excluir permanentemente os posts selecionados?')"
+      >
+        Excluir selecionados
+      </button>
+    </div>
+    <p class="admin-bulk-hint"><span data-bulk-count>0</span> selecionado(s) nesta página</p>
+  </section>
 
   <section class="admin-card admin-card-table">
     <div class="admin-table-wrap">
       <table class="admin-table admin-table-dense">
         <thead>
-          <tr><th>Título</th><th>Categoria</th><th>Status</th><th>Data</th><th>Ações</th></tr>
+          <tr>
+            <th class="admin-col-check"></th>
+            <th>Título</th>
+            <th>Categoria</th>
+            <th>Status</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
         </thead>
         <tbody>
           {data.articles.map((post) => (
             <tr>
+              <td class="admin-col-check">
+                <input form="admin-posts-bulk" type="checkbox" name="ids" value={String(post.id)} data-bulk-item />
+              </td>
               <td><strong>{post.title}</strong></td>
               <td>{post.category.name}</td>
               <td>
@@ -56,4 +155,39 @@ const data = await articleList({ page: Number(Astro.url.searchParams.get('page')
     </div>
     {data.articles.length === 0 && <p class="admin-empty">Nenhum post encontrado.</p>}
   </section>
+
+  <Pagination page={data.page} totalPages={data.totalPages} basePath="/admin/posts" query={pagerQuery} />
 </AdminLayout>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.admin-bulk-bar')?.parentElement || document;
+    const selectAll = document.querySelector('[data-bulk-select-all]');
+    const countEl = document.querySelector('[data-bulk-count]');
+    const bulkForm = document.getElementById('admin-posts-bulk');
+    const items = () => Array.from(document.querySelectorAll('[data-bulk-item]'));
+    function refresh() {
+      const list = items();
+      const n = list.filter((el) => el.checked).length;
+      if (countEl) countEl.textContent = String(n);
+      if (selectAll) {
+        selectAll.checked = list.length > 0 && list.every((el) => el.checked);
+        selectAll.indeterminate = n > 0 && n < list.length;
+      }
+    }
+    selectAll?.addEventListener('change', () => {
+      items().forEach((el) => { el.checked = !!selectAll.checked; });
+      refresh();
+    });
+    document.addEventListener('change', (e) => {
+      if (e.target && e.target.matches('[data-bulk-item]')) refresh();
+    });
+    bulkForm?.addEventListener('submit', (e) => {
+      if (items().filter((el) => el.checked).length === 0) {
+        e.preventDefault();
+        alert('Selecione ao menos um post.');
+      }
+    });
+    refresh();
+  })();
+</script>

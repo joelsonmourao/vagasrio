@@ -6,14 +6,19 @@ import {
   buildBlogPageTitle,
   buildBlogPageDescription,
   buildBreadcrumbSchema,
+  buildFaqPageSchema,
+  buildHowToSchema,
+  buildRelatedPostsItemListSchema,
   blogCanonical,
   blogRobotsMeta,
+  extractFaqPairsFromHtml,
+  extractHowToStepsFromHtml,
   mergeJsonLd,
 } from '../../lib/seo';
 import { getSiteSettingsSafe, isIndexingEnabled } from '../../lib/site-settings';
 import { formatDateBr } from '../../lib/format';
 import { formatSchemaDateTime } from '../../lib/datetime-brazil';
-import { absoluteUrl, siteConfig } from '../../lib/config';
+import { absoluteUrl, baseUrl, siteConfig } from '../../lib/config';
 
 const { slug } = Astro.params;
 const article = slug ? await articleBySlug(slug) : null;
@@ -27,6 +32,15 @@ const canonical = blogCanonical(article, settings);
 const robots = blogRobotsMeta(article, indexingOn);
 const cover = article.featuredImage?.trim() || '';
 const ogImage = cover ? (cover.startsWith('http') ? cover : absoluteUrl(cover, settings)) : undefined;
+const pageUrl = baseUrl(`/blog/${article.slug}`, settings);
+const coverAbs = ogImage || absoluteUrl('/assets/img/og-vagas-rj.png', settings);
+
+const more = await articleList({ page: 1, perPage: 6, category: article.category.slug });
+const related = more.articles.filter((a) => a.slug !== article.slug).slice(0, 5);
+
+const faqPairs = extractFaqPairsFromHtml(article.content || '');
+const howToSteps = extractHowToStepsFromHtml(article.content || '');
+
 const jsonLd = mergeJsonLd(
   buildArticleSchema(article, settings),
   buildBreadcrumbSchema(
@@ -37,10 +51,13 @@ const jsonLd = mergeJsonLd(
     ],
     settings,
   ),
+  buildFaqPageSchema(faqPairs, pageUrl),
+  buildHowToSchema(article.title, article.excerpt || description, howToSteps, pageUrl, coverAbs),
+  buildRelatedPostsItemListSchema(
+    related.map((a) => ({ title: a.title, slug: a.slug })),
+    settings,
+  ),
 );
-
-const more = await articleList({ page: 1, perPage: 6, category: article.category.slug });
-const related = more.articles.filter((a) => a.slug !== article.slug).slice(0, 5);
 ---
 <BaseLayout
   title={title}
@@ -62,18 +79,19 @@ const related = more.articles.filter((a) => a.slug !== article.slug).slice(0, 5)
 
   <div class="article-page">
     <div class="article-page-grid">
-      <article class="article-content" itemscope itemtype="https://schema.org/BlogPosting">
+      {/* Sem microdata itemscope: evita Article/BlogPosting duplicado no Google */}
+      <article class="article-content">
         <header class="panel article-header">
           <p class="article-meta-kicker">{article.category.name}</p>
-          <h1 itemprop="headline">{article.title}</h1>
+          <h1>{article.title}</h1>
           <p class="article-byline">
-            <span itemprop="author">{`Redação ${siteConfig.name}`}</span>
+            <span>{`Redação ${siteConfig.name}`}</span>
             <span aria-hidden="true"> · </span>
-            <time itemprop="datePublished" datetime={formatSchemaDateTime(article.publishedAt)}>
+            <time datetime={formatSchemaDateTime(article.publishedAt)}>
               Publicado em {formatDateBr(article.publishedAt)}
             </time>
           </p>
-          {article.excerpt && <p class="article-deck" itemprop="description">{article.excerpt}</p>}
+          {article.excerpt && <p class="article-deck">{article.excerpt}</p>}
         </header>
         {cover && (
           <figure class="article-cover">
@@ -83,11 +101,10 @@ const related = more.articles.filter((a) => a.slug !== article.slug).slice(0, 5)
               width="1200"
               height="675"
               loading="eager"
-              itemprop="image"
             />
           </figure>
         )}
-        <div class="panel prose article-body" itemprop="articleBody" set:html={article.content} />
+        <div class="panel prose article-body" set:html={article.content} />
       </article>
       {related.length > 0 && (
         <aside class="article-sidebar">

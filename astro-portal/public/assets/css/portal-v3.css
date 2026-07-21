@@ -583,3 +583,76 @@ main.container,
     grid-template-columns: 1fr;
   }
 }
+
+/* FAQ listagens — estilo portais (visível + FAQPage) */
+.jobs-faq {
+  margin: 36px 0 12px;
+  padding: 28px 24px;
+  background: linear-gradient(180deg, #f4f7fb 0%, #fff 48%);
+  border: 1px solid #dbe3ee;
+  border-radius: 14px;
+}
+
+.jobs-faq-head h2 {
+  margin: 0 0 8px;
+  font-size: clamp(1.25rem, 2.4vw, 1.55rem);
+  font-weight: 800;
+  color: #0b1f3a;
+  letter-spacing: -0.02em;
+}
+
+.jobs-faq-lead {
+  margin: 0 0 18px;
+  color: #5a6a82;
+  font-size: 0.98rem;
+  max-width: 62ch;
+}
+
+.jobs-faq-list {
+  display: grid;
+  gap: 10px;
+}
+
+.jobs-faq-item {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0 16px;
+}
+
+.jobs-faq-item summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 14px 0;
+  font-weight: 700;
+  color: #0b1f3a;
+  font-size: 0.98rem;
+}
+
+.jobs-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.jobs-faq-item summary::after {
+  content: '+';
+  float: right;
+  color: #2563eb;
+  font-weight: 800;
+}
+
+.jobs-faq-item[open] summary::after {
+  content: '–';
+}
+
+.jobs-faq-item p {
+  margin: 0 0 14px;
+  color: #334155;
+  line-height: 1.55;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 640px) {
+  .jobs-faq {
+    padding: 20px 14px;
+  }
+}

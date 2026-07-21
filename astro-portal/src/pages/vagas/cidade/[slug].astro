@@ -3,20 +3,53 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import JobCard from '../../../components/JobCard.astro';
 import Pagination from '../../../components/Pagination.astro';
 import EmptyState from '../../../components/EmptyState.astro';
+import JobsFaq from '../../../components/JobsFaq.astro';
 import { cityBySlug, jobList } from '../../../lib/portal';
 import { baseUrl, siteConfig } from '../../../lib/config';
-import { getSiteSettingsSafe } from '../../../lib/site-settings';
-import { buildCityPageTitle, buildBreadcrumbSchema, mergeJsonLd } from '../../../lib/seo';
+import { getSiteSettingsSafe, SETTING_KEYS } from '../../../lib/site-settings';
+import { getRjJobsFaqs } from '../../../lib/jobs-faq';
+import {
+  buildBreadcrumbSchema,
+  buildFaqPageSchema,
+  buildJobsListingSeo,
+  mergeJsonLd,
+} from '../../../lib/seo';
 
 const { slug } = Astro.params;
 const city = slug ? await cityBySlug(slug) : null;
 if (!city) return Astro.redirect('/404');
 
 const settings = await getSiteSettingsSafe();
+const brand = settings[SETTING_KEYS.siteName] || siteConfig.name;
 const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
 const jobsData = await jobList({ page, city: city.slug });
-const title = buildCityPageTitle(city.name, settings);
-const description = `Vagas de emprego em ${city.name}, Rio de Janeiro (RJ). Confira oportunidades atualizadas no ${siteConfig.name}.`;
+const { title, description } = buildJobsListingSeo({
+  total: jobsData.total,
+  jobTitles: jobsData.jobs.map((j) => j.title),
+  placeLabel: `${city.name}, RJ`,
+  brand,
+  settings,
+});
+
+const faqItems = getRjJobsFaqs({
+  brand,
+  jobCount: jobsData.total,
+  cities: [city.name, ...siteConfig.allowedCities.filter((c) => c !== city.name)],
+}).map((item) => {
+  if (item.question.includes('Quais cidades')) {
+    return {
+      ...item,
+      question: `Há vagas de emprego em ${city.name}?`,
+      answer: `Sim. Esta página lista vagas de emprego em ${city.name}/${city.state}. ${
+        jobsData.total > 0
+          ? `Há ${jobsData.total} vaga${jobsData.total === 1 ? '' : 's'} pública${jobsData.total === 1 ? '' : 's'} no momento.`
+          : 'No momento pode não haver anúncios públicos; volte em breve ou veja outras cidades do RJ.'
+      } Use também a busca geral de vagas rio e empregos RJ.`,
+    };
+  }
+  return item;
+});
+
 const jsonLd = mergeJsonLd(
   buildBreadcrumbSchema(
     [
@@ -25,6 +58,10 @@ const jsonLd = mergeJsonLd(
       { name: city.name, path: `/vagas/cidade/${city.slug}` },
     ],
     settings,
+  ),
+  buildFaqPageSchema(
+    faqItems.map((f) => ({ question: f.question, answer: f.answer })),
+    baseUrl(`/vagas/cidade/${city.slug}`, settings),
   ),
 );
 ---
@@ -38,10 +75,9 @@ const jsonLd = mergeJsonLd(
       </nav>
       <h1 class="market-title">Vagas de emprego em {city.name}</h1>
       <p class="market-lead">
-        Oportunidades de trabalho em {city.name}/{city.state}.
         {jobsData.total > 0
-          ? ` ${jobsData.total} vaga${jobsData.total === 1 ? '' : 's'} pública${jobsData.total === 1 ? '' : 's'} no momento.`
-          : ''}
+          ? `${jobsData.total} vagas de emprego para ${city.name}, RJ. Oportunidades atualizadas de trabalho na região.`
+          : `Oportunidades de trabalho em ${city.name}/${city.state}.`}
       </p>
     </section>
 
@@ -61,6 +97,12 @@ const jsonLd = mergeJsonLd(
       page={jobsData.page}
       totalPages={jobsData.totalPages}
       basePath={`/vagas/cidade/${city.slug}`}
+    />
+
+    <JobsFaq
+      items={faqItems}
+      title={`Perguntas frequentes — vagas em ${city.name}`}
+      lead={`Tire dúvidas sobre empregos em ${city.name} e vagas RJ.`}
     />
   </div>
 </BaseLayout>

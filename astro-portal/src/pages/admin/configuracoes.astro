@@ -40,9 +40,9 @@ const K = SETTING_KEYS;
       <div class="admin-form-grid">
         <label class="admin-field-span-2">Título SEO da página inicial <input name={K.homeSeoTitle} value={s[K.homeSeoTitle]} /></label>
         <label class="admin-field-span-2">Meta description da home <textarea name={K.homeSeoDescription} rows="3">{s[K.homeSeoDescription]}</textarea></label>
-        <label class="admin-field-span-2">Sufixo padrão em títulos de vagas <input name={K.jobMetaSuffix} value={s[K.jobMetaSuffix]} placeholder="Vagas RJ" /></label>
-        <label class="admin-field-span-2">Modelo de título — páginas de empresa <input name={K.companyMetaTemplate} value={s[K.companyMetaTemplate]} placeholder="Vagas na {empresa} - Rio de Janeiro | Vagas RJ" /></label>
-        <label class="admin-field-span-2">Modelo de título — páginas de cidade <input name={K.cityMetaTemplate} value={s[K.cityMetaTemplate]} placeholder="Vagas em {cidade} RJ - Vagas RJ" /></label>
+        <label class="admin-field-span-2">Sufixo padrão em títulos de vagas <input name={K.jobMetaSuffix} value={s[K.jobMetaSuffix]} placeholder="Vagas RJ RIO" /></label>
+        <label class="admin-field-span-2">Modelo de título — páginas de empresa <input name={K.companyMetaTemplate} value={s[K.companyMetaTemplate]} placeholder="Vagas na {empresa} - Rio de Janeiro | Vagas RJ RIO" /></label>
+        <label class="admin-field-span-2">Modelo de título — páginas de cidade <input name={K.cityMetaTemplate} value={s[K.cityMetaTemplate]} placeholder="Vagas em {cidade} RJ - Vagas RJ RIO" /></label>
         <label class="admin-field-check admin-field-span-2">
           <input type="hidden" name={K.indexingEnabled} value="0" />
           <input type="checkbox" name={K.indexingEnabled} value="1" checked={s[K.indexingEnabled] !== '0'} />

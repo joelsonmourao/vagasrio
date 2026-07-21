@@ -100,7 +100,7 @@ function buildFaq(item, index) {
   const qs = [
     [`“${item.title}” exige curso pago?`, `Não como regra para “${item.title}”. Em ${city}, curso curto alinhado ao anúncio e prova prática costumam pesar mais do que certificado genérico.`],
     [`Como aplicar “${item.title}” sem experiência CLT?`, `No tema “${item.title}”, descreva tarefas reais com honestidade e busque cargos de entrada compatíveis com sua rotina em ${city}.`],
-    [`O Vagas RJ garante resultado em “${item.title}”?`, `Não. Sobre “${item.title}”, o portal só divulga oportunidades; a seleção é da empresa e a checagem do canal oficial continua com você.`],
+    [`O Vagas RJ RIO garante resultado em “${item.title}”?`, `Não. Sobre “${item.title}”, o portal só divulga oportunidades; a seleção é da empresa e a checagem do canal oficial continua com você.`],
     [`E se pedirem pagamento durante “${item.title}”?`, `Se isso aparecer no fluxo de “${item.title}”, trate como alerta. Empresa séria no RJ não cobra para candidatar. Guarde print e interrompa o contato.`],
   ];
   return qs
@@ -134,7 +134,7 @@ export function buildArticleHtml(item) {
   let html = `
 <p class="magnet-hook">${escapeHtml(scene)}</p>
 <p><strong>Resposta direta:</strong> ${escapeHtml(uniqueSentence(hash(item.key) + 3, item.title, city))} Trate “${escapeHtml(item.title)}” como processo: ler, adaptar, enviar, registrar e proteger seus dados.</p>
-<p>${escapeHtml(item.localAngle)} Este guia do Vagas RJ é específico para o tema “${escapeHtml(item.title)}” com referência a ${escapeHtml(city)}.</p>
+<p>${escapeHtml(item.localAngle)} Este guia do Vagas RJ RIO é específico para o tema “${escapeHtml(item.title)}” com referência a ${escapeHtml(city)}.</p>
 
 <h2>Por que “${escapeHtml(item.title)}” importa</h2>
 <p>${escapeHtml(uniqueSentence(hash(item.key) + 5, item.title, city))}</p>
@@ -163,7 +163,7 @@ ${buildFaq(item, index)}
 <h2>Fechamento</h2>
 <p>${escapeHtml(uniqueSentence(hash(item.key) + 201, item.title, city))}</p>
 <p>${escapeHtml(uniqueSentence(hash(item.key) + 203, item.title, city))}</p>
-<p><strong>Importante:</strong> o Vagas RJ divulga oportunidades ligadas a “${escapeHtml(item.title)}” e não garante contratação, não cobra taxa de candidato e não pede pagamento para liberar vaga. Confira o canal oficial da empresa em ${escapeHtml(city)} antes de enviar documentos sensíveis.</p>
+<p><strong>Importante:</strong> o Vagas RJ RIO divulga oportunidades ligadas a “${escapeHtml(item.title)}” e não garante contratação, não cobra taxa de candidato e não pede pagamento para liberar vaga. Confira o canal oficial da empresa em ${escapeHtml(city)} antes de enviar documentos sensíveis.</p>
 `.trim();
 
   let guard = 0;

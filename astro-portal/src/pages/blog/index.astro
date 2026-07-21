@@ -6,18 +6,58 @@ import ListingMeta from '../../components/ListingMeta.astro';
 import EmptyState from '../../components/EmptyState.astro';
 import { articleList } from '../../lib/portal';
 import { baseUrl, siteConfig } from '../../lib/config';
+import { getSiteSettingsSafe } from '../../lib/site-settings';
+import {
+  buildBreadcrumbSchema,
+  buildRelatedPostsItemListSchema,
+  mergeJsonLd,
+} from '../../lib/seo';
 
 const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
 const hasQueryString = Astro.url.searchParams.toString().length > 0;
 const data = await articleList({ page });
+const settings = await getSiteSettingsSafe();
 const title = `Dicas de Emprego e Carreira no RJ | ${siteConfig.name}`;
 const description = `Artigos sobre currículo, entrevista, segurança e primeiro emprego no Rio de Janeiro. Conteúdo do ${siteConfig.name}.`;
+
+const collectionSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: title,
+  description,
+  url: baseUrl('/blog', settings),
+  isPartOf: {
+    '@type': 'WebSite',
+    name: siteConfig.name,
+    url: baseUrl('/', settings),
+  },
+  about: {
+    '@type': 'Thing',
+    name: 'Emprego e carreira no Rio de Janeiro',
+  },
+};
+
+const jsonLd = mergeJsonLd(
+  collectionSchema,
+  buildBreadcrumbSchema(
+    [
+      { name: 'Início', path: '/' },
+      { name: 'Dicas de emprego', path: '/blog' },
+    ],
+    settings,
+  ),
+  buildRelatedPostsItemListSchema(
+    data.articles.map((a) => ({ title: a.title, slug: a.slug })),
+    settings,
+  ),
+);
 ---
 <BaseLayout
   title={title}
   description={description}
   canonical={baseUrl('/blog')}
   robots={hasQueryString ? 'noindex,follow' : undefined}
+  jsonLd={jsonLd}
 >
   <div class="page-stack page-stack-market">
     <section class="market-top">
