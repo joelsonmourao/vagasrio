@@ -26,6 +26,10 @@
     "slug:redirects": "node scripts/generate-legacy-slug-redirects.mjs",
     "slug:fix-seed": "node scripts/fix-local-slugs.mjs && npm run slug:redirects",
     "audit:links": "node scripts/audit-links.mjs",
+    "editorial:covers": "node scripts/generate-rj-local-covers.mjs",
+    "editorial:seed": "node scripts/seed-rj-local-editorial.mjs",
+    "editorial:cleanup": "node scripts/cleanup-rj-local-orphans.mjs",
+    "editorial:audit": "node scripts/audit-blog-quality.mjs",
     "postinstall": "node scripts/prisma-cli.mjs sqlite generate"
   },
   "prisma": {

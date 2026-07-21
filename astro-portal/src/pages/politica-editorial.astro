@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { baseUrl, siteConfig } from '../lib/config';
+import { getSiteSettingsSafe } from '../lib/site-settings';
+
+const settings = await getSiteSettingsSafe();
+---
+<BaseLayout
+  title={`Política editorial | ${siteConfig.name}`}
+  description="Critérios editoriais do blog do Vagas RJ: conteúdo original, utilidade local e revisão humana."
+  canonical={baseUrl('/politica-editorial', settings)}
+>
+  <article class="page-stack">
+    <header class="page-head-panel panel">
+      <h1>Política editorial</h1>
+      <p>
+        O blog do {siteConfig.name} existe para orientar candidatos no Rio de Janeiro com informação prática,
+        local e verificável — não para gerar páginas vazias em massa.
+      </p>
+    </header>
+
+    <section class="panel">
+      <h2>O que publicamos</h2>
+      <ul>
+        <li>Guias de candidatura, currículo, entrevista, segurança e direitos em linguagem clara.</li>
+        <li>Conteúdo com recorte fluminense (cidades, deslocamento, setores e riscos locais).</li>
+        <li>Textos com estrutura completa, exemplos utilizáveis e avisos de segurança.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>O que não fazemos</h2>
+      <ul>
+        <li>Não prometemos emprego garantido.</li>
+        <li>Não cobramos taxa de candidato para candidatar-se ou “liberar vaga”.</li>
+        <li>Não publicamos automaticamente centenas de URLs genéricas sem valor.</li>
+        <li>Não inventamos dados oficiais, salários médios ou estatísticas sem fonte.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>Padrão de qualidade</h2>
+      <p>
+        Artigos substanciais devem ter utilidade real (passos, checklist, alertas), título honesto,
+        descrição clara e, sempre que possível, imagem de capa. Textos rasos, repetidos ou enganosos
+        devem ser corrigidos, desindexados ou removidos.
+      </p>
+      <p>
+        A divulgação de vagas no portal é separada do conteúdo editorial: anúncios apontam para canais
+        de candidatura e o candidato deve conferir a empresa antes de enviar documentos sensíveis.
+      </p>
+    </section>
+
+    <section class="panel">
+      <h2>Correções e contato</h2>
+      <p>
+        Encontrou erro factual, link quebrado ou conteúdo suspeito?
+        Escreva para <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
+        ou use a página de <a href="/contato">contato</a>.
+      </p>
+    </section>
+  </article>
+</BaseLayout>

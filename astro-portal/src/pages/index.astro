@@ -28,22 +28,22 @@ const jsonLd = mergeJsonLd(
   <section class="hero hero-home">
     <div class="hero-pattern" aria-hidden="true"></div>
     <div class="hero-copy">
-      <p class="hero-kicker">Portal regional · Rio de Janeiro</p>
-      <h1>Vagas de emprego no Rio de Janeiro</h1>
-      <p>Encontre oportunidades por cidade, empresa e categoria em todo o RJ.</p>
+      <p class="hero-kicker">Vagas RJ</p>
+      <h1>Emprego no Rio de Janeiro</h1>
+      <p>Busque por cargo e cidade. Oportunidades em todo o estado, com filtros claros e artigos úteis para candidatura.</p>
       <form class="search-form search-form-hero" action="/vagas" method="get">
-        <input type="search" name="q" placeholder="Exemplo: assistente, logística, jovem aprendiz" aria-label="Cargo ou palavra-chave" />
-        <input type="text" name="city" placeholder="Exemplo: Rio de Janeiro, Niterói, Duque de Caxias" aria-label="Cidade" list="home-city-list" />
-        <button class="btn btn-hero" type="submit">Buscar vagas</button>
+        <input type="search" name="q" placeholder="Cargo ou palavra-chave" aria-label="Cargo ou palavra-chave" />
+        <input type="text" name="city" placeholder="Cidade no RJ" aria-label="Cidade" list="home-city-list" />
+        <button class="btn btn-hero" type="submit">Buscar</button>
       </form>
       <datalist id="home-city-list">
         {siteConfig.allowedCities.map((c) => <option value={c} />)}
       </datalist>
     </div>
     <div class="hero-stats">
-      <article><strong>{data.stats.activeJobs}</strong><span>vagas públicas</span></article>
+      <article><strong>{data.stats.activeJobs}</strong><span>vagas ativas</span></article>
       <article><strong>{data.stats.cities}</strong><span>cidades</span></article>
-      <article><strong>{data.stats.posts}</strong><span>artigos no blog</span></article>
+      <article><strong>{data.stats.posts}</strong><span>artigos</span></article>
     </div>
   </section>
 
@@ -84,8 +84,8 @@ const jsonLd = mergeJsonLd(
   )}
 
   <section class="cta-band">
-    <h2>Pronto para sua próxima oportunidade?</h2>
-    <p>Explore vagas disponíveis no Rio de Janeiro, filtre por cidade e acompanhe novas oportunidades.</p>
-    <a class="btn btn-lg" href="/vagas">Ver todas as vagas</a>
+    <h2>Próxima candidatura no RJ</h2>
+    <p>Filtre por cidade, leia a vaga com atenção e use o blog para preparar currículo e entrevista.</p>
+    <a class="btn btn-lg" href="/vagas">Ver vagas</a>
   </section>
 </BaseLayout>

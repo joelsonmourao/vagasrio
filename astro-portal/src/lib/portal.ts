@@ -99,12 +99,21 @@ export async function dashboardStats() {
   };
 }
 
+/** Posts públicos: ativos, indexáveis e com data de publicação já alcançada. */
+export function publicPostPrismaFilter(now = new Date()) {
+  return {
+    isActive: true,
+    isIndexable: true,
+    publishedAt: { lte: now },
+  };
+}
+
 export async function publicHomeStats() {
   const now = new Date();
   const jobWhere = { state: siteConfig.mainUf, ...publicJobPrismaFilter(now) };
   const [activeJobs, posts, cities] = await Promise.all([
     prisma.job.count({ where: jobWhere }),
-    prisma.blogPost.count({ where: { isActive: true, isIndexable: true } }),
+    prisma.blogPost.count({ where: publicPostPrismaFilter(now) }),
     prisma.city.count({ where: { state: siteConfig.mainUf } }),
   ]);
   return { activeJobs, posts, cities, companies: 0, jobs: activeJobs };
@@ -121,7 +130,7 @@ export async function homeData() {
       take: 6,
     }),
     prisma.blogPost.findMany({
-      where: { isActive: true },
+      where: publicPostPrismaFilter(now),
       include: { category: true },
       orderBy: { publishedAt: 'desc' },
       take: 4,
@@ -259,7 +268,12 @@ export async function articleList(opts: { page?: number; perPage?: number; categ
   const page = Math.max(1, opts.page ?? 1);
   const perPage = opts.perPage ?? siteConfig.perPage;
   const where: Record<string, unknown> = {};
-  if (opts.activeOnly !== false) where.isActive = true;
+  if (opts.activeOnly !== false) {
+    Object.assign(where, {
+      isActive: true,
+      publishedAt: { lte: new Date() },
+    });
+  }
   if (opts.category) {
     const cat = await prisma.blogCategory.findFirst({ where: { slug: opts.category } });
     if (cat) where.categoryId = cat.id;
@@ -285,7 +299,7 @@ export async function articleList(opts: { page?: number; perPage?: number; categ
 
 export async function articleBySlug(slug: string) {
   return prisma.blogPost.findFirst({
-    where: { slug, isActive: true },
+    where: { slug, isActive: true, publishedAt: { lte: new Date() } },
     include: { category: true },
   });
 }

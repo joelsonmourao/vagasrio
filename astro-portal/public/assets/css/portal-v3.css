@@ -1,0 +1,364 @@
+/* Vagas RJ — visual profissional v3 (limpo, editorial, menos “glass”) */
+
+:root {
+  --navy: #0a1628;
+  --navy-soft: #132338;
+  --blue: #1a56db;
+  --blue-bright: #2563eb;
+  --blue-light: #e8f0fe;
+  --cyan: #0e7490;
+  --bg: #f3f5f8;
+  --bg-soft: #fafbfc;
+  --card: #ffffff;
+  --text: #121a26;
+  --muted: #5c6b7f;
+  --line: #d5dde8;
+  --line-soft: #e8eef5;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --shadow: 0 12px 32px rgba(10, 22, 40, 0.08);
+  --shadow-sm: 0 2px 10px rgba(10, 22, 40, 0.05);
+  --header-h: 72px;
+  --container-max: 1120px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-size: 1.025rem;
+  line-height: 1.65;
+}
+
+.container,
+.admin-body .container {
+  max-width: var(--container-max);
+}
+
+/* Header mais sóbrio */
+.site-header {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: none;
+  border-bottom: 1px solid var(--line);
+  box-shadow: none;
+  min-height: var(--header-h);
+}
+
+.header-inner {
+  min-height: var(--header-h);
+}
+
+.logo-image {
+  height: 40px;
+}
+
+.main-nav a {
+  border-radius: 8px;
+  font-weight: 600;
+  color: #243247;
+}
+
+.main-nav a.active {
+  background: var(--blue-light);
+  color: var(--blue);
+  box-shadow: none;
+}
+
+.btn,
+.btn-nav {
+  border-radius: var(--radius-sm) !important;
+  box-shadow: none !important;
+  background: var(--blue) !important;
+  transform: none !important;
+}
+
+.btn:hover,
+.btn-nav:hover {
+  background: var(--navy) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btn-outline {
+  background: #fff !important;
+  color: var(--blue) !important;
+  border: 1px solid var(--line) !important;
+}
+
+.btn-outline:hover {
+  background: var(--blue-light) !important;
+  border-color: #b7c9e8 !important;
+}
+
+/* Hero limpo — sem grade e sem cards de vidro */
+.hero {
+  border-radius: var(--radius);
+  padding: clamp(28px, 4vw, 44px) clamp(22px, 3.5vw, 40px);
+  min-height: 0;
+  background: linear-gradient(145deg, #0a1628 0%, #153056 55%, #1a4a8c 100%);
+  border: 0;
+  box-shadow: var(--shadow);
+}
+
+.hero-pattern {
+  opacity: 0.35;
+  background:
+    radial-gradient(ellipse at 80% 20%, rgba(37, 99, 235, 0.35), transparent 50%),
+    radial-gradient(ellipse at 10% 90%, rgba(14, 116, 144, 0.2), transparent 45%);
+}
+
+.hero-home {
+  grid-template-columns: 1.7fr 0.9fr;
+  gap: 28px;
+}
+
+.hero-kicker,
+.section-kicker {
+  letter-spacing: 0.08em;
+  color: #9ec0f5;
+}
+
+.hero h1 {
+  font-size: clamp(1.85rem, 4.2vw, 2.55rem);
+  font-weight: 750;
+  max-width: 18ch;
+}
+
+.hero p {
+  color: #c5d6ef;
+  max-width: 46ch;
+}
+
+.search-form-hero {
+  background: #fff;
+  border: 0;
+  backdrop-filter: none;
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.search-form-hero input {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.hero-stats article {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  backdrop-filter: none;
+  box-shadow: none;
+  min-height: 88px;
+  padding: 16px;
+}
+
+.hero-stats strong {
+  font-size: 1.65rem;
+}
+
+/* Seções e cards */
+.home-section-soft {
+  background: #fff;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  box-shadow: none;
+  padding: 22px 24px;
+}
+
+.section-head h2 {
+  font-size: clamp(1.25rem, 2.2vw, 1.55rem);
+}
+
+.job-card,
+.entity-card,
+.card,
+.panel {
+  border-radius: var(--radius);
+  box-shadow: none;
+  border-color: var(--line);
+}
+
+.job-card:hover,
+.card-hover:hover,
+.entity-card:hover {
+  transform: none;
+  box-shadow: var(--shadow-sm);
+  border-color: #b8c7dc;
+}
+
+.job-card-premium {
+  min-height: 280px;
+}
+
+.job-card-accent {
+  width: 3px;
+  background: var(--blue);
+}
+
+.cta-band {
+  border-radius: var(--radius);
+  background: var(--navy);
+  box-shadow: none;
+  text-align: left;
+  padding: 28px 30px;
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.cta-band p {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Blog cards com capa */
+.blog-card {
+  padding: 0;
+  overflow: hidden;
+  gap: 0 !important;
+  min-height: 0;
+}
+
+.blog-card-cover {
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--navy-soft);
+}
+
+.blog-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.blog-card-body {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px 18px;
+}
+
+.blog-card-body .btn {
+  justify-self: start;
+  margin-top: 4px;
+}
+
+.article-cover {
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--line-soft);
+  margin-bottom: 4px;
+}
+
+.article-cover img {
+  width: 100%;
+  max-height: 360px;
+  object-fit: cover;
+}
+
+.article-header {
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+
+.prose,
+.article-body {
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+
+.prose .magnet-hook {
+  font-size: 1.08rem;
+  color: var(--navy);
+  border-left: 3px solid var(--blue);
+  padding-left: 14px;
+  margin: 0 0 1.25em;
+}
+
+.prose .magnet-cta-box {
+  display: grid;
+  gap: 10px;
+  margin: 1.5em 0;
+  padding: 16px 18px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+}
+
+.prose .magnet-cta-box a {
+  font-weight: 700;
+}
+
+/* Footer */
+.site-footer {
+  background: var(--navy);
+  margin-top: 48px;
+  padding: 40px 0 24px;
+}
+
+/* AdSense readiness */
+.readiness-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.readiness-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.readiness-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.readiness-ok {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.readiness-bad {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.readiness-warn {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+@media (max-width: 900px) {
+  .hero-home {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-stats {
+    grid-template-columns: repeat(3, 1fr);
+    display: grid;
+  }
+
+  .hero-stats article {
+    min-height: 72px;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .cta-band {
+    text-align: center;
+    justify-items: center;
+  }
+}

@@ -7,15 +7,24 @@ interface Props {
     title: string;
     excerpt: string;
     publishedAt: Date;
+    featuredImage?: string | null;
     category: { name: string };
   };
 }
 const { article } = Astro.props;
+const cover = article.featuredImage?.trim() || '';
 ---
 <article class="entity-card blog-card blog-card-list card-hover">
-  <p class="blog-card-category">{article.category.name}</p>
-  <h2><a href={`/blog/${article.slug}`}>{article.title}</a></h2>
-  <p class="blog-card-date">{formatDateBr(article.publishedAt)}</p>
-  <p>{article.excerpt}</p>
-  <a class="btn btn-sm btn-outline" href={`/blog/${article.slug}`}>Ler artigo</a>
+  {cover && (
+    <a class="blog-card-cover" href={`/blog/${article.slug}`} tabindex="-1" aria-hidden="true">
+      <img src={cover} alt="" loading="lazy" width="640" height="360" />
+    </a>
+  )}
+  <div class="blog-card-body">
+    <p class="blog-card-category">{article.category.name}</p>
+    <h2><a href={`/blog/${article.slug}`}>{article.title}</a></h2>
+    <p class="blog-card-date">{formatDateBr(article.publishedAt)}</p>
+    <p>{article.excerpt}</p>
+    <a class="btn btn-sm btn-outline" href={`/blog/${article.slug}`}>Ler artigo</a>
+  </div>
 </article>

@@ -53,6 +53,17 @@ const related = more.articles.filter((a) => a.slug !== article.slug).slice(0, 5)
           <h1>{article.title}</h1>
           <p class="article-meta">{formatDateBr(article.publishedAt)}</p>
         </header>
+        {article.featuredImage?.trim() && (
+          <figure class="article-cover">
+            <img
+              src={article.featuredImage.trim()}
+              alt={`Capa: ${article.title}`}
+              width="960"
+              height="540"
+              loading="eager"
+            />
+          </figure>
+        )}
         <div class="panel prose article-body" set:html={article.content} />
       </article>
       {related.length > 0 && (

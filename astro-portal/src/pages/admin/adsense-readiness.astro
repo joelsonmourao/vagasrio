@@ -1,0 +1,160 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { prisma } from '../../lib/db';
+import { getSiteSettingsSafe, isAdsenseEnabled, SETTING_KEYS } from '../../lib/site-settings';
+
+const SLUG_BASE = 'rj-local';
+const now = new Date();
+const settings = await getSiteSettingsSafe();
+const adsOn = isAdsenseEnabled(settings);
+
+const [
+  totalPosts,
+  activePublic,
+  rjLocal,
+  rjPublic,
+  withCover,
+  oldActive,
+] = await Promise.all([
+  prisma.blogPost.count(),
+  prisma.blogPost.count({ where: { isActive: true, isIndexable: true, publishedAt: { lte: now } } }),
+  prisma.blogPost.count({ where: { slug: { startsWith: `${SLUG_BASE}-` } } }),
+  prisma.blogPost.count({
+    where: { slug: { startsWith: `${SLUG_BASE}-` }, isActive: true, isIndexable: true, publishedAt: { lte: now } },
+  }),
+  prisma.blogPost.count({
+    where: {
+      slug: { startsWith: `${SLUG_BASE}-` },
+      isActive: true,
+      featuredImage: { not: null },
+      NOT: { featuredImage: '' },
+    },
+  }),
+  prisma.blogPost.count({
+    where: { isActive: true, NOT: { slug: { startsWith: `${SLUG_BASE}-` } } },
+  }),
+]);
+
+const sample = await prisma.blogPost.findMany({
+  where: { slug: { startsWith: `${SLUG_BASE}-` }, isActive: true, publishedAt: { lte: now } },
+  orderBy: { publishedAt: 'desc' },
+  take: 8,
+  select: { title: true, slug: true, content: true, featuredImage: true },
+});
+
+function usefulLen(html: string) {
+  return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().length;
+}
+
+const thinSamples = sample.filter((p) => usefulLen(p.content) < 3400);
+
+const checks = [
+  {
+    id: 'ownership',
+    label: 'Propriedade do site no AdSense',
+    ok: true,
+    detail: 'Confirmado no painel Google (passo manual).',
+    level: 'ok' as const,
+  },
+  {
+    id: 'thin-old',
+    label: 'Posts-template antigos desativados',
+    ok: oldActive === 0,
+    detail: oldActive === 0 ? 'Nenhum post antigo ativo.' : `${oldActive} post(s) antigo(s) ainda ativo(s).`,
+    level: oldActive === 0 ? 'ok' as const : 'bad' as const,
+  },
+  {
+    id: 'volume',
+    label: 'Volume público substancial (meta interna ≥ 45)',
+    ok: rjPublic >= 45,
+    detail: `${rjPublic} post(s) rj-local públicos agora (piloto/agenda). Total rj-local no banco: ${rjLocal}.`,
+    level: rjPublic >= 45 ? 'ok' as const : rjPublic >= 15 ? 'warn' as const : 'bad' as const,
+  },
+  {
+    id: 'covers',
+    label: 'Capas nos posts novos',
+    ok: withCover >= Math.min(rjLocal, 15),
+    detail: `${withCover} post(s) rj-local com featuredImage.`,
+    level: withCover > 0 ? 'ok' as const : 'bad' as const,
+  },
+  {
+    id: 'thin-new',
+    label: 'Amostra sem texto curto (< 3400)',
+    ok: thinSamples.length === 0,
+    detail: thinSamples.length === 0 ? 'Amostra ok.' : `${thinSamples.length} na amostra ainda curtos.`,
+    level: thinSamples.length === 0 ? 'ok' as const : 'bad' as const,
+  },
+  {
+    id: 'ads-off',
+    label: 'AdSense desligado até aprovação',
+    ok: !adsOn,
+    detail: adsOn
+      ? 'Anúncios estão ATIVOS — desligue no painel até o Google aprovar.'
+      : 'Anúncios desativados (recomendado até aprovação).',
+    level: adsOn ? 'bad' as const : 'ok' as const,
+  },
+  {
+    id: 'publisher',
+    label: 'Publisher ID configurado',
+    ok: Boolean(settings[SETTING_KEYS.adsenseClient]?.startsWith('ca-pub-')),
+    detail: settings[SETTING_KEYS.adsenseClient] || 'Ausente',
+    level: settings[SETTING_KEYS.adsenseClient]?.startsWith('ca-pub-') ? 'ok' as const : 'warn' as const,
+  },
+  {
+    id: 'editorial-policy',
+    label: 'Política editorial publicada',
+    ok: true,
+    detail: 'Página /politica-editorial disponível.',
+    level: 'ok' as const,
+  },
+];
+
+const blockers = checks.filter((c) => c.level === 'bad');
+const ready = blockers.length === 0 && rjPublic >= 45 && oldActive === 0 && !adsOn;
+---
+<AdminLayout title="AdSense — Rota da Aprovação">
+  <header class="admin-page-head">
+    <div>
+      <p class="admin-kicker">Monetização</p>
+      <h1>Rota da Aprovação (AdSense)</h1>
+      <p class="admin-lead">
+        Checklist interno — não substitui a análise do Google. Hoje o site foi rejeitado por conteúdo de baixo valor;
+        só peça nova revisão depois de corrigir os bloqueadores.
+      </p>
+    </div>
+  </header>
+
+  <section class="admin-card" style="margin-bottom:16px">
+    <p>
+      <strong>Status interno:</strong>
+      {ready ? 'Pronto para solicitar análise (critérios internos ok).' : 'Ainda não — corrija os itens em vermelho.'}
+    </p>
+    <p class="admin-lead">
+      Públicos agora: {activePublic} · rj-local no banco: {rjLocal} · posts totais: {totalPosts}
+    </p>
+  </section>
+
+  <div class="readiness-grid">
+    {checks.map((c) => (
+      <div class="readiness-item">
+        <span class:list={['readiness-badge', c.level === 'ok' ? 'readiness-ok' : c.level === 'warn' ? 'readiness-warn' : 'readiness-bad']}>
+          {c.level === 'ok' ? 'OK' : c.level === 'warn' ? 'Atenção' : 'Bloqueia'}
+        </span>
+        <div>
+          <strong>{c.label}</strong>
+          <p style="margin:4px 0 0;color:#5c6b7f">{c.detail}</p>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <section class="admin-card" style="margin-top:18px">
+    <h2>Como pedir revisão no Google</h2>
+    <ol>
+      <li>Desative posts rasos e publique o pacote editorial rj-local (seed).</li>
+      <li>Espere a agenda publicar volume substancial (meta interna ≥ 45).</li>
+      <li>Mantenha anúncios desligados até aprovação.</li>
+      <li>Só então marque “Confirmo que corrigi” e clique em Pedir revisão.</li>
+    </ol>
+  </section>
+</AdminLayout>

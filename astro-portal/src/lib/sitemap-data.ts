@@ -23,6 +23,7 @@ export const SITEMAP_PAGE_PATHS = [
   '/politica-de-privacidade',
   '/politica-de-cookies',
   '/termos-de-uso',
+  '/politica-editorial',
   `/vagas/estado/${siteConfig.mainUf.toLowerCase()}`,
 ] as const;
 
@@ -107,9 +108,10 @@ export async function fetchSitemapJobs(includeIndexable = true): Promise<Sitemap
 }
 
 export async function fetchSitemapPosts(includeIndexable = true): Promise<SitemapUrlEntry[]> {
+  const now = new Date();
   const where = includeIndexable
-    ? { isActive: true, isIndexable: true, title: { not: '' }, slug: { not: '' } }
-    : { isActive: true, title: { not: '' }, slug: { not: '' } };
+    ? { isActive: true, isIndexable: true, publishedAt: { lte: now }, title: { not: '' }, slug: { not: '' } }
+    : { isActive: true, publishedAt: { lte: now }, title: { not: '' }, slug: { not: '' } };
 
   const rows = await prisma.blogPost.findMany({
     where,
