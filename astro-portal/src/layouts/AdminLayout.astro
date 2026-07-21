@@ -6,18 +6,46 @@ const settings = await getSiteSettingsSafe();
 const logoSrc = settings[SETTING_KEYS.logoPath] || '/assets/img/logo-vagas-rj.svg';
 const path = Astro.url.pathname;
 const title = Astro.props.title;
-const links = [
-  { href: '/admin', label: 'Dashboard', exact: true },
-  { href: '/admin/vagas', label: 'Vagas' },
-  { href: '/admin/posts', label: 'Posts' },
-  { href: '/admin/importar-vagas', label: 'Importar' },
-  { href: '/admin/adsense-readiness', label: 'AdSense' },
-  { href: '/admin/configuracoes', label: 'Configurações' },
+
+const menu = [
+  {
+    label: 'Painel',
+    items: [{ href: '/admin', label: 'Início', exact: true }],
+  },
+  {
+    label: 'Vagas',
+    items: [
+      { href: '/admin/vagas', label: 'Todas as vagas' },
+      { href: '/admin/vagas/nova', label: 'Adicionar nova' },
+      { href: '/admin/importar-vagas', label: 'Importar' },
+    ],
+  },
+  {
+    label: 'Posts',
+    items: [
+      { href: '/admin/posts', label: 'Todos os posts' },
+      { href: '/admin/posts/novo', label: 'Adicionar novo' },
+    ],
+  },
+  {
+    label: 'Configurações',
+    items: [
+      { href: '/admin/configuracoes', label: 'Geral e SEO' },
+      { href: '/admin/adsense-readiness', label: 'AdSense' },
+    ],
+  },
 ];
 
 function isActive(href: string, exact?: boolean): boolean {
   if (exact) return path === href || path === `${href}/`;
-  return path === href || path.startsWith(`${href}/`);
+  // Listagens: destaca também telas de edição
+  if (href === '/admin/vagas') {
+    return path === '/admin/vagas' || path === '/admin/vagas/' || path.startsWith('/admin/vagas/editar/');
+  }
+  if (href === '/admin/posts') {
+    return path === '/admin/posts' || path === '/admin/posts/' || path.startsWith('/admin/posts/editar/');
+  }
+  return path === href || path === `${href}/`;
 }
 ---
 <!doctype html>
@@ -29,36 +57,69 @@ function isActive(href: string, exact?: boolean): boolean {
     <title>{title} | Admin {siteConfig.name}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/css/app.css" />
     <link rel="stylesheet" href="/assets/css/portal-v2.css" />
-    <link rel="stylesheet" href="/assets/css/portal-v3.css" />
+    <link rel="stylesheet" href="/assets/css/admin-wp.css" />
   </head>
-  <body class="admin-body">
-    <header class="admin-header">
-      <div class="container admin-header-inner">
-        <a class="admin-brand-link" href="/admin">
-          <img class="admin-brand-logo" src={logoSrc} alt={siteConfig.name} width="160" height="38" />
-          <span>
-            <strong>Painel admin</strong>
-            <small>{siteConfig.name}</small>
-          </span>
+  <body class="admin-body admin-wp">
+    <div class="wp-shell">
+      <aside class="wp-sidebar" id="admin-main-nav" aria-label="Menu do admin">
+        <a class="wp-sidebar-brand" href="/admin">
+          <img src={logoSrc} alt="" width="28" height="28" />
+          <span>{siteConfig.name}</span>
         </a>
-        <button type="button" class="admin-nav-toggle" data-admin-nav-toggle aria-expanded="false" aria-controls="admin-main-nav">
-          Menu
-        </button>
-        <nav id="admin-main-nav" class="admin-nav" aria-label="Admin">
-          {links.map((l) => (
-            <a href={l.href} class:list={{ active: isActive(l.href, l.exact) }}>{l.label}</a>
-          ))}
-          <a class="btn btn-sm btn-outline admin-logout-link" href="/api/auth/logout">Sair</a>
-        </nav>
+
+        {menu.map((group) => (
+          <div class="wp-menu-group">
+            <p class="wp-menu-label">{group.label}</p>
+            <nav class="wp-menu">
+              {group.items.map((item) => (
+                <a
+                  href={item.href}
+                  class:list={{ active: isActive(item.href, item.exact) }}
+                >
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+          </div>
+        ))}
+
+        <div class="wp-sidebar-foot">
+          <a href="/" target="_blank" rel="noopener">Ver site ↗</a>
+          <a class="wp-logout" href="/api/auth/logout">Sair</a>
+        </div>
+      </aside>
+
+      <div class="wp-main">
+        <header class="wp-topbar">
+          <button
+            type="button"
+            class="wp-menu-toggle admin-nav-toggle"
+            data-admin-nav-toggle
+            aria-expanded="false"
+            aria-controls="admin-main-nav"
+          >
+            Menu
+          </button>
+          <div class="wp-topbar-title">
+            <span class="wp-topbar-kicker">Administração</span>
+            <strong>{title}</strong>
+          </div>
+          <div class="wp-topbar-actions">
+            <a class="wp-top-link" href="/" target="_blank" rel="noopener">Ver site</a>
+            <a class="wp-top-link wp-top-link-muted" href="/api/auth/logout">Sair</a>
+          </div>
+        </header>
+
+        <main class="wp-content">
+          <slot />
+        </main>
       </div>
-    </header>
+    </div>
+
     <div id="admin-nav-backdrop" class="admin-nav-backdrop" aria-hidden="true"></div>
-    <main class="container admin-main">
-      <slot />
-    </main>
     <script src="/assets/js/app.js" defer></script>
   </body>
 </html>

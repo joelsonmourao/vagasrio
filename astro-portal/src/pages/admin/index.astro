@@ -8,25 +8,27 @@ import { jobIsPubliclyVisible } from '../../lib/public-content';
 
 const stats = await dashboardStats();
 ---
-<AdminLayout title="Dashboard">
+<AdminLayout title="Início">
   <header class="admin-page-head">
     <div>
-      <p class="admin-kicker">Painel</p>
-      <h1>Dashboard</h1>
-      <p class="admin-lead">Visão geral do portal {siteConfig.name}.</p>
+      <h1>Início</h1>
+      <p class="admin-lead">Resumo do {siteConfig.name}. Use o menu à esquerda para gerenciar vagas e posts.</p>
     </div>
   </header>
 
+  <div class="admin-actions-bar">
+    <a href="/admin/vagas/nova" class="btn">Adicionar vaga</a>
+    <a href="/admin/posts/novo" class="btn btn-outline">Adicionar post</a>
+    <a href="/admin/importar-vagas" class="btn btn-outline">Importar vagas</a>
+  </div>
+
   <div class="stats-grid stats-grid-wide">
-    <article class="stat-card"><strong>{stats.jobs}</strong><span>Total cadastradas</span></article>
-    <article class="stat-card"><strong>{stats.activeJobs}</strong><span>Ativas (painel)</span></article>
-    <article class="stat-card stat-card-success"><strong>{stats.publicJobs}</strong><span>Públicas no site</span></article>
-    <article class="stat-card stat-card-warn"><strong>{stats.hiddenActiveJobs}</strong><span>Ativas não públicas</span></article>
-    <article class="stat-card"><strong>{stats.demoJobs}</strong><span>Demo</span></article>
-    <article class="stat-card stat-card-warn"><strong>{stats.expiredJobs}</strong><span>Expiradas / inativas</span></article>
+    <article class="stat-card"><strong>{stats.publicJobs}</strong><span>Vagas no site</span></article>
+    <article class="stat-card"><strong>{stats.activeJobs}</strong><span>Vagas ativas</span></article>
     <article class="stat-card"><strong>{stats.posts}</strong><span>Posts ativos</span></article>
     <article class="stat-card"><strong>{stats.companies}</strong><span>Empresas</span></article>
     <article class="stat-card"><strong>{stats.cities}</strong><span>Cidades</span></article>
+    <article class="stat-card"><strong>{stats.hiddenActiveJobs}</strong><span>Ativas só no painel</span></article>
   </div>
 
   <AdminJobsNotice
@@ -36,19 +38,9 @@ const stats = await dashboardStats();
     hiddenActiveJobs={stats.hiddenActiveJobs}
   />
 
-  <div class="admin-actions-bar admin-actions-bar-wrap">
-    <a href="/admin/vagas/nova" class="btn">Nova vaga</a>
-    <a href="/admin/posts/novo" class="btn btn-outline">Novo post</a>
-    <a href="/admin/importar-vagas" class="btn btn-outline">Importar vagas</a>
-    <a href="/admin/configuracoes" class="btn btn-outline">Configurações de SEO</a>
-    <a href="/sitemap.xml" class="btn btn-outline btn-sm" target="_blank" rel="noopener">Ver sitemap</a>
-    <a href="/robots.txt" class="btn btn-outline btn-sm" target="_blank" rel="noopener">Ver robots.txt</a>
-    <a href="/" class="btn btn-outline btn-sm" target="_blank" rel="noopener">Ver site</a>
-  </div>
-
   <div class="admin-dashboard-grid">
     <section class="admin-card">
-      <h2>Últimas vagas cadastradas</h2>
+      <h2>Vagas recentes</h2>
       {stats.recentJobs.length === 0 ? (
         <p class="admin-empty">Nenhuma vaga ainda.</p>
       ) : (
@@ -67,11 +59,11 @@ const stats = await dashboardStats();
           })}
         </ul>
       )}
-      <a class="admin-card-link" href="/admin/vagas">Gerenciar todas →</a>
+      <a class="admin-card-link" href="/admin/vagas">Ver todas as vagas</a>
     </section>
 
     <section class="admin-card">
-      <h2>Últimos posts publicados</h2>
+      <h2>Posts recentes</h2>
       {stats.recentPosts.length === 0 ? (
         <p class="admin-empty">Nenhum post ainda.</p>
       ) : (
@@ -79,12 +71,12 @@ const stats = await dashboardStats();
           {stats.recentPosts.map((post) => (
             <li>
               <a href={`/admin/posts/editar/${post.id}`}>{post.title}</a>
-              <span>{post.category.name} · {formatDateBr(post.publishedAt)}</span>
+              <span>{formatDateBr(post.publishedAt)}</span>
             </li>
           ))}
         </ul>
       )}
-      <a class="admin-card-link" href="/admin/posts">Gerenciar todos →</a>
+      <a class="admin-card-link" href="/admin/posts">Ver todos os posts</a>
     </section>
   </div>
 </AdminLayout>
