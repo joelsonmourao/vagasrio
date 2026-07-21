@@ -1,11 +1,11 @@
 /** Conteúdo das páginas institucionais (SEO, AdSense, confiança). */
 export const institutionalPages: Record<string, { title: string; description: string; html: string }> = {
   sobre: {
-    title: 'Sobre o Vagas RJ',
+    title: 'Sobre o Vagas RJ RIO',
     description:
-      'Conheça o Vagas RJ: portal regional de divulgação de vagas de emprego no Rio de Janeiro (RJ), com busca por cidade, empresa e categoria.',
+      'Conheça o Vagas RJ RIO: portal regional de divulgação de vagas de emprego no Rio de Janeiro (RJ), com busca por cidade, empresa e categoria.',
     html: `
-<p>O <strong>Vagas RJ</strong> é um portal regional independente de <strong>divulgação de oportunidades de emprego</strong>, com foco exclusivo no estado do Rio de Janeiro (RJ). Não somos empresa contratante: reunimos anúncios publicados por terceiros para facilitar a busca de quem procura trabalho na região.</p>
+<p>O <strong>Vagas RJ RIO</strong> é um portal regional independente de <strong>divulgação de oportunidades de emprego</strong>, com foco exclusivo no estado do Rio de Janeiro (RJ). Não somos empresa contratante: reunimos anúncios publicados por terceiros para facilitar a busca de quem procura trabalho na região.</p>
 <h2>O que fazemos</h2>
 <ul>
   <li>Organizamos vagas por cidade, empresa, categoria e palavra-chave.</li>
@@ -25,7 +25,7 @@ export const institutionalPages: Record<string, { title: string; description: st
   contato: {
     title: 'Contato',
     description:
-      'Entre em contato com o Vagas RJ para dúvidas, correções de vagas, sugestões e questões sobre privacidade ou publicidade.',
+      'Entre em contato com o Vagas RJ RIO para dúvidas, correções de vagas, sugestões e questões sobre privacidade ou publicidade.',
     html: `
 <p>Use os canais abaixo para falar conosco. Respondemos solicitações relacionadas ao portal, conteúdo publicado e políticas do site.</p>
 <h2>E-mail</h2>
@@ -43,11 +43,11 @@ export const institutionalPages: Record<string, { title: string; description: st
   'politica-de-privacidade': {
     title: 'Política de Privacidade',
     description:
-      'Política de privacidade do Vagas RJ: dados coletados, cookies, Google Analytics, Google AdSense e seus direitos.',
+      'Política de privacidade do Vagas RJ RIO: dados coletados, cookies, Google Analytics, Google AdSense e seus direitos.',
     html: `
-<p>Esta Política de Privacidade descreve como o <strong>Vagas RJ</strong> trata informações quando você visita nosso site. Ao continuar navegando, você declara ter lido este documento.</p>
+<p>Esta Política de Privacidade descreve como o <strong>Vagas RJ RIO</strong> trata informações quando você visita nosso site. Ao continuar navegando, você declara ter lido este documento.</p>
 <h2>Quem somos</h2>
-<p>O Vagas RJ é um portal de divulgação de vagas de emprego no Rio de Janeiro (RJ). Para contato: <a href="mailto:contato@vagasrj.rio.br">contato@vagasrj.rio.br</a> ou <a href="/contato">/contato</a>.</p>
+<p>O Vagas RJ RIO é um portal de divulgação de vagas de emprego no Rio de Janeiro (RJ). Para contato: <a href="mailto:contato@vagasrj.rio.br">contato@vagasrj.rio.br</a> ou <a href="/contato">/contato</a>.</p>
 <h2>Dados que podemos tratar</h2>
 <ul>
   <li><strong>Dados de navegação</strong> (endereço IP, tipo de navegador, páginas visitadas, data/hora), via cookies e logs do servidor.</li>
@@ -72,9 +72,9 @@ export const institutionalPages: Record<string, { title: string; description: st
   'politica-de-cookies': {
     title: 'Política de Cookies',
     description:
-      'Saiba quais cookies o Vagas RJ utiliza: essenciais, Google Analytics, Google AdSense e como gerenciar preferências.',
+      'Saiba quais cookies o Vagas RJ RIO utiliza: essenciais, Google Analytics, Google AdSense e como gerenciar preferências.',
     html: `
-<p>Esta página explica o uso de <strong>cookies</strong> e tecnologias semelhantes no site Vagas RJ.</p>
+<p>Esta página explica o uso de <strong>cookies</strong> e tecnologias semelhantes no site Vagas RJ RIO.</p>
 <h2>O que são cookies</h2>
 <p>Cookies são pequenos arquivos armazenados no seu navegador que permitem lembrar preferências ou medir o uso do site.</p>
 <h2>Tipos de cookies que podemos usar</h2>
@@ -97,11 +97,11 @@ export const institutionalPages: Record<string, { title: string; description: st
   'termos-de-uso': {
     title: 'Termos de Uso',
     description:
-      'Termos de uso do Vagas RJ: divulgação de vagas, limitações de responsabilidade, links externos e regras para candidatos.',
+      'Termos de uso do Vagas RJ RIO: divulgação de vagas, limitações de responsabilidade, links externos e regras para candidatos.',
     html: `
-<p>Ao acessar o <strong>Vagas RJ</strong>, você concorda com estes Termos de Uso. Se não concordar, não utilize o site.</p>
+<p>Ao acessar o <strong>Vagas RJ RIO</strong>, você concorda com estes Termos de Uso. Se não concordar, não utilize o site.</p>
 <h2>Natureza do serviço</h2>
-<p>O Vagas RJ <strong>apenas divulga oportunidades</strong> de emprego no estado do Rio de Janeiro. Não somos empregador, agência de recrutamento nem garantimos contratação.</p>
+<p>O Vagas RJ RIO <strong>apenas divulga oportunidades</strong> de emprego no estado do Rio de Janeiro. Não somos empregador, agência de recrutamento nem garantimos contratação.</p>
 <h2>Candidatura</h2>
 <ul>
   <li>A candidatura é feita no site ou canal indicado pela <strong>empresa anunciante</strong>, não neste portal.</li>
@@ -109,13 +109,13 @@ export const institutionalPages: Record<string, { title: string; description: st
   <li>Desconfie de pedidos de dinheiro, senhas bancárias ou documentos em canais não oficiais.</li>
 </ul>
 <h2>Responsabilidade das empresas</h2>
-<p>Cada empresa é responsável pelo conteúdo, veracidade e legalidade das vagas que publica ou autoriza a publicar. O Vagas RJ pode remover anúncios suspeitos, fraudulentos ou que violem estes termos.</p>
+<p>Cada empresa é responsável pelo conteúdo, veracidade e legalidade das vagas que publica ou autoriza a publicar. O Vagas RJ RIO pode remover anúncios suspeitos, fraudulentos ou que violem estes termos.</p>
 <h2>Conteúdo do blog</h2>
 <p>Artigos têm caráter informativo e não constituem aconselhamento jurídico ou garantia de emprego.</p>
 <h2>Links externos</h2>
 <p>Links para sites de terceiros (empresas, candidatura) não implicam endosso. Acesse por sua conta e risco.</p>
 <h2>Propriedade intelectual</h2>
-<p>Textos, marca e layout do portal pertencem ao Vagas RJ ou licenciadores. É proibida cópia automatizada em massa sem autorização.</p>
+<p>Textos, marca e layout do portal pertencem ao Vagas RJ RIO ou licenciadores. É proibida cópia automatizada em massa sem autorização.</p>
 <h2>Limitação de responsabilidade</h2>
 <p>O site é oferecido &quot;como está&quot;. Não nos responsabilizamos por danos indiretos decorrentes do uso das informações publicadas ou de sites de terceiros.</p>
 <h2>Alterações</h2>

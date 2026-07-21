@@ -7,8 +7,9 @@ const logoSrc = settings[SETTING_KEYS.logoPath] || '/assets/img/logo-vagas-rj.sv
 const path = Astro.url.pathname;
 const nav = [
   { href: '/vagas', label: 'Vagas' },
+  { href: '/cidades', label: 'Cidades' },
   { href: '/empresas', label: 'Empresas' },
-  { href: '/blog', label: 'Blog' },
+  { href: '/blog', label: 'Dicas' },
   { href: '/sobre', label: 'Sobre' },
 ];
 ---
@@ -30,7 +31,7 @@ const nav = [
           {item.label}
         </a>
       ))}
-      <a class="btn btn-sm btn-nav" href="/vagas">Vagas</a>
+      <a class="btn btn-sm btn-nav" href="/vagas">Buscar emprego</a>
     </nav>
   </div>
 </header>

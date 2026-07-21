@@ -2,8 +2,8 @@ import type { SiteSettingsMap } from './site-settings';
 import { SETTING_KEYS } from './site-settings';
 
 export const siteConfig = {
-  name: process.env.SITE_NAME || 'Vagas RJ',
-  subtitle: 'Empregos no Rio de Janeiro',
+  name: process.env.SITE_NAME || 'Vagas RJ RIO',
+  subtitle: 'Vagas de emprego no Rio de Janeiro',
   mainUf: 'RJ',
   mainStateName: 'Rio de Janeiro',
   contactEmail: process.env.SITE_CONTACT_EMAIL || 'contato@vagasrj.rio.br',

@@ -35,16 +35,22 @@ const hasQueryString = Astro.url.searchParams.toString().length > 0;
 const queryForPager = Object.fromEntries(
   Object.entries(filterQuery).filter(([, v]) => v !== ''),
 );
+const title = `Vagas de Emprego no Rio de Janeiro (RJ) | ${siteConfig.name}`;
+const description = `Confira vagas de emprego no RJ. Filtre por cargo, cidade e empresa no ${siteConfig.name}. Atualizado para candidatos no Rio de Janeiro.`;
 ---
 <BaseLayout
-  title={`Vagas no Rio de Janeiro RJ - ${siteConfig.name}`}
-  description="Listagem de vagas de emprego no Rio de Janeiro com filtros por cidade, empresa e categoria."
+  title={title}
+  description={description}
   canonical={baseUrl('/vagas')}
   robots={hasQueryString ? 'noindex,follow' : undefined}
 >
   <div class="page-stack page-stack-market">
     <section class="market-top">
-      <h1 class="market-title">Vagas</h1>
+      <h1 class="market-title">Vagas de emprego no RJ</h1>
+      <p class="market-lead">
+        Encontre oportunidades de trabalho no Rio de Janeiro. Use os filtros ou
+        <a href="/cidades">navegue por cidade</a>.
+      </p>
       <JobFilters {...filterQuery} />
     </section>
 
@@ -60,8 +66,8 @@ const queryForPager = Object.fromEntries(
       <EmptyState
         title="Nenhuma vaga encontrada"
         message={hasFilters
-          ? 'Não encontramos vagas com esses filtros. Tente outra cidade (ex.: duque) ou palavra-chave.'
-          : 'Ainda não há vagas públicas no site. Oportunidades de demonstração ou com link inválido ficam apenas no painel administrativo.'}
+          ? 'Não encontramos empregos com esses filtros. Limpe a busca ou escolha outra cidade.'
+          : 'Ainda não há vagas públicas no site.'}
         clearHref={hasFilters ? '/vagas' : undefined}
       />
     )}

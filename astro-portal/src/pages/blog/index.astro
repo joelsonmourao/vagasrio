@@ -3,27 +3,29 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import BlogCard from '../../components/BlogCard.astro';
 import Pagination from '../../components/Pagination.astro';
 import ListingMeta from '../../components/ListingMeta.astro';
+import EmptyState from '../../components/EmptyState.astro';
 import { articleList } from '../../lib/portal';
 import { baseUrl, siteConfig } from '../../lib/config';
 
 const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
 const hasQueryString = Astro.url.searchParams.toString().length > 0;
 const data = await articleList({ page });
+const title = `Dicas de Emprego e Carreira no RJ | ${siteConfig.name}`;
+const description = `Artigos sobre currículo, entrevista, segurança e primeiro emprego no Rio de Janeiro. Conteúdo do ${siteConfig.name}.`;
 ---
 <BaseLayout
-  title={`Blog de carreira no Rio de Janeiro - ${siteConfig.name}`}
-  description="Dicas de currículo, entrevista e mercado de trabalho no RJ."
+  title={title}
+  description={description}
   canonical={baseUrl('/blog')}
   robots={hasQueryString ? 'noindex,follow' : undefined}
 >
-  <div class="page-stack">
-    <header class="page-hero page-hero-compact">
-      <div class="page-hero-inner">
-        <p class="section-kicker" style="color:#93c5fd;margin:0 0 8px">Carreira · RJ</p>
-        <h1>Blog {siteConfig.name}</h1>
-        <p>Guias práticos sobre currículo, entrevistas, primeiro emprego e mercado de trabalho no Rio de Janeiro.</p>
-      </div>
-    </header>
+  <div class="page-stack page-stack-market">
+    <section class="market-top">
+      <h1 class="market-title">Dicas de emprego</h1>
+      <p class="market-lead">
+        Guias práticos para quem busca vaga no Rio de Janeiro: currículo, entrevista, direitos e segurança.
+      </p>
+    </section>
 
     {data.total > 0 && (
       <ListingMeta page={data.page} totalPages={data.totalPages} total={data.total} noun="artigos" countMode="published" />
@@ -34,10 +36,7 @@ const data = await articleList({ page });
         {data.articles.map((article) => <BlogCard article={article} />)}
       </div>
     ) : (
-      <div class="empty-state empty-state-large">
-        <h3>Em breve</h3>
-        <p>Novos artigos serão publicados em breve.</p>
-      </div>
+      <EmptyState title="Nenhum artigo publicado" message="Em breve publicaremos dicas de carreira." />
     )}
 
     <Pagination page={data.page} totalPages={data.totalPages} basePath="/blog" />

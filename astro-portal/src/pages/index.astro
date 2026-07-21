@@ -5,8 +5,13 @@ import BlogCard from '../components/BlogCard.astro';
 import JobFilters from '../components/JobFilters.astro';
 import { homeData } from '../lib/portal';
 import { baseUrl, siteConfig } from '../lib/config';
-import { getSiteSettingsSafe, SETTING_KEYS } from '../lib/site-settings';
-import { buildPublisherOrganizationSchema, buildWebSiteSchema, mergeJsonLd } from '../lib/seo';
+import { getSiteSettingsSafe } from '../lib/site-settings';
+import {
+  buildHomeSeoDefaults,
+  buildPublisherOrganizationSchema,
+  buildWebSiteSchema,
+  mergeJsonLd,
+} from '../lib/seo';
 
 let data;
 try {
@@ -16,45 +21,55 @@ try {
 }
 
 const settings = await getSiteSettingsSafe();
-const homeTitle = settings[SETTING_KEYS.homeSeoTitle] || `${siteConfig.name} - Empregos no Rio de Janeiro`;
-const homeDesc =
-  settings[SETTING_KEYS.homeSeoDescription] ||
-  'Encontre vagas de emprego no Rio de Janeiro (RJ) por cidade, empresa e categoria em todo o RJ.';
+const homeSeo = buildHomeSeoDefaults(settings);
 const jsonLd = mergeJsonLd(
   buildWebSiteSchema(settings),
   buildPublisherOrganizationSchema(settings),
 );
 ---
-<BaseLayout title={homeTitle} description={homeDesc} canonical={baseUrl('/', settings)} jsonLd={jsonLd}>
+<BaseLayout title={homeSeo.title} description={homeSeo.description} canonical={baseUrl('/', settings)} jsonLd={jsonLd}>
   <section class="market-top">
-    <p class="market-kicker">{siteConfig.name} · Rio de Janeiro</p>
+    <p class="market-kicker">{siteConfig.name} · Empregos no Rio de Janeiro</p>
     <h1 class="market-title">Vagas de emprego no RJ</h1>
+    <p class="market-lead">
+      Busque vagas de emprego por cargo e cidade. Grátis para candidatos em todo o estado do Rio de Janeiro.
+    </p>
     <JobFilters compact />
   </section>
 
   <section class="home-section home-section-jobs">
     <div class="section-head section-head-market">
-      <h2>Vagas</h2>
-      <a class="section-link" href="/vagas">Ver todas</a>
+      <h2>Vagas em destaque</h2>
+      <a class="section-link" href="/vagas">Ver todas as vagas</a>
     </div>
     <div class="job-grid job-grid-market">
       {data.featuredJobs.map((job) => <JobCard job={job} />)}
     </div>
     {data.featuredJobs.length === 0 && (
       <p class="section-text">
-        {data.stats.activeJobs === 0
-          ? 'Ainda não há vagas públicas ativas. '
-          : ''}
-        Novas oportunidades serão publicadas em breve. <a href="/vagas">Explorar vagas</a>.
+        Ainda não há vagas públicas ativas. <a href="/vagas">Explorar vagas</a> ou
+        <a href="/cidades">ver cidades</a>.
       </p>
     )}
+  </section>
+
+  <section class="home-section">
+    <div class="section-head section-head-market">
+      <h2>Empregos por cidade</h2>
+      <a class="section-link" href="/cidades">Todas as cidades</a>
+    </div>
+    <div class="city-chips">
+      {siteConfig.allowedCities.slice(0, 8).map((name) => (
+        <a class="city-chip" href={`/vagas?city=${encodeURIComponent(name)}`}>{name}</a>
+      ))}
+    </div>
   </section>
 
   {data.recentPosts.length > 0 && (
     <section class="home-section">
       <div class="section-head section-head-market">
-        <h2>Blog</h2>
-        <a class="section-link" href="/blog">Todos os artigos</a>
+        <h2>Dicas de emprego e carreira</h2>
+        <a class="section-link" href="/blog">Ver blog</a>
       </div>
       <div class="entity-grid blog-grid blog-grid-compact">
         {data.recentPosts.map((post) => <BlogCard article={post} />)}

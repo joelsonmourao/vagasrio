@@ -1,0 +1,68 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { citiesWithStats } from '../lib/portal';
+import { baseUrl, siteConfig } from '../lib/config';
+import { getSiteSettingsSafe } from '../lib/site-settings';
+import { buildBreadcrumbSchema, mergeJsonLd } from '../lib/seo';
+
+const settings = await getSiteSettingsSafe();
+let cities = [];
+try {
+  cities = await citiesWithStats();
+} catch {
+  cities = [];
+}
+
+const rjCities = cities.filter((c) => c.state === siteConfig.mainUf || !c.state);
+const withJobs = rjCities.filter((c) => c.jobCount > 0);
+const title = `Vagas de Emprego por Cidade no RJ | ${siteConfig.name}`;
+const description = `Encontre vagas de emprego por cidade no Rio de Janeiro: ${siteConfig.allowedCities.slice(0, 6).join(', ')} e mais. Portal ${siteConfig.name}.`;
+const jsonLd = mergeJsonLd(
+  buildBreadcrumbSchema(
+    [
+      { name: 'Início', path: '/' },
+      { name: 'Cidades', path: '/cidades' },
+    ],
+    settings,
+  ),
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Cidades com vagas no Rio de Janeiro',
+    itemListElement: rjCities.slice(0, 50).map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: `Vagas em ${c.name}`,
+      url: baseUrl(`/vagas/cidade/${c.slug}`, settings),
+    })),
+  },
+);
+---
+<BaseLayout title={title} description={description} canonical={baseUrl('/cidades', settings)} jsonLd={jsonLd}>
+  <div class="page-stack page-stack-market">
+    <section class="market-top">
+      <h1 class="market-title">Vagas por cidade no RJ</h1>
+      <p class="market-lead">
+        Escolha a cidade onde você quer trabalhar. Há {withJobs.length} cidade{withJobs.length === 1 ? '' : 's'} com
+        vagas públicas no momento.
+      </p>
+    </section>
+
+    {rjCities.length === 0 ? (
+      <p class="section-text">Nenhuma cidade cadastrada ainda. <a href="/vagas">Ver todas as vagas</a>.</p>
+    ) : (
+      <div class="city-grid city-grid-market">
+        {rjCities.map((c) => (
+          <a class="city-card" href={`/vagas/cidade/${c.slug}`}>
+            <strong>{c.name}</strong>
+            <span>
+              {c.jobCount > 0
+                ? `${c.jobCount} vaga${c.jobCount === 1 ? '' : 's'} de emprego`
+                : 'Sem vagas no momento'}
+            </span>
+          </a>
+        ))}
+      </div>
+    )}
+  </div>
+</BaseLayout>

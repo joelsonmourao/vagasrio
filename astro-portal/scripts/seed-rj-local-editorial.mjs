@@ -84,12 +84,12 @@ const PILOT = 45;
 const scheduleSlots = buildScheduleSlots(Math.max(0, catalog.length - PILOT));
 
 function seoTitle(title) {
-  const base = `${title} | Vagas RJ`;
-  return base.length <= 60 ? base : `${title.slice(0, 50).trim()} | Vagas RJ`.slice(0, 60);
+  const base = `${title} | Dicas de Emprego | Vagas RJ RIO`;
+  return base.length <= 60 ? base : `${title.slice(0, 40).trim()} | Vagas RJ RIO`.slice(0, 60);
 }
 
 function seoDescription(item) {
-  const raw = `Guia prático: ${item.title}. ${item.lead}`.replace(/\s+/g, " ").trim();
+  const raw = `${item.lead} Portal Vagas RJ RIO — emprego no Rio de Janeiro.`.replace(/\s+/g, " ").trim();
   return raw.length <= 160 ? raw : `${raw.slice(0, 157)}...`;
 }
 

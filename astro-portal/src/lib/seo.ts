@@ -17,16 +17,24 @@ type JobSeoInput = {
   state: string;
 };
 
+function brandName(settings?: SiteSettingsMap): string {
+  return settings?.[SETTING_KEYS.siteName]?.trim() || siteConfig.name;
+}
+
+/** Padrão dos grandes portais: Cargo - Cidade/UF | Marca */
 export function buildJobPageTitle(job: JobSeoInput, settings?: SiteSettingsMap): string {
   if (job.seoTitle?.trim()) return job.seoTitle.trim();
-  const suffix = settings?.[SETTING_KEYS.jobMetaSuffix] || siteConfig.name;
-  return `${job.title} - ${job.city.name}/${job.state} | ${suffix}`;
+  return `${job.title} em ${job.city.name}/${job.state} | ${brandName(settings)}`;
 }
 
 export function buildJobPageDescription(job: JobSeoInput, settings?: SiteSettingsMap): string {
   if (job.seoDescription?.trim()) return job.seoDescription.trim();
-  const plain = excerpt(job.description, 155);
-  return plain || `Vaga de emprego em ${job.city.name}/${job.state}. Confira detalhes e candidate-se pelo Vagas RJ.`;
+  const plain = excerpt(job.description, 120);
+  const brand = brandName(settings);
+  return (
+    plain ||
+    `Vaga de emprego: ${job.title} em ${job.city.name}/${job.state}. Confira requisitos e candidate-se pelo ${brand}.`
+  );
 }
 
 export function jobCanonical(job: JobSeoInput, settings?: SiteSettingsMap): string {
@@ -43,11 +51,17 @@ export function jobRobotsMeta(
   return 'index,follow';
 }
 
+/**
+ * Schema para Discover/News-ready: Article + BlogPosting.
+ * Google Discover valoriza imagem grande, data clara e conteúdo original.
+ * Google News exige inscrição no Publisher Center — o schema ajuda, mas não garante inclusão.
+ */
 export function buildArticleSchema(
   article: {
     title: string;
     slug: string;
     excerpt: string;
+    content?: string;
     publishedAt: Date;
     updatedAt: Date;
     featuredImage?: string | null;
@@ -55,37 +69,61 @@ export function buildArticleSchema(
   },
   settings?: SiteSettingsMap,
 ) {
-  const publisherName = settings?.[SETTING_KEYS.siteName] || siteConfig.name;
+  const publisherName = brandName(settings);
   const logo = settings?.[SETTING_KEYS.logoPath] || '/assets/img/logo-vagas-rj.svg';
-  const schema: Record<string, unknown> = {
+  const ogDefault = settings?.[SETTING_KEYS.ogImage] || '/assets/img/og-vagas-rj.png';
+  const pageUrl = baseUrl(`/blog/${article.slug}`, settings);
+  const logoUrl = logo.startsWith('http') ? logo : baseUrl(logo, settings);
+  let imageUrl = ogDefault.startsWith('http') ? ogDefault : baseUrl(ogDefault, settings);
+  if (article.featuredImage?.trim()) {
+    const img = article.featuredImage.trim();
+    imageUrl = img.startsWith('http') ? img : baseUrl(img, settings);
+  }
+
+  const imageObject = {
+    '@type': 'ImageObject',
+    url: imageUrl,
+    width: 1200,
+    height: 675,
+  };
+
+  return {
     '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
-    headline: article.title,
+    '@type': ['BlogPosting', 'Article'],
+    headline: article.title.slice(0, 110),
+    alternativeHeadline: article.excerpt.slice(0, 110),
     description: article.excerpt,
     datePublished: formatSchemaDateTime(article.publishedAt),
     dateModified: formatSchemaDateTime(article.updatedAt),
-    author: { '@type': 'Organization', name: publisherName },
+    author: {
+      '@type': 'Person',
+      name: `Redação ${publisherName}`,
+      url: baseUrl('/sobre', settings),
+    },
     publisher: {
       '@type': 'Organization',
       name: publisherName,
       logo: {
         '@type': 'ImageObject',
-        url: logo.startsWith('http') ? logo : baseUrl(logo, settings),
+        url: logoUrl,
+        width: 600,
+        height: 60,
       },
     },
-    mainEntityOfPage: baseUrl(`/blog/${article.slug}`, settings),
-    url: baseUrl(`/blog/${article.slug}`, settings),
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': pageUrl,
+    },
+    url: pageUrl,
+    image: [imageObject],
     articleSection: article.category.name,
     inLanguage: 'pt-BR',
+    isAccessibleForFree: true,
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['.article-header h1', '.article-body p'],
+    },
   };
-  const ogDefault = settings?.[SETTING_KEYS.ogImage] || '/assets/img/og-vagas-rj.png';
-  if (article.featuredImage?.trim()) {
-    const img = article.featuredImage.trim();
-    schema.image = img.startsWith('http') ? img : baseUrl(img, settings);
-  } else {
-    schema.image = ogDefault.startsWith('http') ? ogDefault : baseUrl(ogDefault, settings);
-  }
-  return schema;
 }
 
 export function buildBreadcrumbSchema(
@@ -117,13 +155,15 @@ export function mergeJsonLd(
 }
 
 export function buildWebSiteSchema(settings?: SiteSettingsMap) {
-  const name = settings?.[SETTING_KEYS.siteName] || siteConfig.name;
+  const name = brandName(settings);
   const url = resolvePublicBaseUrl(settings);
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name,
+    alternateName: ['Vagas RJ', 'Vagas Rio', 'Empregos RJ'],
     url,
+    description: `Portal de vagas de emprego no Rio de Janeiro (RJ). Busque por cidade, empresa e categoria no ${name}.`,
     inLanguage: 'pt-BR',
     potentialAction: {
       '@type': 'SearchAction',
@@ -137,7 +177,7 @@ export function buildWebSiteSchema(settings?: SiteSettingsMap) {
 }
 
 export function buildPublisherOrganizationSchema(settings?: SiteSettingsMap) {
-  const name = settings?.[SETTING_KEYS.siteName] || siteConfig.name;
+  const name = brandName(settings);
   const url = resolvePublicBaseUrl(settings);
   const logo = settings?.[SETTING_KEYS.logoPath] || '/assets/img/logo-vagas-rj.svg';
   const ogImage = settings?.[SETTING_KEYS.ogImage] || '/assets/img/og-vagas-rj.png';
@@ -145,9 +185,14 @@ export function buildPublisherOrganizationSchema(settings?: SiteSettingsMap) {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name,
+    alternateName: 'Vagas RJ',
     url,
     logo: logo.startsWith('http') ? logo : baseUrl(logo, settings),
     image: ogImage.startsWith('http') ? ogImage : baseUrl(ogImage, settings),
+    areaServed: {
+      '@type': 'AdministrativeArea',
+      name: 'Rio de Janeiro',
+    },
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer support',
@@ -169,8 +214,7 @@ type BlogSeoInput = {
 
 export function buildBlogPageTitle(post: BlogSeoInput, settings?: SiteSettingsMap): string {
   if (post.seoTitle?.trim()) return post.seoTitle.trim();
-  const suffix = settings?.[SETTING_KEYS.siteName] || siteConfig.name;
-  return `${post.title} | ${suffix}`;
+  return `${post.title} | Dicas de Emprego | ${brandName(settings)}`;
 }
 
 export function buildBlogPageDescription(post: BlogSeoInput): string {
@@ -185,17 +229,31 @@ export function blogCanonical(post: BlogSeoInput, settings?: SiteSettingsMap): s
 
 export function blogRobotsMeta(post: BlogSeoInput, indexingOn: boolean): string {
   if (!indexingOn || post.isIndexable === false) return 'noindex,follow';
-  return 'index,follow';
+  return 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
 }
 
 export function buildCompanyPageTitle(companyName: string, settings?: SiteSettingsMap): string {
-  const tpl = settings?.[SETTING_KEYS.companyMetaTemplate] || 'Vagas na {empresa} - Rio de Janeiro | Vagas RJ';
+  const tpl =
+    settings?.[SETTING_KEYS.companyMetaTemplate] ||
+    `Vagas na {empresa} no Rio de Janeiro | ${brandName(settings)}`;
   return tpl.replace(/\{empresa\}/gi, companyName);
 }
 
 export function buildCityPageTitle(cityName: string, settings?: SiteSettingsMap): string {
-  const tpl = settings?.[SETTING_KEYS.cityMetaTemplate] || 'Vagas em {cidade} RJ - Vagas RJ';
+  const tpl =
+    settings?.[SETTING_KEYS.cityMetaTemplate] ||
+    `Vagas em {cidade} RJ | Empregos | ${brandName(settings)}`;
   return tpl.replace(/\{cidade\}/gi, cityName);
+}
+
+export function buildHomeSeoDefaults(settings?: SiteSettingsMap): { title: string; description: string } {
+  const brand = brandName(settings);
+  return {
+    title: settings?.[SETTING_KEYS.homeSeoTitle]?.trim() || `Vagas de Emprego no Rio de Janeiro | ${brand}`,
+    description:
+      settings?.[SETTING_KEYS.homeSeoDescription]?.trim() ||
+      `Encontre vagas de emprego no Rio de Janeiro. Busque por cidade, empresa e categoria no ${brand}. Grátis para candidatos.`,
+  };
 }
 
 export function buildOrganizationSchema(

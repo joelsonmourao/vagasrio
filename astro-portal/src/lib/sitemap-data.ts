@@ -16,6 +16,7 @@ import {
 export const SITEMAP_PAGE_PATHS = [
   '/',
   '/vagas',
+  '/cidades',
   '/blog',
   '/empresas',
   '/sobre',

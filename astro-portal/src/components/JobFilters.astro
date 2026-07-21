@@ -1,4 +1,6 @@
 ---
+import { siteConfig } from '../lib/config';
+
 interface Props {
   q?: string;
   city?: string;
@@ -16,64 +18,61 @@ const {
   compact = false,
 } = Astro.props;
 
-const activeCount = [city, company, category].filter(Boolean).length;
+const hasAny = Boolean(q || city || company || category);
+const activeFilters = [city, company, category].filter(Boolean).length;
 ---
-<section class:list={['market-filters', compact && 'market-filters-compact']} aria-label="Busca e filtros de vagas">
+<section class:list={['market-filters', compact && 'market-filters-compact']} aria-label="Busca de vagas de emprego">
   <form class="market-filters-form" method="get" action={action}>
     <div class="market-search">
       <input
         type="search"
         name="q"
         value={q}
-        placeholder="Busque por nome da vaga"
+        placeholder="Cargo, emprego ou palavra-chave"
         autocomplete="off"
-        aria-label="Busque por nome da vaga"
+        aria-label="Cargo, emprego ou palavra-chave"
       />
-      <button class="market-search-btn" type="submit" aria-label="Buscar vagas">
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-          <path fill="currentColor" d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0C7 14 5 12 5 9.5S7 5 9.5 5 14 7 14 9.5 12 14 9.5 14z"/>
-        </svg>
+      <button class="market-search-btn" type="submit">
+        Buscar
       </button>
     </div>
 
-    <div class="market-filter-row">
-      <span class:list={['market-pill', 'market-pill-primary', activeCount > 0 && 'is-active']}>
-        Filtrar{activeCount > 0 ? ` (${activeCount})` : ''}
-      </span>
-
-      <label class:list={['market-pill', 'market-pill-field', city && 'is-active']}>
-        <span class="sr-only">Local de trabalho</span>
-        <input type="text" name="city" value={city} placeholder="Local de trabalho" list="city-suggestions" autocomplete="off" />
+    <div class="market-filter-grid">
+      <label class="market-field">
+        <span class="market-field-label">Cidade (local de trabalho)</span>
+        <input
+          type="text"
+          name="city"
+          value={city}
+          placeholder="Ex.: Niterói, Duque de Caxias"
+          list="city-suggestions"
+          autocomplete="off"
+        />
       </label>
 
-      <label class:list={['market-pill', 'market-pill-field', company && 'is-active']}>
-        <span class="sr-only">Empresa</span>
-        <input type="text" name="company" value={company} placeholder="Empresa" autocomplete="off" />
+      <label class="market-field">
+        <span class="market-field-label">Empresa</span>
+        <input type="text" name="company" value={company} placeholder="Nome da empresa" autocomplete="off" />
       </label>
 
-      <label class:list={['market-pill', 'market-pill-field', category && 'is-active']}>
-        <span class="sr-only">Categoria</span>
-        <input type="text" name="category" value={category} placeholder="Área / categoria" autocomplete="off" />
+      <label class="market-field">
+        <span class="market-field-label">Área / categoria</span>
+        <input type="text" name="category" value={category} placeholder="Ex.: Administrativo, Logística" autocomplete="off" />
       </label>
+    </div>
 
-      <button class="market-pill market-pill-submit" type="submit">Aplicar</button>
-
-      {(q || city || company || category) && (
-        <a class="market-pill market-pill-clear" href={action}>Limpar</a>
+    <div class="market-filter-actions">
+      <button class="btn market-btn-apply" type="submit">
+        {activeFilters > 0 ? `Buscar com filtros (${activeFilters})` : 'Buscar vagas'}
+      </button>
+      {hasAny && (
+        <a class="market-btn-clear" href={action}>Limpar todos os filtros</a>
       )}
+      <a class="market-btn-cities" href="/cidades">Ver cidades do RJ</a>
     </div>
   </form>
 
   <datalist id="city-suggestions">
-    <option value="Rio de Janeiro"></option>
-    <option value="Niterói"></option>
-    <option value="Duque de Caxias"></option>
-    <option value="São Gonçalo"></option>
-    <option value="Nova Iguaçu"></option>
-    <option value="Macaé"></option>
-    <option value="Cabo Frio"></option>
-    <option value="Petrópolis"></option>
-    <option value="Volta Redonda"></option>
-    <option value="Campos dos Goytacazes"></option>
+    {siteConfig.allowedCities.map((c) => <option value={c} />)}
   </datalist>
 </section>

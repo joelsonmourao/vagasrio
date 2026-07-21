@@ -16,6 +16,11 @@ interface Props {
   canonical?: string;
   robots?: string;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  ogType?: 'website' | 'article';
+  ogImage?: string;
+  publishedTime?: string;
+  modifiedTime?: string;
+  articleSection?: string;
 }
 
 const props = Astro.props;
@@ -36,13 +41,17 @@ const canonicalAbsolute = props.canonical
       robots={robots}
       jsonLd={props.jsonLd}
       siteName={settings[SETTING_KEYS.siteName]}
-      ogImage={settings[SETTING_KEYS.ogImage]}
+      ogImage={props.ogImage || settings[SETTING_KEYS.ogImage]}
       faviconPath={settings[SETTING_KEYS.faviconPath]}
       gscVerification={settings[SETTING_KEYS.gscVerification]}
       gaCode={settings[SETTING_KEYS.gaCode]}
       adsenseClient={settings[SETTING_KEYS.adsenseClient]}
       adsenseEnabled={isAdsenseEnabled(settings)}
       adsenseScript={settings[SETTING_KEYS.adsenseScript]}
+      ogType={props.ogType || 'website'}
+      publishedTime={props.publishedTime}
+      modifiedTime={props.modifiedTime}
+      articleSection={props.articleSection}
     />
   </head>
   <body>

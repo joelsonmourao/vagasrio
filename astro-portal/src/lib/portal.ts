@@ -243,10 +243,14 @@ export async function companyBySlug(slug: string) {
 }
 
 export async function citiesWithStats() {
-  const cities = await prisma.city.findMany({ orderBy: { name: 'asc' } });
+  const now = new Date();
+  const cities = await prisma.city.findMany({
+    where: { state: siteConfig.mainUf },
+    orderBy: { name: 'asc' },
+  });
   const counts = await prisma.job.groupBy({
     by: ['cityId'],
-    where: { isActive: true, state: siteConfig.mainUf },
+    where: { state: siteConfig.mainUf, ...publicJobPrismaFilter(now) },
     _count: true,
   });
   const map = new Map(counts.map((c) => [c.cityId, c._count]));

@@ -12,6 +12,8 @@ import {
 } from '../../lib/seo';
 import { getSiteSettingsSafe, isIndexingEnabled } from '../../lib/site-settings';
 import { formatDateBr } from '../../lib/format';
+import { formatSchemaDateTime } from '../../lib/datetime-brazil';
+import { absoluteUrl, siteConfig } from '../../lib/config';
 
 const { slug } = Astro.params;
 const article = slug ? await articleBySlug(slug) : null;
@@ -23,12 +25,14 @@ const title = buildBlogPageTitle(article, settings);
 const description = buildBlogPageDescription(article);
 const canonical = blogCanonical(article, settings);
 const robots = blogRobotsMeta(article, indexingOn);
+const cover = article.featuredImage?.trim() || '';
+const ogImage = cover ? (cover.startsWith('http') ? cover : absoluteUrl(cover, settings)) : undefined;
 const jsonLd = mergeJsonLd(
   buildArticleSchema(article, settings),
   buildBreadcrumbSchema(
     [
       { name: 'Início', path: '/' },
-      { name: 'Blog', path: '/blog' },
+      { name: 'Dicas de emprego', path: '/blog' },
       { name: article.title, path: `/blog/${article.slug}` },
     ],
     settings,
@@ -38,33 +42,52 @@ const jsonLd = mergeJsonLd(
 const more = await articleList({ page: 1, perPage: 6, category: article.category.slug });
 const related = more.articles.filter((a) => a.slug !== article.slug).slice(0, 5);
 ---
-<BaseLayout title={title} description={description} canonical={canonical} robots={robots} jsonLd={jsonLd}>
+<BaseLayout
+  title={title}
+  description={description}
+  canonical={canonical}
+  robots={robots}
+  jsonLd={jsonLd}
+  ogType="article"
+  ogImage={ogImage}
+  publishedTime={formatSchemaDateTime(article.publishedAt)}
+  modifiedTime={formatSchemaDateTime(article.updatedAt)}
+  articleSection={article.category.name}
+>
   <nav class="breadcrumb" aria-label="Navegação">
     <a href="/">Início</a><span>/</span>
-    <a href="/blog">Blog</a><span>/</span>
+    <a href="/blog">Dicas de emprego</a><span>/</span>
     <span>{article.title}</span>
   </nav>
 
   <div class="article-page">
     <div class="article-page-grid">
-      <article class="article-content">
+      <article class="article-content" itemscope itemtype="https://schema.org/BlogPosting">
         <header class="panel article-header">
           <p class="article-meta-kicker">{article.category.name}</p>
-          <h1>{article.title}</h1>
-          <p class="article-meta">{formatDateBr(article.publishedAt)}</p>
+          <h1 itemprop="headline">{article.title}</h1>
+          <p class="article-byline">
+            <span itemprop="author">{`Redação ${siteConfig.name}`}</span>
+            <span aria-hidden="true"> · </span>
+            <time itemprop="datePublished" datetime={formatSchemaDateTime(article.publishedAt)}>
+              Publicado em {formatDateBr(article.publishedAt)}
+            </time>
+          </p>
+          {article.excerpt && <p class="article-deck" itemprop="description">{article.excerpt}</p>}
         </header>
-        {article.featuredImage?.trim() && (
+        {cover && (
           <figure class="article-cover">
             <img
-              src={article.featuredImage.trim()}
-              alt={`Capa: ${article.title}`}
-              width="960"
-              height="540"
+              src={cover}
+              alt={`Imagem de destaque: ${article.title}`}
+              width="1200"
+              height="675"
               loading="eager"
+              itemprop="image"
             />
           </figure>
         )}
-        <div class="panel prose article-body" set:html={article.content} />
+        <div class="panel prose article-body" itemprop="articleBody" set:html={article.content} />
       </article>
       {related.length > 0 && (
         <aside class="article-sidebar">
@@ -74,6 +97,9 @@ const related = more.articles.filter((a) => a.slug !== article.slug).slice(0, 5)
               <li><a href={`/blog/${a.slug}`}>{a.title}</a></li>
             ))}
           </ul>
+          <p class="article-sidebar-note">
+            Conteúdo editorial do {siteConfig.name} sobre emprego no Rio de Janeiro.
+          </p>
         </aside>
       )}
     </div>
