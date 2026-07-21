@@ -1,9 +1,9 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import { categoriesWithStats } from '../../lib/portal';
-import { baseUrl, siteConfig } from '../../lib/config';
-import { getSiteSettingsSafe } from '../../lib/site-settings';
-import { buildBreadcrumbSchema, mergeJsonLd } from '../../lib/seo';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { categoriesWithStats } from '../lib/portal';
+import { baseUrl, siteConfig } from '../lib/config';
+import { getSiteSettingsSafe } from '../lib/site-settings';
+import { buildBreadcrumbSchema, mergeJsonLd } from '../lib/seo';
 
 const settings = await getSiteSettingsSafe();
 const categories = await categoriesWithStats();
