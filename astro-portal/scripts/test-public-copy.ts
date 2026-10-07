@@ -17,6 +17,12 @@ const emptyCopy = emptyFaq.map((item) => item.answer).join(' ');
 
 assert.doesNotMatch(
   emptyCopy,
+  /Vagas RJ RIO RIO/i,
+  'o FAQ também deve normalizar a marca antes de renderizar conteúdo e schema',
+);
+
+assert.doesNotMatch(
+  emptyCopy,
   /hoje há\s+vagas|há oportunidades/i,
   'o estado vazio não pode afirmar que existem vagas',
 );
