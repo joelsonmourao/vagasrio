@@ -1,3 +1,5 @@
+import { normalizeSiteName } from './config';
+
 /**
  * FAQs no padrão dos grandes portais (Vagas.com, Catho, InfoJobs)
  * e das perguntas que o Google costuma mostrar para “vagas rio / empregos rio / vagas rj”.
@@ -16,7 +18,7 @@ export function getRjJobsFaqs(opts: {
   jobCount?: number;
   cities?: string[];
 }): JobsFaqItem[] {
-  const brand = opts.brand?.trim() || brandFallback;
+  const brand = normalizeSiteName(opts.brand?.trim() || brandFallback);
   const count = typeof opts.jobCount === 'number' ? Math.max(0, opts.jobCount) : 0;
   const countLabel = `${count} vaga${count === 1 ? '' : 's'}`;
   const cityList =
