@@ -4,6 +4,7 @@ import { formatSchemaDateTime } from './datetime-brazil';
 import type { SiteSettingsMap } from './site-settings';
 import { excerpt } from './format';
 import { SETTING_KEYS } from './site-settings';
+import { blogPostCanBeIndexed } from './blog-indexing';
 
 type JobSeoInput = {
   title: string;
@@ -394,7 +395,7 @@ export function blogCanonical(post: BlogSeoInput, settings?: SiteSettingsMap): s
 }
 
 export function blogRobotsMeta(post: BlogSeoInput, indexingOn: boolean): string {
-  if (!indexingOn || post.isIndexable === false) return 'noindex,follow';
+  if (!blogPostCanBeIndexed(post, indexingOn)) return 'noindex,follow';
   return 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
 }
 
