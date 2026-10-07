@@ -38,6 +38,10 @@ const homeDefaults = buildHomeSeoDefaults(settings);
 // Preferir snippet dinâmico (contagem + cargos) quando houver vagas; senão defaults do painel
 const title = jobCount > 0 ? listingSeo.title : homeDefaults.title;
 const description = jobCount > 0 ? listingSeo.description : homeDefaults.description;
+const availabilitySuffix =
+  jobCount > 0
+    ? ` — ${jobCount} vaga${jobCount === 1 ? '' : 's'} pública${jobCount === 1 ? '' : 's'} agora.`
+    : '.';
 
 const faqItems = getRjJobsFaqs({
   brand,
@@ -60,8 +64,7 @@ const jsonLd = mergeJsonLd(
     <h1 class="market-title">Vagas de emprego no Rio de Janeiro</h1>
     <p class="market-lead">
       Busque <strong>vagas Rio</strong>, <strong>empregos RJ</strong> e oportunidades por cargo e cidade.
-      Grátis para candidatos em todo o estado do Rio de Janeiro
-      {jobCount > 0 ? ` — ${jobCount} vaga${jobCount === 1 ? '' : 's'} pública${jobCount === 1 ? '' : 's'} agora` : ''}.
+      Grátis para candidatos em todo o estado do Rio de Janeiro{availabilitySuffix}
     </p>
     <JobFilters compact />
   </section>
