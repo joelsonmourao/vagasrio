@@ -2,6 +2,7 @@ import { prisma } from './db';
 import { siteConfig } from './config';
 import { publicJobPrismaFilter } from './public-content';
 import { getStaticSiteLastmodDate, getStaticSiteTimestamps } from './datetime-brazil';
+import { BULK_EDITORIAL_PREFIX, requiresEditorialReview } from './blog-indexing';
 import {
   chunkList,
   entryTimestampsToDate,
@@ -129,7 +130,14 @@ export async function fetchSitemapJobs(includeIndexable = true): Promise<Sitemap
 export async function fetchSitemapPosts(includeIndexable = true): Promise<SitemapUrlEntry[]> {
   const now = new Date();
   const where = includeIndexable
-    ? { isActive: true, isIndexable: true, publishedAt: { lte: now }, title: { not: '' }, slug: { not: '' } }
+    ? {
+        isActive: true,
+        isIndexable: true,
+        publishedAt: { lte: now },
+        title: { not: '' },
+        slug: { not: '' },
+        NOT: { slug: { startsWith: BULK_EDITORIAL_PREFIX } },
+      }
     : { isActive: true, publishedAt: { lte: now }, title: { not: '' }, slug: { not: '' } };
 
   const rows = await prisma.blogPost.findMany({
@@ -146,7 +154,13 @@ export async function fetchSitemapPosts(includeIndexable = true): Promise<Sitema
   });
 
   return rows
-    .filter((r) => isValidSlug(r.slug) && r.title.trim() && r.excerpt.trim())
+    .filter(
+      (r) =>
+        isValidSlug(r.slug) &&
+        !requiresEditorialReview(r.slug) &&
+        Boolean(r.title.trim()) &&
+        Boolean(r.excerpt.trim()),
+    )
     .map((r) =>
       toEntry(`/blog/${r.slug}`, {
         updatedAt: r.updatedAt,
