@@ -80,7 +80,7 @@ function buildScheduleSlots(count, from = new Date()) {
   return slots;
 }
 
-const PILOT = 205; // todos publicados no seed; use accelerate script se precisar reabrir agenda
+const PILOT = 205; // acessíveis, porém fora do índice até revisão editorial individual
 const scheduleSlots = buildScheduleSlots(Math.max(0, catalog.length - PILOT));
 
 function seoTitle(title) {
@@ -148,7 +148,7 @@ async function main() {
           seoDescription: seoDescription(item),
           featuredImage,
           isActive: true,
-          isIndexable: true,
+          isIndexable: false,
           publishedAt,
           categoryId,
         },
@@ -161,7 +161,7 @@ async function main() {
           seoDescription: seoDescription(item),
           featuredImage,
           isActive: true,
-          isIndexable: true,
+          isIndexable: false,
           publishedAt,
           categoryId,
         },
