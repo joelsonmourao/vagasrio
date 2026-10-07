@@ -1,8 +1,13 @@
 import type { SiteSettingsMap } from './site-settings';
 import { SETTING_KEYS } from './site-settings';
 
+export function normalizeSiteName(value: string): string {
+  const compact = value.trim().replace(/\s+/g, ' ');
+  return compact.replace(/(?:\s+RIO){2,}$/i, ' RIO');
+}
+
 export const siteConfig = {
-  name: process.env.SITE_NAME || 'Vagas RJ RIO',
+  name: normalizeSiteName(process.env.SITE_NAME || 'Vagas RJ RIO'),
   subtitle: 'Vagas de emprego no Rio de Janeiro',
   mainUf: 'RJ',
   mainStateName: 'Rio de Janeiro',
