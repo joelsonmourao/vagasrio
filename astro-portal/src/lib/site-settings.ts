@@ -1,5 +1,5 @@
 import { prisma } from './db';
-import { siteConfig } from './config';
+import { normalizeSiteName, siteConfig } from './config';
 
 export const SETTING_KEYS = {
   siteName: 'site.name',
@@ -30,13 +30,16 @@ export type SiteSettingsMap = Record<string, string>;
 /** Troca marcas legadas pela marca atual, sem duplicar "RIO". */
 export function upgradeBrandText(text: string, brand = siteConfig.name): string {
   if (!text) return text;
-  return text
-    .replace(/Vagas RJ RIO/g, '\u0000BRAND\u0000')
-    .replace(/Empregos no Rio de Janeiro - Rio Vagas/gi, brand)
-    .replace(/Rio Vagas/gi, brand)
-    .replace(/Vagas RJ/g, brand)
-    .replace(/Vagas Rio(?!\s+de\s+Janeiro)/gi, brand)
-    .replace(/\u0000BRAND\u0000/g, brand);
+  const safeBrand = normalizeSiteName(brand);
+  return normalizeSiteName(
+    text
+      .replace(/Vagas RJ RIO/g, '\u0000BRAND\u0000')
+      .replace(/Empregos no Rio de Janeiro - Rio Vagas/gi, safeBrand)
+      .replace(/Rio Vagas/gi, safeBrand)
+      .replace(/Vagas RJ/g, safeBrand)
+      .replace(/Vagas Rio(?!\s+de\s+Janeiro)/gi, safeBrand)
+      .replace(/\u0000BRAND\u0000/g, safeBrand),
+  );
 }
 
 function envDefaults(): SiteSettingsMap {
@@ -87,11 +90,13 @@ export async function getSiteSettings(): Promise<SiteSettingsMap> {
   }
 
   // SITE_NAME no ambiente (Coolify) prevalece sobre valor antigo no banco
-  const envName = (process.env.SITE_NAME || '').trim();
+  const envName = normalizeSiteName(process.env.SITE_NAME || '');
   if (envName) map[SETTING_KEYS.siteName] = envName;
 
+  const activeBrand = normalizeSiteName(map[SETTING_KEYS.siteName] || siteConfig.name);
+  map[SETTING_KEYS.siteName] = activeBrand;
   for (const key of BRAND_SETTING_KEYS) {
-    if (map[key]) map[key] = upgradeBrandText(map[key]);
+    if (map[key]) map[key] = upgradeBrandText(map[key], activeBrand);
   }
 
   return map;
