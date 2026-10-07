@@ -39,5 +39,8 @@ jobs:
       - name: Test editorial indexing rules
         run: npm run test:blog-indexing
 
+      - name: Test public brand and zero-jobs copy
+        run: npm run test:public-copy
+
       - name: Build production portal
         run: npm run build:postgres

@@ -31,6 +31,7 @@
     "editorial:cleanup": "node scripts/cleanup-rj-local-orphans.mjs",
     "editorial:audit": "node scripts/audit-blog-quality.mjs",
     "test:blog-indexing": "node --import tsx scripts/test-blog-indexing.ts",
+    "test:public-copy": "node --import tsx scripts/test-public-copy.ts",
     "postinstall": "node scripts/prisma-cli.mjs sqlite generate"
   },
   "prisma": {
