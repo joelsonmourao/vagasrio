@@ -17,18 +17,26 @@ export function getRjJobsFaqs(opts: {
   cities?: string[];
 }): JobsFaqItem[] {
   const brand = opts.brand?.trim() || brandFallback;
-  const count = typeof opts.jobCount === 'number' ? opts.jobCount : 0;
-  const countLabel = count > 0 ? `${count} vaga${count === 1 ? '' : 's'}` : 'vagas';
+  const count = typeof opts.jobCount === 'number' ? Math.max(0, opts.jobCount) : 0;
+  const countLabel = `${count} vaga${count === 1 ? '' : 's'}`;
   const cityList =
     (opts.cities && opts.cities.length > 0
       ? opts.cities.slice(0, 8).join(', ')
       : 'Rio de Janeiro, Niterói, São Gonçalo, Duque de Caxias, Nova Iguaçu, Petrópolis') +
     ' e outras cidades do estado';
+  const availabilityText =
+    count > 0
+      ? `Hoje há ${countLabel} pública${count === 1 ? '' : 's'} no portal.`
+      : 'No momento, o portal não exibe vagas públicas ativas. Consulte novamente depois para verificar novas oportunidades.';
+  const citiesText =
+    count > 0
+      ? `Você pode pesquisar vagas por cidade em ${cityList}. A disponibilidade varia conforme os anúncios ativos; confirme o local de trabalho em cada vaga.`
+      : 'No momento não há vagas públicas ativas por cidade. Quando houver oportunidades, você poderá usar a página de cidades ou os filtros da busca para conferir o local de trabalho.';
 
   return [
     {
       question: 'Como encontrar vagas de emprego no Rio de Janeiro?',
-      answer: `No ${brand} você busca vagas de emprego no Rio de Janeiro (RJ) por cargo, cidade, empresa e área. Use a busca na home ou em /vagas, filtre o local de trabalho e abra o anúncio para seguir ao canal oficial da empresa. Hoje há ${countLabel} pública${count === 1 ? '' : 's'} no portal.`,
+      answer: `No ${brand} você busca vagas de emprego no Rio de Janeiro (RJ) por cargo, cidade, empresa e área. Use a busca na home ou em /vagas, filtre o local de trabalho e abra o anúncio para seguir ao canal oficial da empresa. ${availabilityText}`,
     },
     {
       question: 'O que são vagas RJ, empregos Rio e vagas rio de janeiro?',
@@ -46,7 +54,7 @@ export function getRjJobsFaqs(opts: {
     },
     {
       question: 'Quais cidades do RJ têm vagas de emprego?',
-      answer: `Há oportunidades em ${cityList}. Você também pode navegar em /cidades ou filtrar por cidade na busca de vagas.`,
+      answer: citiesText,
     },
     {
       question: 'Preciso pagar alguma taxa para ver empregos RJ?',
@@ -58,8 +66,9 @@ export function getRjJobsFaqs(opts: {
         'Na página de vagas, use os campos de busca e filtros: cargo/palavra-chave, cidade (local de trabalho), empresa e categoria/área. Depois clique em buscar. Dá para limpar os filtros e recomeçar a qualquer momento.',
     },
     {
-      question: 'As vagas são atualizadas com frequência?',
-      answer: `Sim. O ${brand} publica e atualiza anúncios de emprego no RJ com regularidade. A listagem mostra as oportunidades públicas mais recentes; confira sempre data de publicação e validade no anúncio.`,
+      question: 'Como saber se uma vaga ainda está disponível?',
+      answer:
+        'Consulte a listagem pública e confira a data de publicação e a validade informadas no anúncio. Se a oportunidade não aparecer mais ou o canal oficial estiver encerrado, não envie documentos por contatos alternativos não verificados.',
     },
     {
       question: 'Como identificar vaga falsa no Rio de Janeiro?',
