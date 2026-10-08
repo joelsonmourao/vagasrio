@@ -32,7 +32,7 @@ export function sanitizeJobDescriptionHtml(html: string): string {
     .replace(/<!--[\s\S]*?-->/g, ' ')
     .replace(/<(\/?)(p|ul|li)\b[^>]*>/gi, '<$1$2>')
     .replace(/<br\b[^>]*\/?>/gi, '<br>')
-    .replace(/<[^>]+>/g, ' ')
+    .replace(/<(?!\/?(?:p|ul|li)\b|br\b)[^>]+>/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
