@@ -106,6 +106,16 @@ export function buildBaseSalary(
   };
 }
 
+/** Não publica JobPosting para vaga inativa, expirada ou sem candidatura válida. */
+export function buildPublicJobPostingSchema(
+  job: JobForSchema,
+  publiclyVisible: boolean,
+  settings?: SiteSettingsMap,
+): Record<string, unknown> | undefined {
+  if (!publiclyVisible) return undefined;
+  return buildJobPostingSchema(job, settings);
+}
+
 export function buildJobPostingSchema(job: JobForSchema, settings?: SiteSettingsMap): Record<string, unknown> {
   const address = buildPostalAddress(job);
 
