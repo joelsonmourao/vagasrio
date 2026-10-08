@@ -21,10 +21,17 @@ type JobForSchema = {
   city: { name: string };
 };
 
-function htmlToPlain(html: string): string {
+/**
+ * Preserva apenas a marcação HTML aceita pelo Google em JobPosting.
+ * Remove scripts, estilos, atributos e tags que não ajudam a leitura.
+ */
+export function sanitizeJobDescriptionHtml(html: string): string {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<(\/?)(p|ul|li)\b[^>]*>/gi, '<$1$2>')
+    .replace(/<br\b[^>]*\/?>/gi, '<br>')
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -110,12 +117,12 @@ export function buildJobPostingSchema(job: JobForSchema, settings?: SiteSettings
   const companyWebsite = sanitizeSchemaUrl(job.company.website);
   if (companyWebsite) hiringOrganization.sameAs = companyWebsite;
 
-  const plainDescription = htmlToPlain(job.description);
+  const descriptionHtml = sanitizeJobDescriptionHtml(job.description);
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'JobPosting',
     title: job.title,
-    description: plainDescription,
+    description: descriptionHtml,
     datePosted: formatJobPostingDate(job.publishedAt),
     hiringOrganization,
     jobLocation: { '@type': 'Place', address },
