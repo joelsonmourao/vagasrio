@@ -56,11 +56,10 @@ const faqItems = getRjJobsFaqs({
     return {
       ...item,
       question: `Há vagas de emprego em ${city.name}?`,
-      answer: `Sim. Esta página lista vagas de emprego em ${city.name}/${city.state}. ${
+      answer:
         jobsData.total > 0
-          ? `Há ${jobsData.total} vaga${jobsData.total === 1 ? '' : 's'} pública${jobsData.total === 1 ? '' : 's'} no momento.`
-          : 'No momento pode não haver anúncios públicos; volte em breve ou veja outras cidades do RJ.'
-      } Use também a busca geral de vagas rio e empregos RJ.`,
+          ? `Há ${jobsData.total} vaga${jobsData.total === 1 ? '' : 's'} pública${jobsData.total === 1 ? '' : 's'} em ${city.name}/${city.state} no momento. Use também a busca geral de vagas Rio e empregos RJ.`
+          : `No momento, não há vagas públicas ativas em ${city.name}/${city.state}. Volte em breve ou consulte outras cidades do RJ.`,
     };
   }
   return item;
