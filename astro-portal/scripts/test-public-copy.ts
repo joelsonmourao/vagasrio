@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { normalizeSiteName } from '../src/lib/config';
 import { getRjJobsFaqs } from '../src/lib/jobs-faq';
-import { buildBaseSalary, buildJobPostingSchema } from '../src/lib/job-posting';
+import { buildBaseSalary, buildJobPostingSchema, sanitizeJobDescriptionHtml } from '../src/lib/job-posting';
 import { formatJobValidThroughBr } from '../src/lib/format';
 
 assert.equal(
@@ -68,7 +68,20 @@ assert.equal(
   'a página não pode exibir uma validade inventada',
 );
 
+const sanitizedDescription = sanitizeJobDescriptionHtml(
+  '<p onclick="alert(1)">Resumo <strong>útil</strong></p><ul><li>Item</li></ul><br class="x"><script>alert(1)</script>',
+);
+assert.match(sanitizedDescription, /<p>Resumo útil<\/p>/, 'parágrafo seguro deve ser preservado sem atributos');
+assert.match(sanitizedDescription, /<ul><li>Item<\/li><\/ul>/, 'lista segura deve ser preservada');
+assert.match(sanitizedDescription, /<br>/, 'quebra de linha segura deve ser preservada');
+assert.doesNotMatch(sanitizedDescription, /script|onclick|strong/i, 'marcação insegura ou não suportada deve ser removida');
+
 const schemaWithoutOptionalFacts = buildJobPostingSchema(jobWithoutOptionalFacts);
+assert.equal(
+  schemaWithoutOptionalFacts.description,
+  '<p>Descrição completa da oportunidade.</p>',
+  'JobPosting deve preservar a estrutura HTML segura da descrição',
+);
 assert.ok(
   !('baseSalary' in schemaWithoutOptionalFacts),
   'JobPosting sem salário real deve omitir baseSalary',
