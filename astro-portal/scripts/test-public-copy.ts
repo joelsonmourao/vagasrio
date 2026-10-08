@@ -4,12 +4,19 @@ import { normalizeSiteName } from '../src/lib/config';
 import { getRjJobsFaqs } from '../src/lib/jobs-faq';
 import { buildBaseSalary, buildJobPostingSchema, buildPublicJobPostingSchema, sanitizeJobDescriptionHtml } from '../src/lib/job-posting';
 import { formatJobValidThroughBr } from '../src/lib/format';
+import { paginatedPath, parsePageParam } from '../src/lib/pagination-pages';
 
 assert.equal(
   normalizeSiteName('Vagas RJ RIO RIO'),
   'Vagas RJ RIO',
   'a marca não pode repetir o sufixo RIO',
 );
+
+assert.equal(parsePageParam('2'), 2, 'página válida deve ser preservada');
+assert.equal(parsePageParam('abc'), 1, 'página inválida deve voltar para a primeira');
+assert.equal(parsePageParam('-3'), 1, 'página negativa deve voltar para a primeira');
+assert.equal(paginatedPath('/blog', 1), '/blog', 'página 1 deve manter URL limpa');
+assert.equal(paginatedPath('/blog', 3), '/blog?page=3', 'página seguinte deve ter URL própria');
 
 const emptyFaq = getRjJobsFaqs({
   brand: 'Vagas RJ RIO RIO',
@@ -149,6 +156,21 @@ assert.ok(
   applicationPageSource.includes('robots="noindex,follow"'),
   'página intermediária de candidatura deve permanecer fora do índice',
 );
+
+for (const [relativePath, canonicalSnippet] of [
+  ['../src/pages/blog/index.astro', "paginatedPath('/blog', page)"],
+  ['../src/pages/vagas/index.astro', "paginatedPath('/vagas', page)"],
+] as const) {
+  const paginatedPageSource = readFileSync(new URL(relativePath, import.meta.url), 'utf8');
+  assert.ok(
+    paginatedPageSource.includes(canonicalSnippet),
+    'listagem paginada deve usar canonical próprio em cada página',
+  );
+  assert.ok(
+    paginatedPageSource.includes('!pageIsValid'),
+    'página fora do intervalo deve permanecer fora do índice',
+  );
+}
 
 const companyPageSource = readFileSync(
   new URL('../src/pages/empresas/[slug].astro', import.meta.url),
