@@ -159,6 +159,17 @@ assert.ok(
   'empresa sem vaga pública deve permanecer fora do índice',
 );
 
+for (const [relativePath, label] of [
+  ['../src/pages/vagas/cidade/[slug].astro', 'cidade'],
+  ['../src/pages/vagas/categoria/[slug].astro', 'categoria'],
+] as const) {
+  const listingPageSource = readFileSync(new URL(relativePath, import.meta.url), 'utf8');
+  assert.ok(
+    listingPageSource.includes("jobsData.total > 0 ? 'index,follow' : 'noindex,follow'"),
+    `${label} sem vaga pública deve permanecer fora do índice`,
+  );
+}
+
 const sitemapSource = readFileSync(new URL('../src/lib/sitemap-data.ts', import.meta.url), 'utf8');
 assert.ok(
   sitemapSource.includes('jobs: { some: jobWhereIndexable(includeIndexable) }'),
