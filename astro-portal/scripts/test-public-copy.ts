@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { normalizeSiteName } from '../src/lib/config';
 import { getRjJobsFaqs } from '../src/lib/jobs-faq';
+import { serializeJsonLd } from '../src/lib/seo';
 import { buildBaseSalary, buildJobPostingSchema, buildPublicJobPostingSchema, sanitizeJobDescriptionHtml } from '../src/lib/job-posting';
 import { formatJobValidThroughBr } from '../src/lib/format';
 import { paginatedPath, parsePageParam } from '../src/lib/pagination-pages';
@@ -10,6 +11,21 @@ assert.equal(
   normalizeSiteName('Vagas RJ RIO RIO'),
   'Vagas RJ RIO',
   'a marca não pode repetir o sufixo RIO',
+);
+
+const maliciousJsonLd = serializeJsonLd({
+  '@context': 'https://schema.org',
+  headline: '</script><script>window.__vagasRjXss=true</script>',
+});
+assert.doesNotMatch(
+  maliciousJsonLd,
+  /<\/script/i,
+  'JSON-LD não pode conter fechamento literal de script vindo do conteúdo',
+);
+assert.match(
+  maliciousJsonLd,
+  /\\u003c\/script>\\u003cscript>/,
+  'JSON-LD deve neutralizar sinais de menor antes da injeção no HTML',
 );
 
 assert.equal(parsePageParam('2'), 2, 'página válida deve ser preservada');
