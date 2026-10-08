@@ -19,3 +19,15 @@ export function buildPaginationItems(
 
   return items;
 }
+
+
+/** Normaliza o parâmetro page para um inteiro positivo e seguro. */
+export function parsePageParam(value: string | null | undefined): number {
+  const parsed = Number(value ?? '1');
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+/** Mantém a página 1 limpa e gera URL própria para cada página seguinte. */
+export function paginatedPath(basePath: string, page: number): string {
+  return page > 1 ? `${basePath}?page=${page}` : basePath;
+}
