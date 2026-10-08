@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { normalizeSiteName } from '../src/lib/config';
 import { getRjJobsFaqs } from '../src/lib/jobs-faq';
-import { buildBaseSalary, buildJobPostingSchema, sanitizeJobDescriptionHtml } from '../src/lib/job-posting';
+import { buildBaseSalary, buildJobPostingSchema, buildPublicJobPostingSchema, sanitizeJobDescriptionHtml } from '../src/lib/job-posting';
 import { formatJobValidThroughBr } from '../src/lib/format';
 
 assert.equal(
@@ -75,6 +75,17 @@ assert.match(sanitizedDescription, /<p>Resumo útil<\/p>/, 'parágrafo seguro de
 assert.match(sanitizedDescription, /<ul><li>Item<\/li><\/ul>/, 'lista segura deve ser preservada');
 assert.match(sanitizedDescription, /<br>/, 'quebra de linha segura deve ser preservada');
 assert.doesNotMatch(sanitizedDescription, /script|onclick|strong/i, 'marcação insegura ou não suportada deve ser removida');
+
+assert.equal(
+  buildPublicJobPostingSchema(jobWithoutOptionalFacts, false),
+  undefined,
+  'vaga indisponível não pode manter JobPosting no HTML',
+);
+assert.equal(
+  buildPublicJobPostingSchema(jobWithoutOptionalFacts, true)?.['@type'],
+  'JobPosting',
+  'vaga pública deve continuar com JobPosting',
+);
 
 const schemaWithoutOptionalFacts = buildJobPostingSchema(jobWithoutOptionalFacts);
 assert.equal(
