@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { normalizeSiteName } from '../src/lib/config';
 import { getRjJobsFaqs } from '../src/lib/jobs-faq';
+import { buildBaseSalary, buildJobPostingSchema } from '../src/lib/job-posting';
+import { formatJobValidThroughBr } from '../src/lib/format';
 
 assert.equal(
   normalizeSiteName('Vagas RJ RIO RIO'),
@@ -38,6 +40,58 @@ assert.match(
   oneJobFaq[0]?.answer || '',
   /Hoje há 1 vaga pública no portal\./,
   'a concordância do contador singular precisa ser preservada',
+);
+
+const publishedAt = new Date('2026-10-08T09:00:00-03:00');
+const jobWithoutOptionalFacts = {
+  id: 1,
+  title: 'Auxiliar administrativo',
+  slug: 'auxiliar-administrativo-rio-de-janeiro',
+  description: '<p>Descrição completa da oportunidade.</p>',
+  publishedAt,
+  validThrough: null,
+  applyUrl: 'mailto:rh@example.net',
+  employmentType: 'FULL_TIME',
+  salary: null,
+  company: { name: 'Empresa contratante', website: null, logo: null },
+  city: { name: 'Rio de Janeiro' },
+};
+
+assert.equal(
+  buildBaseSalary(null),
+  null,
+  'salário ausente não pode virar baseSalary zero',
+);
+assert.equal(
+  formatJobValidThroughBr(null, publishedAt),
+  'Não informada',
+  'a página não pode exibir uma validade inventada',
+);
+
+const schemaWithoutOptionalFacts = buildJobPostingSchema(jobWithoutOptionalFacts);
+assert.ok(
+  !('baseSalary' in schemaWithoutOptionalFacts),
+  'JobPosting sem salário real deve omitir baseSalary',
+);
+assert.ok(
+  !('validThrough' in schemaWithoutOptionalFacts),
+  'JobPosting sem validade informada deve omitir validThrough',
+);
+const postalAddress = (
+  schemaWithoutOptionalFacts.jobLocation as {
+    address: Record<string, unknown>;
+  }
+).address;
+assert.ok(
+  !('streetAddress' in postalAddress),
+  'JobPosting sem endereço real deve omitir streetAddress',
+);
+
+const realSalary = buildBaseSalary('R$ 2.000,00');
+assert.equal(
+  realSalary?.value.value,
+  2000,
+  'salário real informado deve continuar no schema',
 );
 
 const middlewareSource = readFileSync(new URL('../src/middleware.ts', import.meta.url), 'utf8');
