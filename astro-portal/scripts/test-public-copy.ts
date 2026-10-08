@@ -137,6 +137,19 @@ assert.equal(
   'salário real informado deve continuar no schema',
 );
 
+const applicationPageSource = readFileSync(
+  new URL('../src/pages/candidatura/[slug].astro', import.meta.url),
+  'utf8',
+);
+assert.ok(
+  applicationPageSource.includes('!channelOk || !jobIsPubliclyVisible(job)'),
+  'candidatura não pode encaminhar vaga inativa, expirada ou sem canal válido',
+);
+assert.ok(
+  applicationPageSource.includes('robots="noindex,follow"'),
+  'página intermediária de candidatura deve permanecer fora do índice',
+);
+
 const middlewareSource = readFileSync(new URL('../src/middleware.ts', import.meta.url), 'utf8');
 const expectedSecurityHeaders = [
   ['X-Content-Type-Options', 'nosniff'],
