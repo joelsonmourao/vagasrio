@@ -1,4 +1,4 @@
-import { formatJobDisplayDate, resolveJobValidThroughDate } from './datetime-brazil';
+import { formatJobDisplayDate } from './datetime-brazil';
 
 /** Data em pt-BR — alinhada ao JobPosting (sem “voltar um dia” por UTC). */
 export function formatDateBr(date: Date | string): string {
@@ -10,8 +10,8 @@ export function formatJobPublishedBr(publishedAt: Date): string {
   return formatJobDisplayDate(publishedAt);
 }
 
-export function formatJobValidThroughBr(validThrough: Date | null, publishedAt: Date): string {
-  return formatJobDisplayDate(resolveJobValidThroughDate(validThrough, publishedAt));
+export function formatJobValidThroughBr(validThrough: Date | null, _publishedAt: Date): string {
+  return validThrough ? formatJobDisplayDate(validThrough) : 'Não informada';
 }
 
 export function formatDatetimeIsoAttr(date: Date | string): string {
