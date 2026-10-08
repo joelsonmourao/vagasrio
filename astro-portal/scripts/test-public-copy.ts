@@ -192,6 +192,19 @@ for (const [relativePath, canonicalSnippet, label] of [
   );
 }
 
+const cityListingSource = readFileSync(
+  new URL('../src/pages/vagas/cidade/[slug].astro', import.meta.url),
+  'utf8',
+);
+assert.ok(
+  cityListingSource.includes('No momento, não há vagas públicas ativas em'),
+  'FAQ de cidade sem vagas deve declarar indisponibilidade de forma factual',
+);
+assert.ok(
+  !cityListingSource.includes('answer: \`Sim.'),
+  'FAQ de cidade não pode responder sim quando não há vagas públicas',
+);
+
 const sitemapSource = readFileSync(new URL('../src/lib/sitemap-data.ts', import.meta.url), 'utf8');
 assert.ok(
   sitemapSource.includes('jobs: { some: jobWhereIndexable(includeIndexable) }'),
