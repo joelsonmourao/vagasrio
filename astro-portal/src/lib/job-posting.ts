@@ -74,11 +74,12 @@ function buildPostalAddress(job: JobForSchema): Record<string, string> {
   const postalCode = siteConfig.cityPostalCodes[job.city.name];
   const address: Record<string, string> = {
     '@type': 'PostalAddress',
-    streetAddress: resolveJobStreetAddress(job) ?? STREET_ADDRESS_FALLBACK,
     addressLocality: job.city.name,
     addressRegion: siteConfig.mainUf,
     addressCountry: 'BR',
   };
+  const streetAddress = resolveJobStreetAddress(job);
+  if (streetAddress) address.streetAddress = streetAddress;
   if (postalCode) address.postalCode = postalCode;
   return address;
 }
@@ -93,13 +94,15 @@ export type JobPostingBaseSalary = {
  * Google JobPosting exige MonetaryAmount em baseSalary (não aceita texto).
  * Sem salário informado: value 0 (em vez de omitir ou enviar "A combinar").
  */
-export function buildBaseSalary(salary: string | null | undefined): JobPostingBaseSalary {
+export function buildBaseSalary(
+  salary: string | null | undefined,
+): JobPostingBaseSalary | null {
   const amount = parseJobSalaryAmount(salary);
-  const value = amount != null && amount > 0 ? amount : 0;
+  if (amount == null || amount <= 0) return null;
   return {
     '@type': 'MonetaryAmount',
     currency: 'BRL',
-    value: { '@type': 'QuantitativeValue', value, unitText: 'MONTH' },
+    value: { '@type': 'QuantitativeValue', value: amount, unitText: 'MONTH' },
   };
 }
 
@@ -121,7 +124,6 @@ export function buildJobPostingSchema(job: JobForSchema, settings?: SiteSettings
     title: job.title,
     description: plainDescription,
     datePosted: formatJobPostingDate(job.publishedAt),
-    validThrough: formatJobPostingValidThrough(job.validThrough, job.publishedAt),
     hiringOrganization,
     jobLocation: { '@type': 'Place', address },
     identifier: {
@@ -137,7 +139,12 @@ export function buildJobPostingSchema(job: JobForSchema, settings?: SiteSettings
   const employmentType = normalizeEmploymentType(job.employmentType);
   if (employmentType) schema.employmentType = employmentType;
 
-  schema.baseSalary = buildBaseSalary(job.salary);
+  if (job.validThrough) {
+    schema.validThrough = formatJobPostingValidThrough(job.validThrough, job.publishedAt);
+  }
+
+  const baseSalary = buildBaseSalary(job.salary);
+  if (baseSalary) schema.baseSalary = baseSalary;
 
   const channel = parseApplyChannel(job.applyUrl);
   if (isValidApplyChannel(channel)) {
