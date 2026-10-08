@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { normalizeSiteName } from '../src/lib/config';
 import { getRjJobsFaqs } from '../src/lib/jobs-faq';
 
@@ -38,5 +39,20 @@ assert.match(
   /Hoje há 1 vaga pública no portal\./,
   'a concordância do contador singular precisa ser preservada',
 );
+
+const middlewareSource = readFileSync(new URL('../src/middleware.ts', import.meta.url), 'utf8');
+const expectedSecurityHeaders = [
+  ['X-Content-Type-Options', 'nosniff'],
+  ['X-Frame-Options', 'SAMEORIGIN'],
+  ['Referrer-Policy', 'strict-origin-when-cross-origin'],
+  ['Permissions-Policy', 'camera=(), microphone=(), geolocation=()'],
+] as const;
+
+for (const [name, value] of expectedSecurityHeaders) {
+  assert.ok(
+    middlewareSource.includes(`response.headers.set('${name}', '${value}')`),
+    `o middleware deve manter ${name}: ${value}`,
+  );
+}
 
 console.log('public-copy: ok');
