@@ -53,9 +53,12 @@ export const institutionalPages: Record<string, { title: string; description: st
 <h2>Dados que podemos tratar</h2>
 <ul>
   <li><strong>Dados de navegação</strong> (endereço IP, tipo de navegador, páginas visitadas, data/hora), via cookies e logs do servidor.</li>
-  <li><strong>Dados enviados por você</strong> quando utilizar formulários de contato ou áreas administrativas (não aplicável ao visitante comum).</li>
+  <li><strong>Dados enviados por você</strong> no formulário de contato, como nome, e-mail, assunto e mensagem.</li>
+  <li><strong>Dados administrativos</strong> informados por usuários autorizados nas áreas restritas do portal.</li>
   <li><strong>Dados de medição</strong> quando o Google Analytics (GA4) estiver ativo no site.</li>
 </ul>
+<h2>Envio do formulário de contato</h2>
+<p>O formulário utiliza o serviço FormSubmit para encaminhar nome, e-mail, assunto e mensagem ao endereço oficial do portal. Esses dados são enviados somente quando você aciona o botão de envio. Se preferir não utilizar esse intermediário, escreva diretamente para <a href="mailto:contato@vagasrj.rio.br">contato@vagasrj.rio.br</a>.</p>
 <h2>Google Analytics</h2>
 <p>Podemos utilizar o Google Analytics para entender o uso do site (páginas mais visitadas, origem do tráfego). O Google pode processar dados conforme sua própria política. Você pode instalar a extensão de opt-out do Google ou gerenciar cookies no navegador.</p>
 <h2>Google AdSense e publicidade</h2>
