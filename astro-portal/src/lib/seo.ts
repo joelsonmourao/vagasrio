@@ -6,6 +6,14 @@ import { excerpt } from './format';
 import { SETTING_KEYS } from './site-settings';
 import { blogPostCanBeIndexed } from './blog-indexing';
 
+/**
+ * Serializa JSON-LD para uso seguro dentro de <script>.
+ * Neutraliza '<' para impedir que conteúdo editorial encerre a tag antecipadamente.
+ */
+export function serializeJsonLd(schema: unknown): string {
+  return JSON.stringify(schema).replace(/</g, '\\u003c');
+}
+
 type JobSeoInput = {
   title: string;
   slug: string;
