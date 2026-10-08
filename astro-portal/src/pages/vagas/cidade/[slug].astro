@@ -6,6 +6,7 @@ import EmptyState from '../../../components/EmptyState.astro';
 import JobsFaq from '../../../components/JobsFaq.astro';
 import { cityBySlug, jobList } from '../../../lib/portal';
 import { baseUrl, siteConfig } from '../../../lib/config';
+import { paginatedPath, parsePageParam } from '../../../lib/pagination-pages';
 import { getSiteSettingsSafe, SETTING_KEYS } from '../../../lib/site-settings';
 import { getRjJobsFaqs } from '../../../lib/jobs-faq';
 import {
@@ -21,16 +22,30 @@ if (!city) return Astro.redirect('/404');
 
 const settings = await getSiteSettingsSafe();
 const brand = settings[SETTING_KEYS.siteName] || siteConfig.name;
-const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
+const page = parsePageParam(Astro.url.searchParams.get('page'));
 const jobsData = await jobList({ page, city: city.slug });
-const robots = jobsData.total > 0 ? 'index,follow' : 'noindex,follow';
-const { title, description } = buildJobsListingSeo({
+const hasUnsupportedQuery = [...Astro.url.searchParams.keys()].some((key) => key !== 'page');
+const pageIsValid = jobsData.totalPages > 0 && page <= jobsData.totalPages;
+const canonicalPath =
+  pageIsValid && !hasUnsupportedQuery
+    ? paginatedPath(`/vagas/cidade/${city.slug}`, page)
+    : `/vagas/cidade/${city.slug}`;
+const robots =
+  jobsData.total > 0 && pageIsValid && !hasUnsupportedQuery
+    ? 'index,follow'
+    : 'noindex,follow';
+const { title: titleBase, description: descriptionBase } = buildJobsListingSeo({
   total: jobsData.total,
   jobTitles: jobsData.jobs.map((j) => j.title),
   placeLabel: `${city.name}, RJ`,
   brand,
   settings,
 });
+const title = page > 1 && pageIsValid ? `${titleBase} — Página ${page}` : titleBase;
+const description =
+  page > 1 && pageIsValid
+    ? `${descriptionBase} Página ${page} de oportunidades.`
+    : descriptionBase;
 
 const faqItems = getRjJobsFaqs({
   brand,
@@ -51,22 +66,25 @@ const faqItems = getRjJobsFaqs({
   return item;
 });
 
-const jsonLd = mergeJsonLd(
-  buildBreadcrumbSchema(
-    [
-      { name: 'Início', path: '/' },
-      { name: 'Cidades', path: '/cidades' },
-      { name: city.name, path: `/vagas/cidade/${city.slug}` },
-    ],
-    settings,
-  ),
-  buildFaqPageSchema(
-    faqItems.map((f) => ({ question: f.question, answer: f.answer })),
-    baseUrl(`/vagas/cidade/${city.slug}`, settings),
-  ),
-);
+const jsonLd =
+  page === 1 && !hasUnsupportedQuery
+    ? mergeJsonLd(
+        buildBreadcrumbSchema(
+          [
+            { name: 'Início', path: '/' },
+            { name: 'Cidades', path: '/cidades' },
+            { name: city.name, path: `/vagas/cidade/${city.slug}` },
+          ],
+          settings,
+        ),
+        buildFaqPageSchema(
+          faqItems.map((f) => ({ question: f.question, answer: f.answer })),
+          baseUrl(`/vagas/cidade/${city.slug}`, settings),
+        ),
+      )
+    : undefined;
 ---
-<BaseLayout title={title} description={description} canonical={baseUrl(`/vagas/cidade/${city.slug}`, settings)} robots={robots} jsonLd={jsonLd}>
+<BaseLayout title={title} description={description} canonical={baseUrl(canonicalPath, settings)} robots={robots} jsonLd={jsonLd}>
   <div class="page-stack page-stack-market">
     <section class="market-top">
       <nav class="breadcrumb">
