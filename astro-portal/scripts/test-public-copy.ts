@@ -173,9 +173,9 @@ for (const [relativePath, canonicalSnippet] of [
 }
 
 for (const [relativePath, canonicalSnippet, label] of [
-  ['../src/pages/empresas/[slug].astro', 'paginatedPath(\`/empresas/\\${company.slug}\`, page)', 'empresa'],
-  ['../src/pages/vagas/cidade/[slug].astro', 'paginatedPath(\`/vagas/cidade/\\${city.slug}\`, page)', 'cidade'],
-  ['../src/pages/vagas/categoria/[slug].astro', 'paginatedPath(\`/vagas/categoria/\\${category.slug}\`, page)', 'categoria'],
+  ['../src/pages/empresas/[slug].astro', "paginatedPath(`/empresas/${company.slug}`, page)", 'empresa'],
+  ['../src/pages/vagas/cidade/[slug].astro', "paginatedPath(`/vagas/cidade/${city.slug}`, page)", 'cidade'],
+  ['../src/pages/vagas/categoria/[slug].astro', "paginatedPath(`/vagas/categoria/${category.slug}`, page)", 'categoria'],
 ] as const) {
   const listingPageSource = readFileSync(new URL(relativePath, import.meta.url), 'utf8');
   assert.ok(
