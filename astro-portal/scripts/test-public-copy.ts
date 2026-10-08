@@ -172,23 +172,23 @@ for (const [relativePath, canonicalSnippet] of [
   );
 }
 
-const companyPageSource = readFileSync(
-  new URL('../src/pages/empresas/[slug].astro', import.meta.url),
-  'utf8',
-);
-assert.ok(
-  companyPageSource.includes("jobsData.total > 0 ? 'index,follow' : 'noindex,follow'"),
-  'empresa sem vaga pública deve permanecer fora do índice',
-);
-
-for (const [relativePath, label] of [
-  ['../src/pages/vagas/cidade/[slug].astro', 'cidade'],
-  ['../src/pages/vagas/categoria/[slug].astro', 'categoria'],
+for (const [relativePath, canonicalSnippet, label] of [
+  ['../src/pages/empresas/[slug].astro', 'paginatedPath(\`/empresas/\\${company.slug}\`, page)', 'empresa'],
+  ['../src/pages/vagas/cidade/[slug].astro', 'paginatedPath(\`/vagas/cidade/\\${city.slug}\`, page)', 'cidade'],
+  ['../src/pages/vagas/categoria/[slug].astro', 'paginatedPath(\`/vagas/categoria/\\${category.slug}\`, page)', 'categoria'],
 ] as const) {
   const listingPageSource = readFileSync(new URL(relativePath, import.meta.url), 'utf8');
   assert.ok(
-    listingPageSource.includes("jobsData.total > 0 ? 'index,follow' : 'noindex,follow'"),
-    `${label} sem vaga pública deve permanecer fora do índice`,
+    listingPageSource.includes(canonicalSnippet),
+    `${label} paginada deve usar canonical próprio em cada página`,
+  );
+  assert.ok(
+    listingPageSource.includes('!pageIsValid'),
+    `${label} fora do intervalo deve permanecer fora do índice`,
+  );
+  assert.ok(
+    listingPageSource.includes('hasUnsupportedQuery'),
+    `${label} com parâmetro não suportado deve permanecer fora do índice`,
   );
 }
 
