@@ -23,6 +23,7 @@ const settings = await getSiteSettingsSafe();
 const brand = settings[SETTING_KEYS.siteName] || siteConfig.name;
 const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
 const jobsData = await jobList({ page, city: city.slug });
+const robots = jobsData.total > 0 ? 'index,follow' : 'noindex,follow';
 const { title, description } = buildJobsListingSeo({
   total: jobsData.total,
   jobTitles: jobsData.jobs.map((j) => j.title),
@@ -65,7 +66,7 @@ const jsonLd = mergeJsonLd(
   ),
 );
 ---
-<BaseLayout title={title} description={description} canonical={baseUrl(`/vagas/cidade/${city.slug}`, settings)} jsonLd={jsonLd}>
+<BaseLayout title={title} description={description} canonical={baseUrl(`/vagas/cidade/${city.slug}`, settings)} robots={robots} jsonLd={jsonLd}>
   <div class="page-stack page-stack-market">
     <section class="market-top">
       <nav class="breadcrumb">
