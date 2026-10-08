@@ -4,6 +4,7 @@ import JobCard from '../../components/JobCard.astro';
 import AdSlot from '../../components/AdSlot.astro';
 import { jobBySlug } from '../../lib/portal';
 import { siteConfig } from '../../lib/config';
+import { jobIsPubliclyVisible } from '../../lib/public-content';
 import { loadJobRetentionRelated } from '../../lib/job-retention';
 import {
   getApplyFinalCta,
@@ -19,7 +20,7 @@ const applyChannel = parseApplyChannel(job.applyUrl);
 const finalCta = getApplyFinalCta(applyChannel);
 const channelOk = isValidApplyChannel(applyChannel);
 
-if (!channelOk) {
+if (!channelOk || !jobIsPubliclyVisible(job)) {
   return Astro.redirect(`/vagas/${job.slug}`);
 }
 
