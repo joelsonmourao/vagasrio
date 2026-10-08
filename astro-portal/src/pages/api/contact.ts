@@ -25,8 +25,20 @@ export const POST: APIRoute = async ({ request, redirect }) => {
   const subject = String(form.get('subject') || 'outro').trim();
   const message = String(form.get('message') || '').trim();
 
-  if (name.length < 2 || message.length < 10 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return redirect(`/contato?error=${encodeURIComponent('Preencha nome, e-mail válido e mensagem (mín. 10 caracteres).')}`);
+  const fieldsAreInvalid =
+    name.length < 2 ||
+    name.length > 120 ||
+    email.length > 160 ||
+    message.length < 10 ||
+    message.length > 4000 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  if (fieldsAreInvalid) {
+    return redirect(
+      `/contato?error=${encodeURIComponent(
+        'Preencha nome, e-mail válido e mensagem entre 10 e 4.000 caracteres.',
+      )}`,
+    );
   }
 
   const settings = await getSiteSettingsSafe();
