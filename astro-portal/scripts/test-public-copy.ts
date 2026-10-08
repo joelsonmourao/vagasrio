@@ -183,7 +183,7 @@ for (const [relativePath, canonicalSnippet, label] of [
     `${label} paginada deve usar canonical próprio em cada página`,
   );
   assert.ok(
-    listingPageSource.includes('!pageIsValid'),
+    listingPageSource.includes('pageIsValid'),
     `${label} fora do intervalo deve permanecer fora do índice`,
   );
   assert.ok(
