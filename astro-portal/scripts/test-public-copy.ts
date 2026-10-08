@@ -150,6 +150,25 @@ assert.ok(
   'página intermediária de candidatura deve permanecer fora do índice',
 );
 
+const companyPageSource = readFileSync(
+  new URL('../src/pages/empresas/[slug].astro', import.meta.url),
+  'utf8',
+);
+assert.ok(
+  companyPageSource.includes("jobsData.total > 0 ? 'index,follow' : 'noindex,follow'"),
+  'empresa sem vaga pública deve permanecer fora do índice',
+);
+
+const sitemapSource = readFileSync(new URL('../src/lib/sitemap-data.ts', import.meta.url), 'utf8');
+assert.ok(
+  sitemapSource.includes('jobs: { some: jobWhereIndexable(includeIndexable) }'),
+  'sitemap de empresas deve exigir ao menos uma vaga pública indexável',
+);
+assert.ok(
+  sitemapSource.includes('fetchSitemapCompanies(includeIndexable)'),
+  'fallback de schema do sitemap deve ser aplicado também às empresas',
+);
+
 const middlewareSource = readFileSync(new URL('../src/middleware.ts', import.meta.url), 'utf8');
 const expectedSecurityHeaders = [
   ['X-Content-Type-Options', 'nosniff'],
