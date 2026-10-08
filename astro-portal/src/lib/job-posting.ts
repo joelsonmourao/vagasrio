@@ -5,9 +5,6 @@ import { isValidApplyChannel, parseApplyChannel } from './apply-channel';
 import { isRealCompanyLogo, sanitizeSchemaUrl } from './public-content';
 import type { SiteSettingsMap } from './site-settings';
 
-/** Ícone quadrado do portal — fallback em hiringOrganization.logo (JobPosting). */
-export const SITE_LOGO_SCHEMA_PATH = '/assets/img/logo-vagas-rj-jobposting.svg';
-
 const STREET_ADDRESS_FALLBACK = 'Não informado';
 
 type JobForSchema = {
@@ -60,14 +57,12 @@ export function formatJobStreetAddressDisplay(job: JobForSchema): string {
 function resolveOrganizationLogoUrl(
   companyLogo: string | null | undefined,
   settings?: SiteSettingsMap,
-): string {
-  if (companyLogo && isRealCompanyLogo(companyLogo)) {
-    const raw = sanitizeSchemaUrl(companyLogo) || companyLogo.trim();
-    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
-    const path = raw.startsWith('/') ? raw : `/${raw}`;
-    return absoluteUrl(path, settings);
-  }
-  return absoluteUrl(SITE_LOGO_SCHEMA_PATH, settings);
+): string | null {
+  if (!companyLogo || !isRealCompanyLogo(companyLogo)) return null;
+  const raw = sanitizeSchemaUrl(companyLogo) || companyLogo.trim();
+  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+  const path = raw.startsWith('/') ? raw : `/${raw}`;
+  return absoluteUrl(path, settings);
 }
 
 function buildPostalAddress(job: JobForSchema): Record<string, string> {
@@ -90,10 +85,7 @@ export type JobPostingBaseSalary = {
   value: { '@type': 'QuantitativeValue'; value: number; unitText: string };
 };
 
-/**
- * Google JobPosting exige MonetaryAmount em baseSalary (não aceita texto).
- * Sem salário informado: value 0 (em vez de omitir ou enviar "A combinar").
- */
+/** Inclui baseSalary apenas quando há um valor real informado pelo empregador. */
 export function buildBaseSalary(
   salary: string | null | undefined,
 ): JobPostingBaseSalary | null {
@@ -112,8 +104,9 @@ export function buildJobPostingSchema(job: JobForSchema, settings?: SiteSettings
   const hiringOrganization: Record<string, unknown> = {
     '@type': 'Organization',
     name: job.company.name,
-    logo: resolveOrganizationLogoUrl(job.company.logo, settings),
   };
+  const companyLogo = resolveOrganizationLogoUrl(job.company.logo, settings);
+  if (companyLogo) hiringOrganization.logo = companyLogo;
   const companyWebsite = sanitizeSchemaUrl(job.company.website);
   if (companyWebsite) hiringOrganization.sameAs = companyWebsite;
 
