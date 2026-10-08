@@ -16,7 +16,10 @@ const settings = await getSiteSettingsSafe();
 const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
 const jobsData = await jobList({ company: company.slug, page });
 const title = buildCompanyPageTitle(company.name, settings);
-const description = `Confira vagas de emprego na ${company.name} no Rio de Janeiro (RJ). Oportunidades atualizadas no ${settings[SETTING_KEYS.siteName] || 'Vagas RJ RIO'}.`;
+const description = jobsData.total > 0
+  ? `Confira vagas de emprego na ${company.name} no Rio de Janeiro (RJ). Oportunidades atualizadas no ${settings[SETTING_KEYS.siteName] || 'Vagas RJ RIO'}.`
+  : `${company.name} não possui vagas públicas ativas no momento. Consulte outras oportunidades no Rio de Janeiro (RJ).`;
+const robots = jobsData.total > 0 ? 'index,follow' : 'noindex,follow';
 const jsonLd = mergeJsonLd(
   buildOrganizationSchema(company, settings),
   buildBreadcrumbSchema(
@@ -29,7 +32,7 @@ const jsonLd = mergeJsonLd(
   ),
 );
 ---
-<BaseLayout title={title} description={description} canonical={baseUrl(`/empresas/${company.slug}`, settings)} jsonLd={jsonLd}>
+<BaseLayout title={title} description={description} canonical={baseUrl(`/empresas/${company.slug}`, settings)} robots={robots} jsonLd={jsonLd}>
   <div class="page-stack">
     <header class="page-hero page-hero-compact">
       <div class="page-hero-inner">
