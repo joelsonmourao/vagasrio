@@ -77,6 +77,25 @@ assert.ok(
   !('validThrough' in schemaWithoutOptionalFacts),
   'JobPosting sem validade informada deve omitir validThrough',
 );
+const hiringOrganization = schemaWithoutOptionalFacts.hiringOrganization as Record<string, unknown>;
+assert.ok(
+  !('logo' in hiringOrganization),
+  'empresa sem logotipo real não pode receber a marca do portal como fallback',
+);
+
+const schemaWithRealLogo = buildJobPostingSchema({
+  ...jobWithoutOptionalFacts,
+  company: {
+    ...jobWithoutOptionalFacts.company,
+    logo: 'https://empresa.example.net/logo.png',
+  },
+});
+assert.equal(
+  (schemaWithRealLogo.hiringOrganization as Record<string, unknown>).logo,
+  'https://empresa.example.net/logo.png',
+  'logotipo real da empresa deve ser preservado',
+);
+
 const postalAddress = (
   schemaWithoutOptionalFacts.jobLocation as {
     address: Record<string, unknown>;
