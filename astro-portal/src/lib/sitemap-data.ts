@@ -170,9 +170,13 @@ export async function fetchSitemapPosts(includeIndexable = true): Promise<Sitema
     );
 }
 
-export async function fetchSitemapCompanies(): Promise<SitemapUrlEntry[]> {
+export async function fetchSitemapCompanies(includeIndexable = true): Promise<SitemapUrlEntry[]> {
   const rows = await prisma.company.findMany({
-    where: { slug: { not: '' }, name: { not: '' } },
+    where: {
+      slug: { not: '' },
+      name: { not: '' },
+      jobs: { some: jobWhereIndexable(includeIndexable) },
+    },
     select: { slug: true, createdAt: true },
     orderBy: { name: 'asc' },
   });
@@ -207,7 +211,7 @@ async function loadAllEntries(includeIndexable = true) {
       fetchSitemapPages(),
       fetchSitemapJobs(includeIndexable),
       fetchSitemapPosts(includeIndexable),
-      fetchSitemapCompanies(),
+      fetchSitemapCompanies(includeIndexable),
       fetchSitemapCities(includeIndexable),
     ]);
     return { pages, jobs, posts, companies, cities };
