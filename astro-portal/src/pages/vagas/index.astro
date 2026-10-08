@@ -9,6 +9,7 @@ import JobsFaq from '../../components/JobsFaq.astro';
 import { jobList } from '../../lib/portal';
 import { baseUrl, siteConfig } from '../../lib/config';
 import { getSiteSettingsSafe, SETTING_KEYS } from '../../lib/site-settings';
+import { paginatedPath, parsePageParam } from '../../lib/pagination-pages';
 import { getRjJobsFaqs } from '../../lib/jobs-faq';
 import {
   buildBreadcrumbSchema,
@@ -17,7 +18,7 @@ import {
   mergeJsonLd,
 } from '../../lib/seo';
 
-const page = Math.max(1, Number(Astro.url.searchParams.get('page') || 1));
+const page = parsePageParam(Astro.url.searchParams.get('page'));
 const filterQuery = {
   q: Astro.url.searchParams.get('q') || '',
   city: Astro.url.searchParams.get('city') || '',
@@ -42,19 +43,33 @@ try {
 const settings = await getSiteSettingsSafe();
 const brand = settings[SETTING_KEYS.siteName] || siteConfig.name;
 const hasFilters = !!(filterQuery.q || filterQuery.city || filterQuery.company || filterQuery.category);
-const hasQueryString = Astro.url.searchParams.toString().length > 0;
+const supportedQueryKeys = new Set(['page', 'q', 'city', 'company', 'category']);
+const hasUnsupportedQuery = [...Astro.url.searchParams.keys()].some((key) => !supportedQueryKeys.has(key));
+const pageIsValid = page <= jobsData.totalPages;
+const canonical = baseUrl(
+  !hasFilters && !hasUnsupportedQuery && pageIsValid
+    ? paginatedPath('/vagas', page)
+    : '/vagas',
+  settings,
+);
 const queryForPager = Object.fromEntries(
   Object.entries(filterQuery).filter(([, v]) => v !== ''),
 );
 
 const placeLabel = filterQuery.city?.trim() || 'Rio de Janeiro';
-const { title, description } = buildJobsListingSeo({
+const { title: titleBase, description: descriptionBase } = buildJobsListingSeo({
   total: jobsData.total,
   jobTitles: jobsData.jobs.map((j) => j.title),
   placeLabel,
   brand,
   settings,
 });
+const title = page > 1 && pageIsValid && !hasFilters
+  ? `${titleBase} — Página ${page}`
+  : titleBase;
+const description = page > 1 && pageIsValid && !hasFilters
+  ? `${descriptionBase} Página ${page} da listagem.`
+  : descriptionBase;
 
 const faqItems = getRjJobsFaqs({
   brand,
@@ -62,7 +77,7 @@ const faqItems = getRjJobsFaqs({
   cities: siteConfig.allowedCities,
 });
 
-const jsonLd = !hasQueryString
+const jsonLd = !hasFilters && !hasUnsupportedQuery && page === 1
   ? mergeJsonLd(
       buildBreadcrumbSchema(
         [
@@ -81,8 +96,8 @@ const jsonLd = !hasQueryString
 <BaseLayout
   title={title}
   description={description}
-  canonical={baseUrl('/vagas')}
-  robots={hasQueryString ? 'noindex,follow' : undefined}
+  canonical={canonical}
+  robots={hasFilters || hasUnsupportedQuery || !pageIsValid ? 'noindex,follow' : undefined}
   jsonLd={jsonLd}
 >
   <div class="page-stack page-stack-market">
@@ -118,6 +133,6 @@ const jsonLd = !hasQueryString
 
     <Pagination page={jobsData.page} totalPages={jobsData.totalPages} basePath="/vagas" query={queryForPager} />
 
-    {!hasQueryString && <JobsFaq items={faqItems} />}
+    {!hasFilters && !hasUnsupportedQuery && page === 1 && <JobsFaq items={faqItems} />}
   </div>
 </BaseLayout>
