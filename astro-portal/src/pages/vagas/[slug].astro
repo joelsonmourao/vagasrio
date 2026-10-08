@@ -5,7 +5,7 @@ import JobApplyBox from '../../components/JobApplyBox.astro';
 import JobApplyCta from '../../components/JobApplyCta.astro';
 import { jobBySlug } from '../../lib/portal';
 import { loadJobRetentionRelated } from '../../lib/job-retention';
-import { buildJobPostingSchema, formatJobStreetAddressDisplay, resolveJobStreetAddress } from '../../lib/job-posting';
+import { buildPublicJobPostingSchema, formatJobStreetAddressDisplay, resolveJobStreetAddress } from '../../lib/job-posting';
 import {
   buildJobPageTitle,
   buildJobPageDescription,
@@ -37,7 +37,7 @@ const canonical = jobCanonical(job, settings);
 const publiclyVisible = jobIsPubliclyVisible(job);
 const robots = jobRobotsMeta(job, indexingOn, publiclyVisible);
 const jsonLd = mergeJsonLd(
-  buildJobPostingSchema(job, settings),
+  buildPublicJobPostingSchema(job, publiclyVisible, settings),
   buildBreadcrumbSchema(
     [
       { name: 'Início', path: '/' },
