@@ -4,21 +4,32 @@
   var accept = document.getElementById("cookie-accept");
   var refuse = document.getElementById("cookie-refuse");
 
-  if (banner && !localStorage.getItem(consentKey)) {
+  function readConsent() {
+    var cookieMatch = document.cookie.match(new RegExp("(?:^|; )" + consentKey + "=([01])"));
+    return cookieMatch ? cookieMatch[1] : localStorage.getItem(consentKey);
+  }
+
+  function storeConsent(value) {
+    localStorage.setItem(consentKey, value);
+    document.cookie = consentKey + "=" + value + "; Max-Age=31536000; Path=/; SameSite=Lax";
+    if (banner) banner.classList.remove("show");
+  }
+
+  var consentValue = readConsent();
+  if (banner && consentValue !== "1" && consentValue !== "0") {
     banner.classList.add("show");
   }
 
   if (accept) {
     accept.addEventListener("click", function () {
-      localStorage.setItem(consentKey, "1");
-      if (banner) banner.classList.remove("show");
+      storeConsent("1");
+      window.location.reload();
     });
   }
 
   if (refuse) {
     refuse.addEventListener("click", function () {
-      localStorage.setItem(consentKey, "0");
-      if (banner) banner.classList.remove("show");
+      storeConsent("0");
     });
   }
 
@@ -123,7 +134,7 @@
     adminBackdrop.addEventListener("click", closeAdminNav);
   }
 
-  if (adNodes.length > 0) {
+  if (consentValue === "1" && adNodes.length > 0) {
     window.adsbygoogle = window.adsbygoogle || [];
     adNodes.forEach(function (node) {
       if (node.getAttribute("data-ads-init") === "1") return;
