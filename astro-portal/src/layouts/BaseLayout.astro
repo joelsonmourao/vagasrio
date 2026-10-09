@@ -25,6 +25,7 @@ interface Props {
 
 const props = Astro.props;
 const settings = await getSiteSettingsSafe();
+const marketingConsent = Astro.cookies.get('portal_vagas_cookie_ok')?.value === '1';
 const indexingOn = isIndexingEnabled(settings);
 const robots = props.robots ?? (indexingOn ? 'index,follow' : 'noindex,nofollow');
 const canonicalAbsolute = props.canonical
@@ -48,6 +49,7 @@ const canonicalAbsolute = props.canonical
       adsenseClient={settings[SETTING_KEYS.adsenseClient]}
       adsenseEnabled={isAdsenseEnabled(settings)}
       adsenseScript={settings[SETTING_KEYS.adsenseScript]}
+      marketingConsent={marketingConsent}
       ogType={props.ogType || 'website'}
       publishedTime={props.publishedTime}
       modifiedTime={props.modifiedTime}
