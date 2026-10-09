@@ -246,4 +246,45 @@ for (const [name, value] of expectedSecurityHeaders) {
   );
 }
 
+const baseLayoutSource = readFileSync(
+  new URL('../src/layouts/BaseLayout.astro', import.meta.url),
+  'utf8',
+);
+const seoHeadSource = readFileSync(
+  new URL('../src/components/SeoHead.astro', import.meta.url),
+  'utf8',
+);
+const publicAppSource = readFileSync(
+  new URL('../public/assets/js/app.js', import.meta.url),
+  'utf8',
+);
+assert.ok(
+  baseLayoutSource.includes("Astro.cookies.get('portal_vagas_cookie_ok')?.value === '1'"),
+  'o servidor deve ler a escolha de cookies antes de montar o head',
+);
+assert.ok(
+  baseLayoutSource.includes('marketingConsent={marketingConsent}'),
+  'o layout deve repassar o consentimento ao componente de SEO',
+);
+assert.ok(
+  seoHeadSource.includes('marketingConsent && adsenseEnabled'),
+  'AdSense não pode carregar antes do consentimento',
+);
+assert.ok(
+  seoHeadSource.includes('marketingConsent && gaCode'),
+  'Analytics não pode carregar antes do consentimento',
+);
+assert.ok(
+  publicAppSource.includes('SameSite=Lax'),
+  'a escolha deve ser persistida em cookie de primeira parte',
+);
+assert.ok(
+  publicAppSource.includes('window.location.reload()'),
+  'a aceitação deve recarregar a página para ativar os scripts autorizados',
+);
+assert.ok(
+  publicAppSource.includes('consentValue === "1" && adNodes.length > 0'),
+  'slots de anúncio não podem ser inicializados após recusa ou antes da escolha',
+);
+
 console.log('public-copy: ok');
