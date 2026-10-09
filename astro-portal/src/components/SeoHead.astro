@@ -16,6 +16,7 @@ interface Props {
   adsenseClient?: string;
   adsenseEnabled?: boolean;
   adsenseScript?: string;
+  marketingConsent?: boolean;
   ogType?: 'website' | 'article';
   publishedTime?: string;
   modifiedTime?: string;
@@ -36,6 +37,7 @@ const {
   adsenseClient,
   adsenseEnabled = false,
   adsenseScript = '',
+  marketingConsent = false,
   ogType = 'website',
   publishedTime,
   modifiedTime,
@@ -49,8 +51,10 @@ const ldJson = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
 const adsScript = adsenseScript?.trim() || '';
 const loadAdsenseAuto =
-  adsenseEnabled && !adsScript && adsenseClient?.startsWith('ca-pub-');
-const loadAdsenseCustom = adsenseEnabled && adsScript.length > 0;
+  marketingConsent && adsenseEnabled && !adsScript && adsenseClient?.startsWith('ca-pub-');
+const loadAdsenseCustom = marketingConsent && adsenseEnabled && adsScript.length > 0;
+const loadGaCustom = marketingConsent && gaCode && gaCode.includes('<script');
+const loadGaStandard = marketingConsent && gaCode && !gaCode.includes('<script') && gaCode.startsWith('G-');
 ---
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -85,11 +89,11 @@ const loadAdsenseCustom = adsenseEnabled && adsScript.length > 0;
 {ldJson.map((schema) => (
   <script type="application/ld+json" set:html={serializeJsonLd(schema)} />
 ))}
-{gaCode && gaCode.includes('<script') && <Fragment set:html={gaCode} />}
-{gaCode && !gaCode.includes('<script') && gaCode.startsWith('G-') && (
+{loadGaCustom && <Fragment set:html={gaCode} />}
+{loadGaStandard && (
   <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaCode}`}></script>
 )}
-{gaCode && !gaCode.includes('<script') && gaCode.startsWith('G-') && (
+{loadGaStandard && (
   <script is:inline define:vars={{ gaCode }}>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
