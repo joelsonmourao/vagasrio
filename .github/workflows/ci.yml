@@ -60,6 +60,10 @@ jobs:
           find app config public templates scripts -type f -name '*.php' -print0 \
             | xargs -0 -n1 php -l
 
+      - name: Verify production database bootstrap guard
+        shell: bash
+        run: php scripts/test-database-bootstrap-guard.php
+
       - name: Verify destructive reset guard without executing it
         shell: bash
         run: |
