@@ -63,9 +63,7 @@ function envDefaults(): SiteSettingsMap {
     [SETTING_KEYS.adsenseClient]: process.env.ADSENSE_CLIENT_ID || '',
     [SETTING_KEYS.adsenseEnabled]: '0',
     [SETTING_KEYS.adsenseScript]: '',
-    [SETTING_KEYS.adsTxt]:
-      process.env.ADSENSE_ADS_TXT ||
-      'google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0',
+    [SETTING_KEYS.adsTxt]: process.env.ADSENSE_ADS_TXT || '',
     [SETTING_KEYS.indexingEnabled]: '1',
     [SETTING_KEYS.robotsExtra]: '',
     [SETTING_KEYS.sitemapNote]: '1',

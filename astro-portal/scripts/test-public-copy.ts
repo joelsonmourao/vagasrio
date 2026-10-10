@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { normalizeSiteName } from '../src/lib/config';
+import { sanitizeAdsTxt } from '../src/lib/ads-txt';
 import { getRjJobsFaqs } from '../src/lib/jobs-faq';
 import { serializeJsonLd } from '../src/lib/seo';
 import { buildBaseSalary, buildJobPostingSchema, buildPublicJobPostingSchema, sanitizeJobDescriptionHtml } from '../src/lib/job-posting';
@@ -11,6 +12,31 @@ assert.equal(
   normalizeSiteName('Vagas RJ RIO RIO'),
   'Vagas RJ RIO',
   'a marca não pode repetir o sufixo RIO',
+);
+
+
+assert.equal(
+  sanitizeAdsTxt('google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0'),
+  '',
+  'ads.txt não pode publicar o publisher ID de exemplo',
+);
+assert.equal(
+  sanitizeAdsTxt(''),
+  '',
+  'ads.txt sem publisher ID real deve permanecer indisponível',
+);
+assert.equal(
+  sanitizeAdsTxt('google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0'),
+  'google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0',
+  'ads.txt deve preservar um publisher ID real configurado',
+);
+assert.doesNotMatch(
+  sanitizeAdsTxt(
+    'google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0\n' +
+      'google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0',
+  ),
+  /pub-0000000000000000/,
+  'ads.txt deve remover linha de exemplo quando existir uma linha real',
 );
 
 const maliciousJsonLd = serializeJsonLd({
