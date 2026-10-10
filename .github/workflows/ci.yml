@@ -44,3 +44,44 @@ jobs:
 
       - name: Build production portal
         run: npm run build:postgres
+
+  php-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container: php:8.2-cli
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Lint production PHP
+        shell: bash
+        run: |
+          find app config public templates scripts -type f -name '*.php' -print0 \
+            | xargs -0 -n1 php -l
+
+      - name: Verify destructive reset guard without executing it
+        shell: bash
+        run: |
+          php -r '
+            $source = file_get_contents("scripts/reset-demo-rj.php");
+            $bootstrap = strpos($source, "app/bootstrap.php");
+            $guards = [
+              strpos($source, "PHP_SAPI"),
+              strpos($source, "APP_ENV"),
+              strpos($source, "RESET_DEMO_CONFIRMATION"),
+              strpos($source, "development"),
+              strpos($source, "test"),
+            ];
+            if ($bootstrap === false) {
+              fwrite(STDERR, "bootstrap marker missing\n");
+              exit(1);
+            }
+            foreach ($guards as $guard) {
+              if ($guard === false || $guard > $bootstrap) {
+                fwrite(STDERR, "reset guard missing or placed after bootstrap\n");
+                exit(1);
+              }
+            }
+            echo "reset guard is present before bootstrap\n";
+          '
