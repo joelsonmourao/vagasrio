@@ -84,6 +84,23 @@ assert.match(
   'o estado vazio deve informar claramente que não há vagas públicas',
 );
 
+const homePageSource = readFileSync(
+  new URL('../src/pages/index.astro', import.meta.url),
+  'utf8',
+);
+assert.ok(
+  homePageSource.includes('const jobCount = data.stats.activeJobs || data.stats.jobs || 0;'),
+  'a home deve derivar o estado público de uma única contagem de vagas',
+);
+assert.ok(
+  homePageSource.includes('getRjJobsFaqs({\n  brand,\n  jobCount,'),
+  'o FAQ visível e o FAQPage devem receber a mesma contagem usada pela home',
+);
+assert.ok(
+  homePageSource.includes('Ainda não há vagas públicas ativas.'),
+  'a home sem vagas deve exibir uma mensagem factual de indisponibilidade',
+);
+
 const oneJobFaq = getRjJobsFaqs({ brand: 'Vagas RJ RIO', jobCount: 1 });
 assert.match(
   oneJobFaq[0]?.answer || '',
