@@ -17,13 +17,13 @@ class Database
 
         if (!is_dir($dbDirectory)) {
             if (!$allowBootstrapWrites) {
-                throw new \\RuntimeException('Diretorio do banco ausente; bootstrap automatico esta bloqueado.');
+                throw new \RuntimeException('Diretorio do banco ausente; bootstrap automatico esta bloqueado.');
             }
             mkdir($dbDirectory, 0775, true);
         }
 
         if (!is_file($dbPath) && !$allowBootstrapWrites) {
-            throw new \\RuntimeException('Banco SQLite ausente; criacao automatica esta bloqueada.');
+            throw new \RuntimeException('Banco SQLite ausente; criacao automatica esta bloqueada.');
         }
 
         self::$pdo = new PDO('sqlite:' . $dbPath);
