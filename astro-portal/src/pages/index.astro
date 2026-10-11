@@ -26,7 +26,7 @@ try {
 
 const settings = await getSiteSettingsSafe();
 const brand = settings[SETTING_KEYS.siteName] || siteConfig.name;
-const jobCount = data.stats.activeJobs || data.stats.jobs || 0;
+const jobCount = data.stats.activeJobs ?? data.stats.jobs ?? 0;
 const listingSeo = buildJobsListingSeo({
   total: jobCount,
   jobTitles: data.featuredJobs.map((j) => j.title),
