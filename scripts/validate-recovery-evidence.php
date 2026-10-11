@@ -100,11 +100,28 @@ function validate_manifest(array $data): array
     ] as $path) {
         error_if(value_at($data, $path) !== true, $path . ' deve ser true', $errors);
     }
-    error_if(!valid_date(value_at($data, 'restore.completed_at')), 'restore.completed_at inválido', $errors);
-    error_if(!valid_date(value_at($data, 'rollback.completed_at')), 'rollback.completed_at inválido', $errors);
-    error_if(preg_match('/^[a-f0-9]{40}$/', (string) value_at($data, 'rollback.previous_commit')) !== 1, 'rollback.previous_commit deve ser SHA completo', $errors);
-
     $capturedAt = value_at($data, 'backup.captured_at');
+    $restoreCompletedAt = value_at($data, 'restore.completed_at');
+    $rollbackCompletedAt = value_at($data, 'rollback.completed_at');
+    error_if(!valid_date($restoreCompletedAt), 'restore.completed_at inválido', $errors);
+    error_if(!valid_date($rollbackCompletedAt), 'rollback.completed_at inválido', $errors);
+    error_if(preg_match('/^[a-f0-9]{40}$/', (string) value_at($data, 'rollback.previous_commit')) !== 1, 'rollback.previous_commit deve ser SHA completo', $errors);
+    if (valid_date($capturedAt) && valid_date($restoreCompletedAt)) {
+        error_if(
+            strtotime((string) $restoreCompletedAt) <= strtotime((string) $capturedAt),
+            'restore.completed_at deve ser posterior ao backup',
+            $errors
+        );
+    }
+    if (valid_date($restoreCompletedAt) && valid_date($rollbackCompletedAt)) {
+        error_if(
+            strtotime((string) $rollbackCompletedAt) <= strtotime((string) $restoreCompletedAt),
+            'rollback.completed_at deve ser posterior ao restore',
+            $errors
+        );
+    }
+
+
     $expiresAt = value_at($data, 'retention.expires_at');
     error_if(!valid_date($expiresAt), 'retention.expires_at inválido', $errors);
     if (valid_date($capturedAt) && valid_date($expiresAt)) {
@@ -114,8 +131,16 @@ function validate_manifest(array $data): array
     $decision = value_at($data, 'gate.decision');
     error_if(!in_array($decision, ['blocked', 'open'], true), 'gate.decision deve ser blocked ou open', $errors);
     if ($decision === 'open') {
+        $approvedAt = value_at($data, 'gate.approved_at');
         error_if(!is_string(value_at($data, 'gate.approved_by')) || trim((string) value_at($data, 'gate.approved_by')) === '', 'gate.approved_by obrigatório para open', $errors);
-        error_if(!valid_date(value_at($data, 'gate.approved_at')), 'gate.approved_at obrigatório para open', $errors);
+        error_if(!valid_date($approvedAt), 'gate.approved_at obrigatório para open', $errors);
+        if (valid_date($rollbackCompletedAt) && valid_date($approvedAt)) {
+            error_if(
+                strtotime((string) $approvedAt) <= strtotime((string) $rollbackCompletedAt),
+                'gate.approved_at deve ser posterior ao rollback',
+                $errors
+            );
+        }
     }
 
     return array_values(array_unique($errors));
@@ -173,6 +198,27 @@ if (($argv[1] ?? null) === '--self-test') {
     $invalid['identity']['application_uuid'] = 'wrong-app';
     $invalid['database_url'] = 'postgresql://user:password@example.invalid/db';
     $invalidErrors = validate_manifest($invalid);
+    $invalidChronology = valid_fixture();
+    $invalidChronology['restore']['completed_at'] = '2026-10-11T17:59:59Z';
+    $invalidChronology['rollback']['completed_at'] = '2026-10-11T17:59:58Z';
+    $invalidChronology['gate'] = [
+        'decision' => 'open',
+        'approved_by' => 'responsavel-operacional',
+        'approved_at' => '2026-10-11T17:59:57Z',
+    ];
+    $chronologyErrors = validate_manifest($invalidChronology);
+    $expectedChronologyErrors = [
+        'restore.completed_at deve ser posterior ao backup',
+        'rollback.completed_at deve ser posterior ao restore',
+        'gate.approved_at deve ser posterior ao rollback',
+    ];
+    foreach ($expectedChronologyErrors as $expectedError) {
+        if (!in_array($expectedError, $chronologyErrors, true)) {
+            fwrite(STDERR, "Chronology self-test failed: " . implode('; ', $chronologyErrors) . "\n");
+            exit(1);
+        }
+    }
+
     if ($validErrors !== [] || count($invalidErrors) < 2) {
         fwrite(STDERR, "Self-test failed\n");
         exit(1);
