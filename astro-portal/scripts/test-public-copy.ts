@@ -39,6 +39,26 @@ assert.doesNotMatch(
   'ads.txt deve remover linha de exemplo quando existir uma linha real',
 );
 
+const publicAdsTxt = readFileSync(
+  new URL('../public/ads.txt', import.meta.url),
+  'utf8',
+).trim();
+assert.equal(
+  publicAdsTxt,
+  'google.com, pub-4279201625870524, DIRECT, f08c47fec0942fa0',
+  'o arquivo público deve manter o publisher ID real já configurado para o domínio',
+);
+assert.equal(
+  sanitizeAdsTxt(publicAdsTxt),
+  publicAdsTxt,
+  'o arquivo físico publicado deve passar pela mesma validação da rota dinâmica',
+);
+assert.doesNotMatch(
+  publicAdsTxt,
+  /pub-0{16}|pub-x{16}|placeholder|example/i,
+  'o arquivo físico não pode conter publisher ID de exemplo ou placeholder',
+);
+
 const maliciousJsonLd = serializeJsonLd({
   '@context': 'https://schema.org',
   headline: '</script><script>window.__vagasRjXss=true</script>',
