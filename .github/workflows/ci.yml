@@ -64,6 +64,10 @@ jobs:
         shell: bash
         run: php scripts/test-database-bootstrap-guard.php
 
+      - name: Validate recovery evidence contract
+        shell: bash
+        run: php scripts/validate-recovery-evidence.php --self-test
+
       - name: Verify destructive reset guard without executing it
         shell: bash
         run: |

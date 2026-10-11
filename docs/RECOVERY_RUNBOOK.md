@@ -242,3 +242,15 @@ Política inicial sugerida, sujeita à aprovação operacional:
 Registre ID, horário UTC, operador, commit, versões PHP/SQLite, journal mode, tamanhos, checksums, destino independente, resultado da restauração, testes e rollback.
 
 Nunca anexe o banco, storage, segredos, hashes de senha ou dados pessoais a issues, PRs ou logs públicos.
+
+## 12. Manifesto verificável antes de abrir o gate
+
+O arquivo `scripts/validate-recovery-evidence.php` valida somente metadados e não abre o SQLite, não lê volumes e não chama rede. Ele exige identidade exata do aplicativo, hashes e tamanhos dos artefatos, destino independente, pausa de escrita, restauração isolada, teste de rollback, retenção e decisão explícita do gate. Chaves e padrões de segredo são recusados.
+
+Crie o manifesto fora do repositório e sem credenciais. Valide-o com:
+
+    php scripts/validate-recovery-evidence.php /caminho/restrito/recovery-evidence.json
+
+A mensagem `Recovery evidence: VALID` confirma apenas que o manifesto está completo e coerente. Ela não prova que os comandos foram realmente executados. A evidência original — logs, checksums recalculados no destino independente e resultado da restauração isolada — deve permanecer vinculada ao registro operacional restrito.
+
+O gate só pode mudar para `open` após revisão humana das evidências. Não versionar o manifesto real, artefatos, caminhos internos, credenciais nem dados do banco.
