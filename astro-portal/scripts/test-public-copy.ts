@@ -326,6 +326,20 @@ const publicAppSource = readFileSync(
   'utf8',
 );
 assert.ok(
+  seoHeadSource.includes('const pageTitle = normalizeSiteName(title);'),
+  'o head deve normalizar o título final antes de renderizar metatags',
+);
+for (const titleBinding of [
+  '<title>{pageTitle}</title>',
+  '<meta property="og:title" content={pageTitle} />',
+  '<meta name="twitter:title" content={pageTitle} />',
+]) {
+  assert.ok(
+    seoHeadSource.includes(titleBinding),
+    'title, Open Graph e Twitter devem compartilhar o título normalizado',
+  );
+}
+assert.ok(
   baseLayoutSource.includes("Astro.cookies.get('portal_vagas_cookie_ok')?.value === '1'"),
   'o servidor deve ler a escolha de cookies antes de montar o head',
 );
