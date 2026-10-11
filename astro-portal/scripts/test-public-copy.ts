@@ -89,8 +89,12 @@ const homePageSource = readFileSync(
   'utf8',
 );
 assert.ok(
-  homePageSource.includes('const jobCount = data.stats.activeJobs || data.stats.jobs || 0;'),
-  'a home deve derivar o estado público de uma única contagem de vagas',
+  homePageSource.includes('const jobCount = data.stats.activeJobs ?? data.stats.jobs ?? 0;'),
+  'a home deve preservar zero vagas ativas, sem cair no total histórico de vagas',
+);
+assert.ok(
+  !homePageSource.includes('data.stats.activeJobs || data.stats.jobs'),
+  'zero vagas ativas não pode ser substituído pelo total histórico',
 );
 assert.ok(
   homePageSource.includes('getRjJobsFaqs({\n  brand,\n  jobCount,'),
