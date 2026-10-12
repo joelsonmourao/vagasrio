@@ -122,6 +122,9 @@ deployed_commit=<sha>
 php_version=<major.minor>
 sqlite_version=<major.minor.patch>
 journal_mode=<modo>
+online_backup_completed=true
+quick_check_passed=true
+foreign_key_check_passed=true
 database_sha256=<sha256>
 storage_sha256=<sha256>
 independent_destination=<identificador sem credenciais>
@@ -245,7 +248,7 @@ Nunca anexe o banco, storage, segredos, hashes de senha ou dados pessoais a issu
 
 ## 12. Manifesto verificável antes de abrir o gate
 
-O arquivo `scripts/validate-recovery-evidence.php` valida somente metadados e não abre o SQLite, não lê volumes e não chama rede. Ele exige identidade exata do aplicativo, hashes e tamanhos dos artefatos, destino independente, pausa de escrita, restauração isolada, teste de rollback, retenção e decisão explícita do gate. Chaves e padrões de segredo são recusados.
+O arquivo `scripts/validate-recovery-evidence.php` valida somente metadados e não abre o SQLite, não lê volumes e não chama rede. Ele exige identidade exata do aplicativo, backup online concluído, `quick_check` e `foreign_key_check` aprovados durante a captura, horário da captura dentro da pausa de escrita, hashes e tamanhos dos artefatos, destino independente, restauração isolada, teste de rollback, retenção e decisão explícita do gate. Chaves e padrões de segredo são recusados.
 
 Crie o manifesto fora do repositório e sem credenciais. Valide-o com:
 
