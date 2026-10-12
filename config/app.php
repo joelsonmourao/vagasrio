@@ -1,10 +1,19 @@
 <?php
 
+$appEnv = getenv('APP_ENV') ?: 'development';
 $adsEnabledEnv = getenv('ADS_ENABLED');
 $adsEnabled = $adsEnabledEnv === false ? false : in_array(strtolower((string) $adsEnabledEnv), ['1', 'true', 'yes'], true);
+$bootstrapWritesEnv = getenv('APP_ALLOW_BOOTSTRAP_WRITES');
+$allowBootstrapWrites = in_array($appEnv, ['development', 'test'], true)
+    && $bootstrapWritesEnv !== false
+    && in_array(strtolower((string) $bootstrapWritesEnv), ['1', 'true', 'yes'], true);
 
 return [
-    'env' => getenv('APP_ENV') ?: 'development',
+    'env' => $appEnv,
+    'database' => [
+        // Nunca habilitado em production, mesmo se a variável for configurada por engano.
+        'allow_bootstrap_writes' => $allowBootstrapWrites,
+    ],
     'site' => [
         'name' => getenv('SITE_NAME') ?: 'Vagas RJ',
         'subtitle' => 'Empregos no Rio de Janeiro',

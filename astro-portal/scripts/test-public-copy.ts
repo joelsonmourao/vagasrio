@@ -39,6 +39,26 @@ assert.doesNotMatch(
   'ads.txt deve remover linha de exemplo quando existir uma linha real',
 );
 
+const publicAdsTxt = readFileSync(
+  new URL('../public/ads.txt', import.meta.url),
+  'utf8',
+).trim();
+assert.equal(
+  publicAdsTxt,
+  'google.com, pub-4279201625870524, DIRECT, f08c47fec0942fa0',
+  'o arquivo público deve manter o publisher ID real já configurado para o domínio',
+);
+assert.equal(
+  sanitizeAdsTxt(publicAdsTxt),
+  publicAdsTxt,
+  'o arquivo físico publicado deve passar pela mesma validação da rota dinâmica',
+);
+assert.doesNotMatch(
+  publicAdsTxt,
+  /pub-0{16}|pub-x{16}|placeholder|example/i,
+  'o arquivo físico não pode conter publisher ID de exemplo ou placeholder',
+);
+
 const maliciousJsonLd = serializeJsonLd({
   '@context': 'https://schema.org',
   headline: '</script><script>window.__vagasRjXss=true</script>',
@@ -82,6 +102,27 @@ assert.match(
   emptyCopy,
   /não (?:exibe|há) vagas públicas ativas/i,
   'o estado vazio deve informar claramente que não há vagas públicas',
+);
+
+const homePageSource = readFileSync(
+  new URL('../src/pages/index.astro', import.meta.url),
+  'utf8',
+);
+assert.ok(
+  homePageSource.includes('const jobCount = data.stats.activeJobs ?? data.stats.jobs ?? 0;'),
+  'a home deve preservar zero vagas ativas, sem cair no total histórico de vagas',
+);
+assert.ok(
+  !homePageSource.includes('data.stats.activeJobs || data.stats.jobs'),
+  'zero vagas ativas não pode ser substituído pelo total histórico',
+);
+assert.ok(
+  homePageSource.includes('getRjJobsFaqs({\n  brand,\n  jobCount,'),
+  'o FAQ visível e o FAQPage devem receber a mesma contagem usada pela home',
+);
+assert.ok(
+  homePageSource.includes('Ainda não há vagas públicas ativas.'),
+  'a home sem vagas deve exibir uma mensagem factual de indisponibilidade',
 );
 
 const oneJobFaq = getRjJobsFaqs({ brand: 'Vagas RJ RIO', jobCount: 1 });
@@ -284,6 +325,20 @@ const publicAppSource = readFileSync(
   new URL('../public/assets/js/app.js', import.meta.url),
   'utf8',
 );
+assert.ok(
+  seoHeadSource.includes('const pageTitle = normalizeSiteName(title);'),
+  'o head deve normalizar o título final antes de renderizar metatags',
+);
+for (const titleBinding of [
+  '<title>{pageTitle}</title>',
+  '<meta property="og:title" content={pageTitle} />',
+  '<meta name="twitter:title" content={pageTitle} />',
+]) {
+  assert.ok(
+    seoHeadSource.includes(titleBinding),
+    'title, Open Graph e Twitter devem compartilhar o título normalizado',
+  );
+}
 assert.ok(
   baseLayoutSource.includes("Astro.cookies.get('portal_vagas_cookie_ok')?.value === '1'"),
   'o servidor deve ler a escolha de cookies antes de montar o head',

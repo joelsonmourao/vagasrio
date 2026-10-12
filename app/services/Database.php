@@ -12,13 +12,27 @@ class Database
 
     public static function init(string $dbPath, array $config): void
     {
-        if (!is_dir(dirname($dbPath))) {
-            mkdir(dirname($dbPath), 0775, true);
+        $allowBootstrapWrites = ($config['database']['allow_bootstrap_writes'] ?? false) === true;
+        $dbDirectory = dirname($dbPath);
+
+        if (!is_dir($dbDirectory)) {
+            if (!$allowBootstrapWrites) {
+                throw new \RuntimeException('Diretorio do banco ausente; bootstrap automatico esta bloqueado.');
+            }
+            mkdir($dbDirectory, 0775, true);
+        }
+
+        if (!is_file($dbPath) && !$allowBootstrapWrites) {
+            throw new \RuntimeException('Banco SQLite ausente; criacao automatica esta bloqueada.');
         }
 
         self::$pdo = new PDO('sqlite:' . $dbPath);
         self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         self::$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
+        if (!$allowBootstrapWrites) {
+            return;
+        }
 
         self::migrate();
         DemoDataReset::purgeInvalidData(self::$pdo);

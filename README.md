@@ -12,18 +12,17 @@ Portal de vagas leve em PHP + SQLite, focado no Rio de Janeiro (RJ), com SEO for
 - Para importacao `.xlsx`: extensao `zip` (`ZipArchive`)
 - Apache com `mod_rewrite` (Hostinger) ou Nginx com fallback para `public/index.php`
 
-## Reset de dados demonstrativos (RJ)
+## Reset de dados demonstrativos (somente ambiente descartavel)
 
-Para remover dados antigos de SP e recriar o demo correto do Rio de Janeiro:
+O reset altera dados e e bloqueado em producao. Use apenas por CLI, em `development` ou `test`, com banco/volumes descartaveis e confirmacao explicita:
 
 ```bash
-cd C:\Users\Joelson\Documents\Portal_Vagas_UF
+APP_ENV=development \
+RESET_DEMO_CONFIRMATION=RESET-DEMO-RJ \
 php scripts/reset-demo-rj.php
 ```
 
-O script remove vagas demo antigas, cidades invalidas, empresas legadas de SP e recria cidades, empresas e vagas demo do RJ.
-
-Cidades permitidas estao em `config/app.php` -> `site.allowed_cities`.
+Nunca execute esse script contra o SQLite ou os volumes de producao. Cidades permitidas estao em `config/app.php` -> `site.allowed_cities`.
 
 
 ```bash
@@ -68,7 +67,8 @@ php -r "echo password_hash('SUA_SENHA_FORTE', PASSWORD_DEFAULT), PHP_EOL;"
 
 Variaveis de ambiente suportadas:
 
-- `APP_ENV` (`production` ou `development`)
+- `APP_ENV` (`production`, `development` ou `test`)
+- `APP_ALLOW_BOOTSTRAP_WRITES` (`false` em producao; `true` apenas em ambiente descartavel)
 - `SITE_BASE_URL` (URL publica, ex: `https://vagasrj.com.br`)
 - `SITE_NAME`
 - `ADMIN_USERNAME`
@@ -229,7 +229,9 @@ Monte estes caminhos para nao perder dados entre deploys:
 
 No Coolify: **Storages / Persistent Volumes** com destino exatamente nesses paths.
 
-O banco e criado automaticamente em `database/portal.sqlite` na primeira requisicao, se o volume estiver vazio.
+Em producao, banco/diretorio ausente causa falha controlada: criacao, migration, seed, limpeza e expurgo automaticos ficam bloqueados. `APP_ALLOW_BOOTSTRAP_WRITES=true` so funciona em `development` ou `test`.
+
+Antes de qualquer deploy, siga [o runbook de backup, restauracao isolada e rollback](docs/RECOVERY_RUNBOOK.md).
 
 ### Variaveis de ambiente recomendadas
 
@@ -264,9 +266,14 @@ docker build -t vagas-rj .
 docker run --rm -p 8080:80 \
   -v vagas-db:/var/www/html/database \
   -v vagas-storage:/var/www/html/storage \
-  -e APP_ENV=production \
+  -e APP_ENV=development \
+  -e APP_ALLOW_BOOTSTRAP_WRITES=true \
   -e SITE_BASE_URL=http://localhost:8080 \
   vagas-rj
 ```
 
 Site: `http://localhost:8080`
+
+## 16) Backup e recuperacao
+
+O procedimento verificavel para SQLite e storage esta em [docs/RECOVERY_RUNBOOK.md](docs/RECOVERY_RUNBOOK.md). A existencia do documento nao comprova backup: o gate exige copia em destino independente, restauracao isolada e rollback ensaiado.
