@@ -72,6 +72,9 @@ function validate_manifest(array $data): array
     error_if(!is_string(value_at($data, 'backup.php_version')), 'backup.php_version obrigatório', $errors);
     error_if(!is_string(value_at($data, 'backup.sqlite_version')), 'backup.sqlite_version obrigatório', $errors);
     error_if(!in_array(strtolower((string) value_at($data, 'backup.journal_mode')), ['delete', 'truncate', 'persist', 'memory', 'wal', 'off'], true), 'backup.journal_mode inválido', $errors);
+    error_if(value_at($data, 'backup.online_backup_completed') !== true, 'backup.online_backup_completed deve ser true', $errors);
+    error_if(value_at($data, 'backup.quick_check_passed') !== true, 'backup.quick_check_passed deve ser true', $errors);
+    error_if(value_at($data, 'backup.foreign_key_check_passed') !== true, 'backup.foreign_key_check_passed deve ser true', $errors);
 
     foreach (['database', 'storage'] as $artifact) {
         error_if(preg_match('/^[a-f0-9]{64}$/', (string) value_at($data, 'artifacts.' . $artifact . '_sha256')) !== 1, 'artifacts.' . $artifact . '_sha256 inválido', $errors);
@@ -83,7 +86,17 @@ function validate_manifest(array $data): array
     error_if(!valid_date(value_at($data, 'write_pause.started_at')), 'write_pause.started_at inválido', $errors);
     error_if(!valid_date(value_at($data, 'write_pause.finished_at')), 'write_pause.finished_at inválido', $errors);
     if (valid_date(value_at($data, 'write_pause.started_at')) && valid_date(value_at($data, 'write_pause.finished_at'))) {
-        error_if(strtotime((string) value_at($data, 'write_pause.finished_at')) < strtotime((string) value_at($data, 'write_pause.started_at')), 'write_pause tem ordem inválida', $errors);
+        $pauseStartedAt = strtotime((string) value_at($data, 'write_pause.started_at'));
+        $pauseFinishedAt = strtotime((string) value_at($data, 'write_pause.finished_at'));
+        error_if($pauseFinishedAt < $pauseStartedAt, 'write_pause tem ordem inválida', $errors);
+        if (valid_date(value_at($data, 'backup.captured_at'))) {
+            $capturedAtTimestamp = strtotime((string) value_at($data, 'backup.captured_at'));
+            error_if(
+                $capturedAtTimestamp < $pauseStartedAt || $capturedAtTimestamp > $pauseFinishedAt,
+                'backup.captured_at deve estar dentro da pausa de escrita',
+                $errors
+            );
+        }
     }
 
     foreach ([
@@ -160,6 +173,9 @@ function valid_fixture(): array
             'php_version' => '8.2.0',
             'sqlite_version' => '3.40.0',
             'journal_mode' => 'wal',
+            'online_backup_completed' => true,
+            'quick_check_passed' => true,
+            'foreign_key_check_passed' => true,
         ],
         'artifacts' => [
             'database_sha256' => str_repeat('b', 64),
@@ -198,6 +214,25 @@ if (($argv[1] ?? null) === '--self-test') {
     $invalid['identity']['application_uuid'] = 'wrong-app';
     $invalid['database_url'] = 'postgresql://user:password@example.invalid/db';
     $invalidErrors = validate_manifest($invalid);
+    $invalidBackup = valid_fixture();
+    $invalidBackup['backup']['online_backup_completed'] = false;
+    $invalidBackup['backup']['quick_check_passed'] = false;
+    $invalidBackup['backup']['foreign_key_check_passed'] = false;
+    $invalidBackup['backup']['captured_at'] = '2026-10-11T17:59:59Z';
+    $invalidBackupErrors = validate_manifest($invalidBackup);
+    $expectedBackupErrors = [
+        'backup.online_backup_completed deve ser true',
+        'backup.quick_check_passed deve ser true',
+        'backup.foreign_key_check_passed deve ser true',
+        'backup.captured_at deve estar dentro da pausa de escrita',
+    ];
+    foreach ($expectedBackupErrors as $expectedError) {
+        if (!in_array($expectedError, $invalidBackupErrors, true)) {
+            fwrite(STDERR, "Backup self-test failed: " . implode('; ', $invalidBackupErrors) . "\n");
+            exit(1);
+        }
+    }
+
     $invalidChronology = valid_fixture();
     $invalidChronology['restore']['completed_at'] = '2026-10-11T17:59:59Z';
     $invalidChronology['rollback']['completed_at'] = '2026-10-11T17:59:58Z';
