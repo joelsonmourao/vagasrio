@@ -50,8 +50,13 @@ const favicon = faviconPath?.startsWith('http') ? faviconPath : absoluteUrl(favi
 const ldJson = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
 const adsScript = adsenseScript?.trim() || '';
+// Metatag de propriedade visível aos robôs do AdSense, sem exigir consentimento
+// para carregar anúncios ou ativar rastreamento.
+const verifiedAdsenseClient = /^ca-pub-\d{16}$/.test(adsenseClient?.trim() || '')
+  ? adsenseClient!.trim()
+  : null;
 const loadAdsenseAuto =
-  marketingConsent && adsenseEnabled && !adsScript && adsenseClient?.startsWith('ca-pub-');
+  marketingConsent && adsenseEnabled && !adsScript && Boolean(verifiedAdsenseClient);
 const loadAdsenseCustom = marketingConsent && adsenseEnabled && adsScript.length > 0;
 const loadGaCustom = marketingConsent && gaCode && gaCode.includes('<script');
 const loadGaStandard = marketingConsent && gaCode && !gaCode.includes('<script') && gaCode.startsWith('G-');
@@ -79,6 +84,7 @@ const loadGaStandard = marketingConsent && gaCode && !gaCode.includes('<script')
 <meta name="twitter:description" content={description} />
 <meta name="twitter:image" content={imageUrl} />
 {gscVerification && <meta name="google-site-verification" content={gscVerification} />}
+{verifiedAdsenseClient && <meta name="google-adsense-account" content={verifiedAdsenseClient} />}
 <link rel="icon" href={favicon} type="image/svg+xml" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -105,7 +111,7 @@ const loadGaStandard = marketingConsent && gaCode && !gaCode.includes('<script')
 {loadAdsenseAuto && (
   <script
     async
-    src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
+    src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${verifiedAdsenseClient}`}
     crossorigin="anonymous"
   ></script>
 )}
